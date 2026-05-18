@@ -513,8 +513,8 @@ def prepare_historical_data_for_prediction(prediction_date, history_days=15):
     '''
     start_date, end_date = get_start_end_date(prediction_date, history_days)
     df_energy = fetch_smard_netzlast(start_date, end_date)
-    df_energy = create_energy_features(df_energy)
     df_energy = create_time_based_features(df_energy, in_year=pd.to_datetime(prediction_date).year)
+    df_energy = create_energy_features(df_energy)
 
     df_weather = prepare_weather_data(in_start_date=start_date, in_end_date=end_date)
     out_df = combine_energy_weather_dataset(df_energy, df_weather)
@@ -535,81 +535,54 @@ def get_start_end_date(prediction_date, history_days=15):
     return start_date, end_date
 
 
-def prepare_future_features(prediction_date, horizon_hours=24):
+# prepare data for prediction for the next day
+def prepare_data_for_next_day_prediction(prediction_date):
     '''
-    Prepare future features for prediction.
-    
-    Parameters
-    ----------
-    prediction_date : str  e.g. "2026-05-13"
-        First hour of the forecast window (00:00 local time).
-    horizon_hours : int
-        How many hours ahead to forecast (24 = 1 day, 168 = 7 days).
-
-    Returns
-    -------
-    df_future : pd.DataFrame
-        One row per forecast hour, same feature columns as training data,
-        WITHOUT EnergyDemand (target).
+    Prepare data for prediction for the next day: 
+        prepare future features for the prediction date, 
+        and return the prepared DataFrame.
     '''
-    if horizon_hours > 24:
-        import warnings
-        warnings.warn(
-            "horizon_hours > 24: lag_24h features for hours beyond the first 24 "
-            "will use actual historical values from 1+ weeks ago, not predicted values. "
-            "For accurate multi-day forecasts consider iterative/recursive prediction.",
-            UserWarning
-        )
+    start_date, end_date = get_start_end_date(prediction_date)
 
-    # ---- 1. fetch enough historical energy data for lag/rolling features ----
-    # lag_168h + rolling_mean_168h need 168 rows before the first forecast hour
-    # add extra buffer of 2 days to be safe after dropna()
-    history_days = (168 // 24) + 2  # = 9 days
-    hist_start = (pd.to_datetime(prediction_date) - pd.Timedelta(days=history_days)).strftime("%Y-%m-%d")
-    hist_end   = (pd.to_datetime(prediction_date) - pd.Timedelta(hours=1)).strftime("%Y-%m-%d")
+    # ---- 1. fetch full history and compute lag/rolling features on the full history ----
+    # create_energy_features needs > 168 rows before dropna() yields valid lags.
+    # Calling it on tail(24) first would make all lag columns NaN.
+    df_energy = fetch_smard_netzlast(start_date, end_date)
 
-    df_energy = fetch_smard_netzlast(hist_start, hist_end)
+    # Append NaN rows for the 24 forecast hours
+    df_future_skeleton = pd.DataFrame({
+        'time': pd.date_range(start=pd.to_datetime(prediction_date, utc=True), periods=24, freq='h'),
+        'EnergyDemand': [float('nan')] * 24
+    })
+    df_extended = pd.concat([df_energy[['time','EnergyDemand']], df_future_skeleton], ignore_index=True)
 
-    #df_hist = create_time_based_features(df_hist, in_year=pd.to_datetime(prediction_date).year)
-    df_energy = create_energy_features(df_energy) # adds lags & rolling means, drops NaN
-    #print(f'df_energy shape: {df_energy.shape}')
-    #display(f'df_energy tail 3 for {prediction_date}', df_energy.tail(3))
+    # Compute lag/rolling features on the extended series — no dropna so future rows survive.
+    # shift(24) and shift(168) look purely into history for all 24 future rows (no NaN issue).
+    # For rolling means, forward-fill the future NaN EnergyDemand values so the rolling window
+    # doesn't propagate NaN; the last known historical value is used as a stand-in.
+    df_extended['EnergyDemand_lag_24h']  = df_extended['EnergyDemand'].shift(24)
+    df_extended['EnergyDemand_lag_168h'] = df_extended['EnergyDemand'].shift(168)
+    _eed_filled = df_extended['EnergyDemand'].ffill()
+    df_extended['EnergyDemand_rolling_mean_24h']  = _eed_filled.shift(1).rolling(24).mean()
+    df_extended['EnergyDemand_rolling_mean_168h'] = _eed_filled.shift(1).rolling(168).mean()
 
-    df_future = df_energy.tail(24).copy().reset_index(drop=True)
+    # Take only the 24 forecast rows — they now have correct lag lookbacks into history
+    df_future = df_extended.tail(24).copy().reset_index(drop=True)
+    # (EnergyDemand is NaN here — it's the target, not a feature; drop it before predict)
 
-    # ---- 2. build future hourly timestamps for the forecast horizon ----
-    future_times = pd.date_range(
-        start=pd.to_datetime(prediction_date, utc=True), #.tz_convert("Europe/Berlin"),
-        periods=horizon_hours,
-        freq='h',
-        # bug 4 corrected: add timezone information to future timestamps, since the future timestamps need to have the same timezone information as the historical energy data and weather data for merging and creating time-based features, we need to add timezone information (UTC) to the future timestamps and then convert it to the local timezone (Europe/Berlin) if needed
-        #tz='Europe/Berlin'
-    )
-    df_future['time'] = future_times
-
-    # ---- 3. add time-based features for future timestamps ----
     df_future = create_time_based_features(df_future, in_year=pd.to_datetime(prediction_date).year)
-    #display(f'future features (time + energy) tail 3 for {prediction_date}', df_future.tail(3))
+
+    # ---- 4. fetch weather: historical archive + forecast, then re-compute features ----
+    # Re-running create_weather_features on the combined data ensures rolling/lag
+    # weather features are computed continuously across the boundary.
+    df_weather_historical = prepare_weather_data(in_start_date=start_date, in_end_date=end_date)
+    df_weather_forecast = prepare_weather_forecast()
+    df_weather = pd.concat([df_weather_historical, df_weather_forecast], ignore_index=True)
+    df_weather = create_weather_features(df_weather)
+    df_weather = df_weather.tail(24).reset_index(drop=True)
+
+    # ---- 5. merge energy features with weather features ----
+    df_future = combine_energy_weather_dataset(df_future, df_weather)
+    df_future = df_future.sort_values('time').reset_index(drop=True)
     
-    # ---- 4. fetch weather forecast  ----
-    df_weather_forecast = prepare_weather_forecast( )
-    #display(f'weather forecast tail 3 for {prediction_date}', df_weather_forecast.tail(3))
-
-    df_weather = prepare_weather_data(in_start_date=hist_start, in_end_date=hist_end)  
-    #display(f'weather data tail 3 from {hist_start} to {hist_end}', df_weather.tail(3))
-
-    df_weather = pd.concat([df_weather, df_weather_forecast], ignore_index=True)  # combine historical weather and forecast weather
-    #display(f'combined weather data + forecast tail 3 for {prediction_date}', df_weather.tail(3))
-
-    df_weather = create_weather_features(df_weather)  # update weather features for the whole period
-    df_weather = df_weather.tail(24)
-    #print(f"weather features tail 24 after creating features: {df_weather.shape}")
-    #display(f'weather features tail 3 after adding features for {prediction_date}', df_weather.tail(3))
-    #print(df_weather.isna().sum())
-  
-    df_future = combine_energy_weather_dataset(df_future, df_weather)  # merge future timestamps with weather features
-    #print(f"df_future tail 24 after merge: {df_future.shape}")
-    #display(f'df_future tail 24 after merge for {prediction_date}', df_future.tail(24))
-    #print(df_future.isna().sum())
-
     return df_future

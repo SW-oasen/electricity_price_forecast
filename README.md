@@ -4,9 +4,9 @@
 
 Ein Data-Science-/Data-Analyst-Portfolio-Projekt zur Vorhersage des stündlichen Stromverbrauchs in Deutschland.
 
-**Energy Analytics + Time Series + Wetter + Kalenderfeatures + Power BI Storytelling**
+**Energy Analytics + Time Series + Wetter + Kalenderfeatures**
 
-Primäres Ziel: **Electricity Load Forecasting für Deutschland (stündlich, 2020–2025)**.
+Primäres Ziel: **Electricity Load Forecasting für Deutschland (stündlich)**.
 
 ---
 
@@ -16,19 +16,27 @@ Primäres Ziel: **Electricity Load Forecasting für Deutschland (stündlich, 202
 
 - [x] EDA Stromverbrauch Deutschland (Notebook 01)
 - [x] EDA Wetterdaten (Notebook 02)
-- [x] Feature Engineering & EDA kombinierter Datensatz (Notebook 03)
+- [x] Feature Engineering & EDA kombinierter Stromverbrauch und Wetter Datensatz (Notebook 03)
 - [x] Baseline- und ML-Modell-Evaluation (Notebook 04)
 - [x] Feature Importances Analyse (Notebook 05)
-- [x] Web scraping SMARD die Stromverbrauch-Daten seit 2025-10-01 für die aktuelle Vorhersage (Notebook 06)
+- [x] Web Scraping SMARD Stromverbrauch-Daten ab 2025-10-01 für aktuelle Vorhersage (Notebook 06)
 - [x] Python Source Refactoring, /src (`fetch_prepare_data.py`, `train_model_predict.py`)
-- [x] Interaktive Vorhersage mit Datenpipeline (Notebook 07/08)
+- [x] Vollständige ML-Pipeline mit Funktionsaufrufen aus Python-Modulen (Notebook 07)
+- [x] Bayesian Optimization (Optuna) auf AI PC
+- [x] Interaktive Vorhersage mit Datenpipeline (Notebook 08): getrenntes GUI für (1) Tagesvorhersage (morgen) und (2) historischen Vergleich bis 1 Jahr
+- [x] Notebook 08: 3-Kurven-Vergleich Actual / SMARD-Prognose / ML-Vorhersage mit Metriktabelle (MAE, RMSE)
+- [x] Notebook 08: SMARD-Prognoselinie (Filter 411) in Tagesvorhersage-Chart integriert
+- [x] Web Interface (Streamlit) für Stromverbrauch-Vorhersage
+- [x] Exploration asymmetrischer Verlustfunktionen / Quantilregression (Notebook 09, in Arbeit)
 
 ### Offen
 
-- [ ] Web Interface (Streamlit) für Stromverbrauch-Vorhersage
-- [ ] Bayesian Optimization (Optuna) und SARIMAX Modell auf AI PC
-- [ ] Mehrere Länder
-- [ ] Residuallast=Netzlast−PV−Wind Onshore - konventionelle Erzeugung: positiv oder negativ?
+- [ ] ETL Pipeline
+- [ ] SARIMAX Modell auf AI PC
+
+### Folgeprojekt
+
+- [ ] Residuallast-Vorhersage: Residuallast=Netzlast−PV−Wind Onshore − konventionelle Erzeugung
 
 ---
 
@@ -57,7 +65,9 @@ Lizenzhinweis:
 ([SMARD](https://www.smard.de/home))
 
 Filter-ID 410: Realisierter Stromverbrauch – Netzlast  
-Programmatisch abgerufen über `fetch_smard_netzlast()` in `src/fetch_prepare_data.py`.
+Filter-ID 411: Prognostizierter Stromverbrauch – Netzlast (SMARD offizielle Tagesvorhersage)  
+Programmatisch abgerufen über `fetch_smard_netzlast(filter_id=...)` in `src/fetch_prepare_data.py`.  
+Filter 411 wird für den 3-Kurven-Vergleich (Actual vs. SMARD-Prognose vs. ML-Vorhersage) in Notebook 08 verwendet.
 
 ---
 
@@ -78,7 +88,7 @@ Verwendete Variablen:
 - `wind_speed_10m`
 - `shortwave_radiation`
 
-Aggregation über Top-5-Städte Deutschland (ungewichtet gemittelt):
+Aggregation über Top-5-Städte Deutschland (gewichtet mit der Population gemittelt):
 
 | Stadt | Einwohner |
 |---|---|
@@ -117,7 +127,10 @@ Features:
 | Feature | Beschreibung |
 |---|---|
 | `is_holiday` | Feiertag ja/nein |
-| `holiday_ratio` | gewichteter Feiertagsanteil Bundesländer |
+| `holiday_ratio` | Anteil der Bundesländer mit Feiertag (0–1) |
+| `is_workday` | 1 wenn Werktag und kein Feiertag (direktes Signal für Hochlasttage) |
+| `is_bridge_day` | 1 wenn Werktag eingeklemmt zwischen Feiertag und Wochenende |
+| `holiday_weight` | kombiniertes Signal: `max(holiday_ratio, is_weekend × 0.5)` |
 | `is_pandemic_time` | 2020-03-01 bis 2021-12-31 |
 
 ### Wetterfeatures
@@ -131,7 +144,7 @@ Features:
 | `apparent_temperature_rolling_mean_24h` | 24h-Rollmittel Temperatur |
 | `shortwave_radiation_0m_lag_24h` | Solarstrahlung vor 24h |
 | `shortwave_radiation_0m_rolling_mean_24h` | 24h-Rollmittel Solarstrahlung |
-| `heating_degree` | `max(0, 15 - apparent_temperature)` |
+| `heating_degree` | `max(0, 18 - apparent_temperature)` |
 | `cooling_degree` | `max(0, apparent_temperature - 25)` |
 
 * Gewichtete Wetteraggregation nach Stadtbevölkerung
@@ -205,9 +218,9 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 - ENTSO-E Day-Ahead-Preise als Feature
 - Industrieproduktionsindex (Destatis, monatlich)
 - Schulferienratio
-- Brückentage
-- Mehrere Länder wegen besonderes Klimas (FI - Finland, ES - Spanien)
-- 24h-/7-Tage-Forecast
+- Mehrere Länder wegen besonderem Klima (FI – Finnland, ES – Spanien)
+- 7-Tage-Forecast (iterative/rekursive Vorhersage)
+- Quantilregression (α > 0.5) für konservativere Vorhersagen analog SMARD
 
 ---
 
@@ -221,7 +234,32 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 | `04_base_models_eval.ipynb` | Modelltraining, Tuning, Lernkurven, Prediction vs. Actual |
 | `05_feature_importances.ipynb` | Feature Importance Analyse, Entfernung schwacher Features |
 | `06_scrape_smard.ipynb` | SMARD API Scraping für Stromverbrauch ab 2025-10-01 |
-| `07/08_interactive_prediction.ipynb` | Interaktive Vorhersage, Datenpipeline für Prediction |
+| `07_complete_ml_pipeline.ipynb` | Vollständige ML-Pipeline: Training, Tuning, Persistenz |
+| `08_interactive_prediction.ipynb` | Interaktive Vorhersage: (1) Tagesvorhersage morgen mit SMARD-Prognoselinie; (2) historischer 3-Kurven-Vergleich Actual / SMARD / ML mit MAE+RMSE-Tabelle |
+| `09_asymmetric_loss.ipynb` | Exploration asymmetrischer Verlustfunktionen und Quantilregression für konservativere Vorhersagen |
+
+---
+
+## Quick Start – Streamlit App
+
+Voraussetzung: virtuelle Umgebung aktiviert, trainierte Modelle liegen unter `models/`.
+
+```powershell
+# 1. Ins Projektverzeichnis wechseln
+cd d:\Projects\DataScience\Portfolio\electricity_demand_forecast\workspace_energy_demand
+
+# 2. Virtuelle Umgebung aktivieren (einmalig pro Terminal-Session)
+.venv\Scripts\Activate.ps1
+
+# 3. Streamlit starten
+streamlit run src/streamlit_app.py
+```
+
+Der Browser öffnet sich automatisch unter **http://localhost:8501**.
+
+Die App bietet zwei Tabs:
+- **Tab 1 – Vorhersage (morgen)**: ML-Prognose für den nächsten Tag inkl. SMARD-Vergleich
+- **Tab 2 – Historischer Vergleich**: Tatsächlicher Verbrauch vs. ML-Vorhersage vs. SMARD-Prognose für einen frei wählbaren Zeitraum
 
 ---
 
@@ -229,8 +267,9 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 
 | Datei | Inhalt |
 |---|---|
-| `fetch_prepare_data.py` | Kaggle/SMARD/Open-Meteo Datenabruf, Feature Engineering, Datenpipeline |
+| `fetch_prepare_data.py` | Kaggle/SMARD (Filter 410 + 411)/Open-Meteo Datenabruf, Feature Engineering; `prepare_data_for_next_day_prediction()` für die Tagesvorhersage |
 | `train_model_predict.py` | Modelltraining, Hyperparameter-Tuning, Modell-Persistenz |
+| `streamlit_app.py` | Interaktive Web-App (2 Tabs: Morgen-Prognose + Historischer Vergleich) |
 
 ---
 

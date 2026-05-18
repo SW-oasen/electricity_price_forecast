@@ -23,8 +23,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import streamlit as st
 
+FILTER_SMARD_FORECAST = 411  # Prognostizierter Stromverbrauch: Netzlast
+
 from fetch_prepare_data import (
-    prepare_future_features,
+    prepare_data_for_next_day_prediction,
     fetch_smard_netzlast,
     create_energy_features,
     create_time_based_features,
@@ -47,6 +49,7 @@ def load_models():
     return {
         "LGBM":          load_model_from_pickle(os.path.join(_base, "best_lgbm_model_bayesian.pkl")),
         "Random Forest": load_model_from_pickle(os.path.join(_base, "best_rf_model_bayesian.pkl")),
+        "XGBoost":       load_model_from_pickle(os.path.join(_base, "best_xgb_model_bayesian.pkl")),
     }
 
 
@@ -78,9 +81,19 @@ with tab_future:
     if st.button("Predict for Tomorrow", type="primary", key="btn_future"):
         tomorrow_str = tomorrow.isoformat()
 
+        # 1. SMARD official consumption forecast (filter 411) ─────────────────
+        with st.spinner("SMARD-Prognose wird abgerufen …"):
+            try:
+                df_smard_fc = fetch_smard_netzlast(
+                    tomorrow_str, tomorrow_str, filter_id=FILTER_SMARD_FORECAST
+                )
+            except Exception:
+                df_smard_fc = pd.DataFrame(columns=["time", "EnergyDemand"])
+
+        # 2. ML features + prediction ─────────────────────────────────────────
         with st.spinner(f"Features werden vorbereitet für {tomorrow_str} …"):
             try:
-                df_future = prepare_future_features(prediction_date=tomorrow_str)
+                df_future = prepare_data_for_next_day_prediction(prediction_date=tomorrow_str)
             except Exception as exc:
                 st.error(f"Feature-Vorbereitung fehlgeschlagen: {exc}")
                 st.stop()
@@ -91,7 +104,10 @@ with tab_future:
 
         with st.spinner(f"{future_model} wird ausgeführt …"):
             X     = df_future.drop(columns=["time", "EnergyDemand"], errors="ignore")
-            preds = models[future_model].predict(X)
+            model = models[future_model]
+            if hasattr(model, "feature_names_in_"):
+                X = X.reindex(columns=model.feature_names_in_)
+            preds = model.predict(X)
 
         st.success(f"Vorhersage abgeschlossen — {tomorrow_str} ({future_model})")
 
@@ -99,8 +115,12 @@ with tab_future:
 
         with col_chart:
             fig, ax = plt.subplots(figsize=(10, 4))
-            ax.plot(df_future["time"], preds, linewidth=2, color="steelblue",
-                    label=f"{future_model} prediction")
+            if not df_smard_fc.empty:
+                ax.plot(df_smard_fc["time"], df_smard_fc["EnergyDemand"],
+                        color="mediumseagreen", linewidth=1.5, linestyle="-.",
+                        label="SMARD offizielle Prognose")
+            ax.plot(df_future["time"], preds, linewidth=2, color="darkorange", linestyle="--",
+                    label=f"{future_model} Vorhersage")
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
             ax.set_xlabel("Stunde (UTC)")
             ax.set_ylabel("Netzlast (MWh)")
@@ -113,10 +133,18 @@ with tab_future:
 
         with col_table:
             df_result = df_future[["time"]].copy()
-            df_result["predicted_MWh"] = preds.round(0).astype(int)
-            df_result["Stunde (UTC)"]  = df_result["time"].dt.strftime("%H:%M")
+            df_result["ML (MWh)"] = preds.round(0).astype(int)
+            if not df_smard_fc.empty:
+                smard_idx = df_smard_fc.set_index("time")["EnergyDemand"]
+                df_result["SMARD (MWh)"] = (
+                    df_result["time"].map(smard_idx).round(0).astype("Int64")
+                )
+            df_result["Stunde (UTC)"] = df_result["time"].dt.strftime("%H:%M")
+            display_cols = ["Stunde (UTC)", "ML (MWh)"]
+            if "SMARD (MWh)" in df_result.columns:
+                display_cols.append("SMARD (MWh)")
             st.dataframe(
-                df_result[["Stunde (UTC)", "predicted_MWh"]].reset_index(drop=True),
+                df_result[display_cols].reset_index(drop=True),
                 use_container_width=True,
                 height=600,
             )
@@ -175,8 +203,8 @@ with tab_hist:
             from_str = str(date_from)
             to_str   = str(date_to)
 
-            # 1. Fetch actual SMARD data ───────────────────────────────────────
-            with st.spinner(f"SMARD-Daten werden abgerufen für {from_str} → {to_str} …"):
+            # 1. Fetch actual SMARD data (filter 410) ──────────────────────────────
+            with st.spinner(f"SMARD-Verbrauchsdaten werden abgerufen für {from_str} → {to_str} …"):
                 try:
                     df_actual = fetch_smard_netzlast(from_str, to_str)
                 except Exception as exc:
@@ -187,7 +215,16 @@ with tab_hist:
                 st.error(f"Keine SMARD-Daten verfügbar für {from_str} → {to_str}.")
                 st.stop()
 
-            # 2. Build feature matrix ──────────────────────────────────────────
+            # 2. Fetch SMARD official forecast (filter 411) ───────────────────────
+            with st.spinner("SMARD-Prognose (Filter 411) wird abgerufen …"):
+                try:
+                    df_smard_fc = fetch_smard_netzlast(
+                        from_str, to_str, filter_id=FILTER_SMARD_FORECAST
+                    )
+                except Exception:
+                    df_smard_fc = pd.DataFrame(columns=["time", "EnergyDemand"])
+
+            # 3. Build feature matrix ──────────────────────────────────────────
             with st.spinner("Modellfeatures werden berechnet (Energie + Wetter) …"):
                 HISTORY_DAYS = 15
                 try:
@@ -220,19 +257,27 @@ with tab_hist:
                 st.error("Keine Feature-Daten für den gewählten Zeitraum.")
                 st.stop()
 
-            # 3. Predict ───────────────────────────────────────────────────────
+            # 4. Predict ───────────────────────────────────────────────────────
             with st.spinner(f"{hist_model} wird ausgeführt …"):
                 X     = df_feat.drop(columns=["time", "EnergyDemand"], errors="ignore")
-                preds = models[hist_model].predict(X)
+                model = models[hist_model]
+                if hasattr(model, "feature_names_in_"):
+                    X = X.reindex(columns=model.feature_names_in_)
+                preds = model.predict(X)
 
-            # 4. Align actual and predicted on shared timestamps ───────────────
-            s_pred   = pd.Series(preds, index=df_feat["time"], name="Predicted")
+            # 5. Align all three series on shared timestamps ───────────────────
+            s_pred   = pd.Series(preds, index=df_feat["time"], name="ML Prediction")
             s_actual = df_actual.set_index("time")["EnergyDemand"].rename("Actual")
-            df_plot  = pd.concat([s_actual, s_pred], axis=1).dropna()
+            s_smard  = (
+                df_smard_fc.set_index("time")["EnergyDemand"].rename("SMARD Forecast")
+                if not df_smard_fc.empty
+                else pd.Series(dtype=float, name="SMARD Forecast")
+            )
+            df_plot = pd.concat([s_actual, s_smard, s_pred], axis=1)
 
             st.success(f"Vergleich abgeschlossen — {from_str} → {to_str} ({hist_model})")
 
-            # 5. Plot ──────────────────────────────────────────────────────────
+            # 6. Plot ──────────────────────────────────────────────────────────
             days_in_range = delta_days + 1
             if days_in_range <= 3:
                 x_fmt = "%m-%d %H:%M"
@@ -245,9 +290,13 @@ with tab_hist:
             ax.plot(df_plot.index, df_plot["Actual"],
                     color="steelblue", linewidth=1.5,
                     label="Tatsächlicher Verbrauch (SMARD)")
-            ax.plot(df_plot.index, df_plot["Predicted"],
+            if not df_smard_fc.empty and df_plot["SMARD Forecast"].notna().any():
+                ax.plot(df_plot.index, df_plot["SMARD Forecast"],
+                        color="mediumseagreen", linewidth=1.5, linestyle="-.",
+                        label="SMARD offizielle Prognose")
+            ax.plot(df_plot.index, df_plot["ML Prediction"],
                     color="darkorange", linewidth=1.5, linestyle="--",
-                    label=f"Vorhersage ({hist_model})")
+                    label=f"ML Vorhersage ({hist_model})")
             ax.xaxis.set_major_formatter(mdates.DateFormatter(x_fmt))
             ax.set_xlabel("Datum / Uhrzeit (UTC)")
             ax.set_ylabel("Netzlast (MWh)")
@@ -261,11 +310,23 @@ with tab_hist:
             plt.tight_layout()
             st.pyplot(fig)
 
-            # 6. Metrics ───────────────────────────────────────────────────────
-            mae  = (df_plot["Actual"] - df_plot["Predicted"]).abs().mean()
-            rmse = ((df_plot["Actual"] - df_plot["Predicted"]) ** 2).mean() ** 0.5
+            # 7. Metrics ───────────────────────────────────────────────────────
+            df_ml_cmp = df_plot[["Actual", "ML Prediction"]].dropna()
+            mae_ml    = (df_ml_cmp["Actual"] - df_ml_cmp["ML Prediction"]).abs().mean()
+            rmse_ml   = ((df_ml_cmp["Actual"] - df_ml_cmp["ML Prediction"]) ** 2).mean() ** 0.5
 
-            m1, m2, m3 = st.columns(3)
-            m1.metric("MAE",          f"{mae:,.0f} MWh")
-            m2.metric("RMSE",         f"{rmse:,.0f} MWh")
-            m3.metric("Datenpunkte",  f"{len(df_plot):,}")
+            if not df_smard_fc.empty and df_plot["SMARD Forecast"].notna().any():
+                df_sm_cmp  = df_plot[["Actual", "SMARD Forecast"]].dropna()
+                mae_smard  = (df_sm_cmp["Actual"] - df_sm_cmp["SMARD Forecast"]).abs().mean()
+                rmse_smard = ((df_sm_cmp["Actual"] - df_sm_cmp["SMARD Forecast"]) ** 2).mean() ** 0.5
+                col_a, col_b, col_c, col_d, col_e = st.columns(5)
+                col_a.metric(f"MAE – ML ({hist_model})",  f"{mae_ml:,.0f} MWh")
+                col_b.metric(f"RMSE – ML ({hist_model})", f"{rmse_ml:,.0f} MWh")
+                col_c.metric("MAE – SMARD",              f"{mae_smard:,.0f} MWh")
+                col_d.metric("RMSE – SMARD",             f"{rmse_smard:,.0f} MWh")
+                col_e.metric("Datenpunkte",               f"{len(df_ml_cmp):,}")
+            else:
+                m1, m2, m3 = st.columns(3)
+                m1.metric("MAE",         f"{mae_ml:,.0f} MWh")
+                m2.metric("RMSE",        f"{rmse_ml:,.0f} MWh")
+                m3.metric("Datenpunkte", f"{len(df_ml_cmp):,}")

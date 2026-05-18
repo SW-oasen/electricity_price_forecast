@@ -72,8 +72,8 @@ def print_scores(model_name, target_test, predictions):
     rmse = np.sqrt(mean_squared_error(target_test, predictions))
     r2 = r2_score(target_test, predictions)
     print("-"*20 + f" scoring " + "-"*20)
-    print("model          MAE         RMSE       R²")
-    print(f'{model_name:<15} {mae:.4f}     {rmse:.4f}    {r2:.4f}')
+    print(f"{'model':<15} {'MAE':>10} {'RMSE':>10} {'R²':>8}")
+    print(f'{model_name:<16} {mae:>10.2f} {rmse:>10.2f} {r2:>8.2f}')
     
 
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, learning_curve, learning_curve
