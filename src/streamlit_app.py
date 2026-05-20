@@ -26,7 +26,8 @@ import streamlit as st
 FILTER_SMARD_FORECAST = 411  # Prognostizierter Stromverbrauch: Netzlast
 
 from fetch_prepare_data import (
-    prepare_data_for_next_day_prediction,
+    #prepare_data_for_next_day_prediction,
+    prepare_for_prediction_tomorrow,
     fetch_smard_netzlast,
     create_energy_features,
     create_time_based_features,
@@ -48,7 +49,7 @@ def load_models():
     _base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models")
     return {
         "LGBM":          load_model_from_pickle(os.path.join(_base, "best_lgbm_model_bayesian.pkl")),
-        "Random Forest": load_model_from_pickle(os.path.join(_base, "best_rf_model_bayesian.pkl")),
+        #"Random Forest": load_model_from_pickle(os.path.join(_base, "best_rf_model_bayesian.pkl")),
         "XGBoost":       load_model_from_pickle(os.path.join(_base, "best_xgb_model_bayesian.pkl")),
     }
 
@@ -93,7 +94,7 @@ with tab_future:
         # 2. ML features + prediction ─────────────────────────────────────────
         with st.spinner(f"Features werden vorbereitet für {tomorrow_str} …"):
             try:
-                df_future = prepare_data_for_next_day_prediction(prediction_date=tomorrow_str)
+                df_future = prepare_for_prediction_tomorrow(prediction_date=tomorrow_str)
             except Exception as exc:
                 st.error(f"Feature-Vorbereitung fehlgeschlagen: {exc}")
                 st.stop()

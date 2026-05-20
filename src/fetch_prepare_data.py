@@ -23,6 +23,7 @@ def fetch_kaggle_dataset(in_dataset_link=dataset_link, in_destination=destinatio
 # ========== prepare the energy data from Kaggle file for modeling ============
 
 from IPython.display import display
+import numpy as np
 import pandas as pd
 
 orig_file_path = "../data/raw/MHLV_2019_2025_combined.csv"
@@ -39,7 +40,8 @@ def prepare_energy_data_for_modeling(file_path=orig_file_path):
     out_df = pd.read_csv(file_path)
 
     out_df = rename_time_column(out_df)
-    out_df['time'] = pd.to_datetime(out_df['time'], utc=True) 
+    # DateUTC column contains UTC-valued naive timestamps — localize UTC first, then convert to Berlin
+    out_df['time'] = pd.to_datetime(out_df['time']).dt.tz_localize("UTC").dt.tz_convert("Europe/Berlin").dt.as_unit('s')
     out_df = out_df.rename(columns={'Value': 'EnergyDemand'})
 
     out_start_date = out_df['time'].min().strftime("%Y-%m-%d")
@@ -121,8 +123,8 @@ def fetch_smard_netzlast(
     pd.DataFrame with columns ['timestamp', 'load_MWh'].
     """
     # Convert date strings to UTC millisecond boundaries
-    start_dt = datetime.strptime(in_start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    end_dt   = datetime.strptime(in_end_date,   "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    start_dt = pd.to_datetime(in_start_date).tz_localize("Europe/Berlin")
+    end_dt   = pd.to_datetime(in_end_date).tz_localize("Europe/Berlin")
     # Include the full end day
     end_ms   = int(end_dt.timestamp() * 1000) + 86_400_000 - 1
     start_ms = int(start_dt.timestamp() * 1000)
@@ -150,7 +152,10 @@ def fetch_smard_netzlast(
     df = pd.DataFrame(rows, columns=["ts_ms", "load_MWh"])
     df = df.dropna(subset=["load_MWh"])
     df = df[(df["ts_ms"] >= start_ms) & (df["ts_ms"] <= end_ms)]
-    df["timestamp"] = pd.to_datetime(df["ts_ms"], unit="ms", utc=True) #.dt.tz_convert("Europe/Berlin")
+    # Downcast ms → s: hourly data needs no sub-second precision; aligns with open-meteo datetime64[s]
+    df["timestamp"] = (pd.to_datetime(df["ts_ms"], unit="ms", utc=True)
+                       .dt.tz_convert("Europe/Berlin")
+                       .dt.as_unit('s'))
     df = df[["timestamp", "load_MWh"]].sort_values("timestamp").reset_index(drop=True)
 
     if output_file:
@@ -201,8 +206,8 @@ def holiday_ratio(date):
                 if date in _state_holidays(code, date.year))
     return count / 16
 
-pandemic_start = pd.to_datetime('2020-03-01', utc=True)
-pandemic_end = pd.to_datetime('2021-12-31', utc=True)
+pandemic_start = pd.to_datetime('2020-03-01', utc=True).tz_convert("Europe/Berlin")
+pandemic_end = pd.to_datetime('2021-12-31', utc=True).tz_convert("Europe/Berlin")
 
 def create_time_based_features(in_df, in_year, time_column='time', in_pandemic_start=pandemic_start, in_pandemic_end=pandemic_end):
     '''
@@ -272,9 +277,9 @@ def create_energy_features(in_df):
     # lag_8760h (1 year) is not useful, it leads to worse scoring and makes future prediction more difficult
     #out_df['EnergyDemand_lag_8760h'] = out_df['EnergyDemand'].shift(8760) # 1 year
 
-    # rolling mean of past demand (shift first to avoid leakage)
-    out_df['EnergyDemand_rolling_mean_24h'] = out_df['EnergyDemand'].shift(1).rolling(24).mean()   # daily pattern
-    out_df['EnergyDemand_rolling_mean_168h'] = out_df['EnergyDemand'].shift(1).rolling(168).mean() # weekly pattern
+    # rolling after shift(24) to provide the recent historical context for the future rows; forward-fill NaN to avoid rolling mean becoming NaN 
+    out_df['EnergyDemand_rolling_mean_24h'] = out_df['EnergyDemand'].shift(24).rolling(24).mean()   # daily pattern
+    out_df['EnergyDemand_rolling_mean_168h'] = out_df['EnergyDemand'].shift(24).rolling(168).mean() # weekly pattern
     # rolling_mean_8760h (1 year) is not useful, it leads to worse scoring and makes future prediction more difficult
     #out_df['EnergyDemand_rolling_mean_8760h'] = out_df['EnergyDemand'].shift(1).rolling(8760).mean() # yearly pattern
 
@@ -294,13 +299,23 @@ def prepare_energy_data_for_prediction(prediction_date, history_days=15):
     '''
     # for prediction, we need to fetch the most recent energy data to create lagged features, since the Kaggle dataset only goes up to 2025-09-30
     start_date, end_date = get_start_end_date(prediction_date, history_days)
-    out_df = fetch_smard_netzlast(start_date, end_date)
-    out_df = create_energy_features(out_df)
+    #print('\n---- debugging output of prepare_energy_data_for_prediction ----')
+    #print(start_date, end_date)
     
+    out_df = fetch_smard_netzlast(start_date, end_date)
+    #print('\nfetched from smard', out_df['time'].head(3))
+    
+    out_df = create_energy_features(out_df)
+    #print('\nafter creating energy features', out_df['time'].head(3))
+
     # bug 2 corrected
     # create time hourly of end_date+1 features for the future prediction date, since the lagged features will be based on the past 24h and 168h of energy demand, we need to have at least 168h of energy data up to the day before the prediction date
-    time_24h_after_end_date = pd.date_range(end_date, periods=24, freq='H') + pd.Timedelta(hours=24)
+    time_24h_after_end_date = pd.date_range(end_date, periods=24, freq='h').tz_localize("Europe/Berlin", nonexistent='shift_forward', ambiguous='infer') + pd.Timedelta(hours=24)
+    out_df = out_df.sort_values('time').tail(24)
     out_df['time'] = time_24h_after_end_date
+    #print('\nafter creating future time rows head:', out_df['time'].head(3))
+    #print('\n---- end of debugging output of prepare_energy_data_for_prediction ----\n')
+
     out_df = create_time_based_features(out_df, in_year=pd.to_datetime(end_date).year)
 
     return out_df
@@ -329,22 +344,37 @@ selected_cities = {
 start_date = "2019-01-01" # Kaggle dataset starts from 2019-01-01
 end_date = "2025-09-30" # Kaggle dataset ends at 2025-09-30
 
-def fetch_weather_data_for_cities(in_selected_cities=selected_cities, 
-                                  in_start_date=start_date, 
+def fetch_weather_data_for_cities(in_start_date=start_date, 
                                   in_end_date=end_date, 
+                                  in_selected_cities=selected_cities,
                                   in_weather_variables=weather_variables):
     '''
     Fetch weather data from open-meteo archive API for the selected cities 
     and return a dictionary of city name to weather DataFrame.
     '''
+    # Fetch 1 day before in_start_date in UTC so Berlin midnight (00:00+02:00 = 22:00 UTC prior day) is included
+    api_start_date = (pd.to_datetime(in_start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+    berlin_clip_start = pd.Timestamp(in_start_date, tz="Europe/Berlin")
+
     weather_city_dict = {}
     for city, coords in in_selected_cities.items():
-        url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['latitude']}&longitude={coords['longitude']}&start_date={in_start_date}&end_date={in_end_date}&hourly={','.join(in_weather_variables)}&timezone=auto"
-        response = requests.get(url)
-        weather_data = response.json()
+        url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['latitude']}&longitude={coords['longitude']}&start_date={api_start_date}&end_date={in_end_date}&hourly={','.join(in_weather_variables)}&timezone=UTC"
+        for attempt in range(3):
+            try:
+                response = requests.get(url, timeout=30)
+                response.raise_for_status()
+                weather_data = response.json()
+                break
+            except requests.exceptions.RequestException:
+                if attempt == 2:
+                    raise
+                time.sleep(5)
         df_weather_city = pd.DataFrame(weather_data['hourly'])
-        # bug 3 corrected: convert time column to datetime with timezone information, since the open-meteo API returns time in local timezone and we need to have the correct timestamps for merging with the energy data and creating time-based features, we need to convert the time column to datetime with timezone information (UTC) and then convert it to the local timezone (Europe/Berlin) if needed
-        df_weather_city['time'] = pd.to_datetime(df_weather_city['time']) #, utc=True) #.dt.tz_convert("Europe/Berlin")
+
+        # UTC has no DST ambiguity — safe to localize then convert to Berlin
+        df_weather_city['time'] = pd.to_datetime(df_weather_city['time'], utc=True).dt.tz_convert("Europe/Berlin").dt.as_unit('s')
+        # Clip to requested start in Berlin time (drop the extra day fetched for UTC offset coverage)
+        df_weather_city = df_weather_city[df_weather_city['time'] >= berlin_clip_start].reset_index(drop=True)
         #print(f"weather for {city}: {len(df_weather_city)} rows")
         #print(df_weather_city.head(3))
         weather_city_dict.update({city:df_weather_city})
@@ -422,7 +452,7 @@ def prepare_weather_data(in_start_date,
     Prepare weather data for modeling: fetch weather data for the selected cities, 
     merge it with population weights to get a Germany-wide weather dataset, and save it to the processed data folder.
     '''
-    weather_city_dict = fetch_weather_data_for_cities(in_selected_cities, in_start_date, in_end_date, in_weather_variables)
+    weather_city_dict = fetch_weather_data_for_cities(in_start_date, in_end_date)
     out_df = merge_weather_data_with_city_weights(weather_city_dict, in_city_population, in_weather_variables)
     out_df = rename_time_column(out_df)
     out_df = out_df.sort_values('time').reset_index(drop=True)
@@ -442,37 +472,103 @@ def fetch_weather_forecast_for_cities(
     '''
     out_weather_city_dict = {}
     for city, coords in in_selected_cities.items():
+        # past_days=1 ensures Berlin midnight (= UTC-2 the day before) is included.
+        # After converting UTC→Berlin we clip to today's Berlin 00:00 so the series
+        # always starts at midnight, mirroring the archive API behaviour.
         url = (
             f"https://api.open-meteo.com/v1/forecast"
             f"?latitude={coords['latitude']}&longitude={coords['longitude']}"
             f"&hourly={','.join(in_weather_variables)}"
             f"&forecast_days={forecast_days}"
-            f"&timezone=auto"
+            f"&past_days=1"
+            f"&timezone=UTC"
         )
         response = requests.get(url)
         response.raise_for_status()
         weather_data = response.json()
+        '''
+        for attempt in range(3):
+            try:
+                response = requests.get(url, timeout=30)
+                print('open-meteo API response status code:', response.status_code)
+                response.raise_for_status()
+                weather_data = response.json()
+                break
+            except requests.exceptions.RequestException:
+                if attempt == 2:
+                    raise
+                time.sleep(5)
+        '''
         df_weather_city = pd.DataFrame(weather_data['hourly'])
-        df_weather_city['time'] = pd.to_datetime(df_weather_city['time'], utc=True) #.dt.tz_convert("Europe/Berlin")
+        # UTC has no DST ambiguity — safe to localize then convert to Berlin
+        df_weather_city['time'] = (
+            pd.to_datetime(df_weather_city['time'], utc=True)
+            .dt.tz_convert("Europe/Berlin")
+            .dt.as_unit('s')
+        )
+        # Clip to today's Berlin midnight so the series starts at 00:00+02:00
+        today_berlin_midnight = pd.Timestamp.now(tz="Europe/Berlin").normalize()
+        df_weather_city = df_weather_city[
+            df_weather_city['time'] >= today_berlin_midnight
+        ].reset_index(drop=True)
         out_weather_city_dict[city] = df_weather_city
         time.sleep(1)
     return out_weather_city_dict
 
 
 def prepare_weather_forecast(
-        # forecast_days is set to 2 by default, otherwise only the same day forecast is fetched
         in_selected_cities=selected_cities,
         in_weather_variables=weather_variables,
-        in_city_population=city_population):
+        in_city_population=city_population,
+        forecast_days: int = 2):
     '''
     Prepare forecast weather data: fetch forecast for cities, merge with 
     population weights, and create weather features.
+    forecast_days=2 ensures tomorrow is always fully covered regardless of
+    the current UTC hour when the API is called.
     '''
-    weather_city_dict = fetch_weather_forecast_for_cities()
+    weather_city_dict = fetch_weather_forecast_for_cities(forecast_days=forecast_days)
     out_df = merge_weather_data_with_city_weights(weather_city_dict)
     out_df = rename_time_column(out_df)
     
     return out_df
+
+
+def prepare_weather_for_prediction(prediction_date, lookback_days=2, forecast_days=3):
+    '''
+    Fetch archive + forecast weather, combine them, and apply create_weather_features.
+    lookback_days of archive data provides the lag/rolling context needed for tomorrow's
+    weather features (apparent_temperature_lag_24h, rolling_mean_24h, etc.).
+    The model was trained with these features; without them predictions are unreliable.
+    '''
+    # --- archive: lookback_days before prediction_date (for lag/rolling context) ---
+    archive_start = (pd.to_datetime(prediction_date) - pd.Timedelta(days=lookback_days)).strftime('%Y-%m-%d')
+    archive_end   = (pd.to_datetime(prediction_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+
+    archive_city_dict = fetch_weather_data_for_cities(archive_start, archive_end)
+    df_archive = merge_weather_data_with_city_weights(archive_city_dict)
+    df_archive = rename_time_column(df_archive)
+
+    # --- forecast: covers prediction_date and beyond ---
+    fc_city_dict = fetch_weather_forecast_for_cities(forecast_days=forecast_days)
+    df_forecast = merge_weather_data_with_city_weights(fc_city_dict)
+    df_forecast = rename_time_column(df_forecast)
+
+    # Keep archive rows strictly before prediction_date to avoid overlap with forecast
+    pred_start = pd.Timestamp(prediction_date, tz="Europe/Berlin")
+    df_archive = df_archive[df_archive['time'] < pred_start].copy()
+
+    # Combine, deduplicate (forecast wins for any overlap), sort
+    df_combined = pd.concat([df_archive, df_forecast], ignore_index=True)
+    df_combined = (df_combined
+                   .sort_values('time')
+                   .drop_duplicates(subset=['time'])
+                   .reset_index(drop=True))
+
+    # Apply weather feature engineering (same as training path)
+    df_combined = create_weather_features(df_combined)
+
+    return df_combined
 
 
 # ---------- comnbine energy and weather dataset for modeling ----------
@@ -482,8 +578,17 @@ def combine_energy_weather_dataset(in_energy_df, in_weather_df):
     Prepare the combined energy and weather dataset for modeling: merge the energy and weather datasets on the timestamp, 
     drop columns with high correlation, and save the combined dataset to the processed data folder.
     '''
-    in_energy_df['time'] = pd.to_datetime(in_energy_df['time'], utc=True) 
-    in_weather_df['time'] = pd.to_datetime(in_weather_df['time'], utc=True)
+    in_energy_df = in_energy_df.copy()
+    in_weather_df = in_weather_df.copy()
+
+    # may cause doubled time conversion
+    #in_energy_df['time'] = pd.to_datetime(in_energy_df['time']).dt.tz_convert("Europe/Berlin")
+
+    #if in_weather_df['time'].dt.tz is None:
+    #    in_weather_df['time'] = pd.to_datetime(in_weather_df['time']).dt.tz_localize("Europe/Berlin", nonexistent='shift_forward', ambiguous='infer')
+    #else:
+   #     in_weather_df['time'] = pd.to_datetime(in_weather_df['time']).dt.tz_convert("Europe/Berlin")
+
     out_df = pd.merge(in_energy_df, in_weather_df, on='time', how='inner')
     out_df = out_df.sort_values('time').reset_index(drop=True)
 
@@ -511,7 +616,10 @@ def prepare_historical_data_for_prediction(prediction_date, history_days=15):
         fetch the energy data from SMARD for the past history_days, 
         create time-based features, and return the prepared DataFrame along with the actual energy demand for the prediction date.
     '''
-    start_date, end_date = get_start_end_date(prediction_date, history_days)
+    start_date, _ = get_start_end_date(prediction_date, history_days)
+    # Include prediction_date itself so features (lag, rolling) are generated for that day.
+    # get_start_end_date returns end_date = prediction_date - 1, which would exclude it.
+    end_date = prediction_date
     df_energy = fetch_smard_netzlast(start_date, end_date)
     df_energy = create_time_based_features(df_energy, in_year=pd.to_datetime(prediction_date).year)
     df_energy = create_energy_features(df_energy)
@@ -520,8 +628,15 @@ def prepare_historical_data_for_prediction(prediction_date, history_days=15):
     out_df = combine_energy_weather_dataset(df_energy, df_weather)
     out_df = out_df.sort_values('time').reset_index(drop=True)
 
+    # Snap start to next clean midnight: lag/rolling dropna may leave a partial first day
+    # (e.g. SMARD UTC→Berlin conversion shifts the series start to 23:00 instead of 00:00)
+    first_row = out_df['time'].iloc[0]
+    if first_row.hour != 0 or first_row.minute != 0:
+        next_midnight = (first_row + pd.Timedelta(days=1)).normalize()
+        out_df = out_df[out_df['time'] >= next_midnight].reset_index(drop=True)
+
     # use only the predictors 
-    out_df = out_df.drop(columns=['time', 'EnergyDemand'], errors='ignore')
+    out_df = out_df.drop(columns=['EnergyDemand'], errors='ignore')
     
     return out_df
 
@@ -530,59 +645,84 @@ def prepare_historical_data_for_prediction(prediction_date, history_days=15):
 
 def get_start_end_date(prediction_date, history_days=15):
     # Need at least 168h (7 days) of history for lag/rolling features + buffer
-    start_date = (pd.to_datetime(prediction_date) - pd.Timedelta(days=history_days)).strftime("%Y-%m-%d")
-    end_date   = (pd.to_datetime(prediction_date) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    start_date = (pd.to_datetime(prediction_date).tz_localize("Europe/Berlin") - pd.Timedelta(days=history_days)).strftime("%Y-%m-%d")
+    end_date   = (pd.to_datetime(prediction_date).tz_localize("Europe/Berlin") - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
     return start_date, end_date
 
 
-# prepare data for prediction for the next day
-def prepare_data_for_next_day_prediction(prediction_date):
-    '''
-    Prepare data for prediction for the next day: 
-        prepare future features for the prediction date, 
-        and return the prepared DataFrame.
-    '''
-    start_date, end_date = get_start_end_date(prediction_date)
+def create_tomorrow_time(prediction_date):
+    pred_start = pd.Timestamp(prediction_date, tz="Europe/Berlin")
+    future_times = pd.date_range(pred_start, periods=24, freq="h")
 
-    # ---- 1. fetch full history and compute lag/rolling features on the full history ----
-    # create_energy_features needs > 168 rows before dropna() yields valid lags.
-    # Calling it on tail(24) first would make all lag columns NaN.
-    df_energy = fetch_smard_netzlast(start_date, end_date)
+    #print(f'Appending future energy rows for prediction date {prediction_date}, future times: {future_times[0]} to {future_times[-1]}')
 
-    # Append NaN rows for the 24 forecast hours
-    df_future_skeleton = pd.DataFrame({
-        'time': pd.date_range(start=pd.to_datetime(prediction_date, utc=True), periods=24, freq='h'),
-        'EnergyDemand': [float('nan')] * 24
+    return  future_times
+    #(pd.concat([df_energy, df_future], ignore_index=True).sort_values("time").reset_index(drop=True)
+
+def prepare_for_prediction_tomorrow(prediction_date, history_days=15):
+    '''
+    Prepare the dataset for predicting tomorrow's energy demand:
+        fetch the most recent energy data from SMARD to create lagged features, 
+        create time-based features, fetch forecast weather data, and combine them into a single DataFrame for prediction.
+    '''
+    start_date, end_date = get_start_end_date(prediction_date, history_days)
+
+    df_history = fetch_smard_netzlast(start_date, end_date)
+    df_history = df_history.sort_values('time').reset_index(drop=True)
+
+    # Build energy lag features via direct timestamp lookup instead of shift(24)+tail(24).
+    # The tail(24) approach was wrong in two ways:
+    #   1. shift(24) on history rows gives lag values 24h too old once times are relabeled.
+    #   2. If SMARD only has partial data for today (publication delay), tail(24) straddles
+    #      two partial days, causing a visible ~12h pattern shift.
+    energy_idx = df_history.set_index('time')['EnergyDemand']
+
+    def _get(t):
+        # Fall back to same hour last week if the exact timestamp is not yet published by SMARD
+        v = energy_idx.get(t, np.nan)
+        if pd.isna(v):
+            v = energy_idx.get(t - pd.Timedelta(hours=168), np.nan)
+        return v
+
+    def _rolling_mean(t, n):
+        # Matches training: EnergyDemand.shift(24).rolling(n).mean() at prediction time T
+        # = mean of EnergyDemand from T-(n+23)h to T-24h  (n consecutive hours)
+        window = energy_idx.loc[
+            (energy_idx.index >= t - pd.Timedelta(hours=n + 23)) &
+            (energy_idx.index <= t - pd.Timedelta(hours=24))
+        ]
+        return window.mean() if len(window) > 0 else np.nan
+
+    future_times = create_tomorrow_time(prediction_date)
+
+    df_energy = pd.DataFrame({
+        'time':                           future_times,
+        'EnergyDemand_lag_24h':           [_get(t - pd.Timedelta(hours=24))  for t in future_times],
+        'EnergyDemand_lag_168h':          [_get(t - pd.Timedelta(hours=168)) for t in future_times],
+        'EnergyDemand_rolling_mean_24h':  [_rolling_mean(t, 24)              for t in future_times],
+        'EnergyDemand_rolling_mean_168h': [_rolling_mean(t, 168)             for t in future_times],
     })
-    df_extended = pd.concat([df_energy[['time','EnergyDemand']], df_future_skeleton], ignore_index=True)
 
-    # Compute lag/rolling features on the extended series — no dropna so future rows survive.
-    # shift(24) and shift(168) look purely into history for all 24 future rows (no NaN issue).
-    # For rolling means, forward-fill the future NaN EnergyDemand values so the rolling window
-    # doesn't propagate NaN; the last known historical value is used as a stand-in.
-    df_extended['EnergyDemand_lag_24h']  = df_extended['EnergyDemand'].shift(24)
-    df_extended['EnergyDemand_lag_168h'] = df_extended['EnergyDemand'].shift(168)
-    _eed_filled = df_extended['EnergyDemand'].ffill()
-    df_extended['EnergyDemand_rolling_mean_24h']  = _eed_filled.shift(1).rolling(24).mean()
-    df_extended['EnergyDemand_rolling_mean_168h'] = _eed_filled.shift(1).rolling(168).mean()
+    df_energy = create_time_based_features(
+        df_energy,
+        in_year=pd.to_datetime(prediction_date).year
+    )
 
-    # Take only the 24 forecast rows — they now have correct lag lookbacks into history
-    df_future = df_extended.tail(24).copy().reset_index(drop=True)
-    # (EnergyDemand is NaN here — it's the target, not a feature; drop it before predict)
+    pred_start = pd.Timestamp(prediction_date, tz="Europe/Berlin")
+    pred_end   = pred_start + pd.Timedelta(days=1)
 
-    df_future = create_time_based_features(df_future, in_year=pd.to_datetime(prediction_date).year)
+    df_energy = df_energy[
+        (df_energy["time"] >= pred_start) &
+        (df_energy["time"] < pred_end)
+    ].copy()
 
-    # ---- 4. fetch weather: historical archive + forecast, then re-compute features ----
-    # Re-running create_weather_features on the combined data ensures rolling/lag
-    # weather features are computed continuously across the boundary.
-    df_weather_historical = prepare_weather_data(in_start_date=start_date, in_end_date=end_date)
-    df_weather_forecast = prepare_weather_forecast()
-    df_weather = pd.concat([df_weather_historical, df_weather_forecast], ignore_index=True)
-    df_weather = create_weather_features(df_weather)
-    df_weather = df_weather.tail(24).reset_index(drop=True)
+    df_weather = prepare_weather_for_prediction(prediction_date)
+    df_weather = df_weather[
+        (df_weather["time"] >= pred_start) &
+        (df_weather["time"] < pred_end)
+    ].copy()
 
-    # ---- 5. merge energy features with weather features ----
-    df_future = combine_energy_weather_dataset(df_future, df_weather)
-    df_future = df_future.sort_values('time').reset_index(drop=True)
-    
-    return df_future
+    out_df = combine_energy_weather_dataset(df_energy, df_weather)
+
+    return out_df.drop(columns=["EnergyDemand"], errors="ignore")
+

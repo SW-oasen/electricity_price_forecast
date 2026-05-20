@@ -34,6 +34,8 @@ https://archive-api.open-meteo.com/v1/archive
   &timezone=auto
 ```
 
+> time: UTC Zeit
+
 ---
 
 ### 2. Weather Forecast
@@ -58,6 +60,8 @@ https://api.open-meteo.com/v1/forecast
 
 - `forecast_days`: 1–16 (free tier maximum is 16 days ahead)
 - Default in this project: `2` days (today + tomorrow)
+
+> time: Europe/Berlin
 
 ---
 

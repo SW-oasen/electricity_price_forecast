@@ -1,12 +1,8 @@
-# Projekt: European Electricity Demand Forecasting
+# PROJECT_CONTEXT — Electricity Demand Forecasting
 
-## Ziel
+> Projektübersicht, App-Nutzung und Business-Erkenntnisse: [README.md](README.md)
 
-Ein Data-Science-/Data-Analyst-Portfolio-Projekt zur Vorhersage des stündlichen Stromverbrauchs in Deutschland.
-
-**Energy Analytics + Time Series + Wetter + Kalenderfeatures + Power BI Storytelling**
-
-Primäres Ziel: **Electricity Load Forecasting für Deutschland (stündlich, 2020–2025)**.
+**Energy Analytics + Time Series + Wetter + Kalenderfeatures**
 
 ---
 
@@ -19,17 +15,21 @@ Primäres Ziel: **Electricity Load Forecasting für Deutschland (stündlich, 202
 - [x] Feature Engineering & EDA kombinierter Datensatz (Notebook 03)
 - [x] Baseline- und ML-Modell-Evaluation (Notebook 04)
 - [x] Feature Importances Analyse (Notebook 05)
-- [x] Web scraping SMARD die Stromverbrauch-Daten seit 2025-10-01 für die aktuelle Vorhersage (Notebook 06)
-- [x] Python Source Refactoring, /src (`fetch_prepare_data.py`, `train_model_predict.py`)
-- [x] Interaktive Vorhersage mit Datenpipeline (Notebook 07/08)
-- [x] Bayesian Optimization (Optuna) auf AI PC
-- [x] interactive Notebook, Streamlit für Stromverbrauch-Vorhersage bzw. Vergleich zwischen Vorhersage und realem Verbrauch
-- [x] Notebook 08 GUI-Trennung: separates Interface für (1) Tages-Vorhersage (morgen) und (2) historischen Vergleich mit Datumsbereichsauswahl (max. 1 Jahr), europäischer Kalender (Wochenstart Montag)
+- [x] Web Scraping SMARD Stromverbrauch-Daten ab 2025-10-01 (Notebook 06)
+- [x] Python Source Refactoring /src (`fetch_prepare_data.py`, `train_model_predict.py`)
+- [x] Vollständige ML-Pipeline: Training, Tuning, Persistenz (Notebook 07)
+- [x] Bayesian Hyperparameter-Optimierung mit Optuna auf AI PC
+- [x] Rolling-Features auf `shift(24)` umgestellt (kein Datenleck durch unmittelbar vorangehende Stunden)
+- [x] Interaktives Notebook und Streamlit-App (Notebook 08): Tages-Vorhersage (morgen) + historischer Vergleich (Actual / SMARD / ML)
+- [x] Notebook 08 GUI-Trennung: Tab 1 = Tages-Vorhersage, Tab 2 = historischer Vergleich (max. 1 Jahr, europäischer Kalender)
+- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup statt `tail(24)`-Ansatz (behebt ~12h Musterverzug durch SMARD-Teiltag)
 
 ### Offen
 
+- [ ] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
 - [ ] ETL Pipeline
-- [ ] Residuallast=Netzlast−PV−Wind Onshore - separates Projekt
+- [ ] Timezone-Fix: Open-Meteo gibt Wetterdaten mit `timezone=auto` zurück (lokale Zeit CEST/CET), während SMARD-Daten in UTC vorliegen — mögliche 1h-Verschiebung im Sommer oder Winter
+- [ ] Residuallast-Vorhersage — separates Folgeprojekt
 
 ---
 
@@ -62,6 +62,11 @@ Filter-ID 411: Prognostizierter Stromverbrauch – Netzlast (offizielle SMARD-Ta
 Programmatisch abgerufen über `fetch_smard_netzlast(filter_id=...)` in `src/fetch_prepare_data.py`.  
 Filter 411 wird in Notebook 08 für den 3-Kurven-Vergleich und als Referenz-Benchmark verwendet.
 
+> **Hinweis Timezone**: SMARD liefert Timestamps in CET/CEST. Die Kaggle-Quelldaten enthalten ebenfalls UTC-Zeitstempel (`DateUTC`). Open-Meteo gibt mit `&timezone=auto` lokale Zeit zurück (CEST im Sommer +2h, CET im Winter +1h) — potenzielle 1h-Verschiebung zwischen Wetter- und Verbrauchsdaten im Sommer.
+
+
+> SMARD JSON API Dokumentation: /documents/smard_api.md
+
 ---
 
 ### 3. Historische Wetterdaten
@@ -70,9 +75,9 @@ Filter 411 wird in Notebook 08 für den 3-Kurven-Vergleich und als Referenz-Benc
 ([Open Meteo](https://open-meteo.com/en/docs/historical-weather-api))
 
 API-Endpunkt:
+```
 https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date=2019-01-01&end_date=2025-09-30&hourly={variables}&timezone=auto
-
-
+```
 
 Verwendete Variablen:
 - `apparent_temperature`
@@ -90,6 +95,8 @@ Aggregation über Top-5-Städte Deutschland (gewichtet nach Stadtbevölkerung):
 | München | 1,51 Mio |
 | Köln | 1,02 Mio |
 | Frankfurt a.M. | 0,76 Mio |
+
+> open-meteo API Dokumentation: /documents/open-meteo_api.md
 
 ---
 
@@ -147,10 +154,12 @@ Features:
 |---|---|
 | `EnergyDemand_lag_24h` | Verbrauch vor 24h (selbe Stunde gestern) |
 | `EnergyDemand_lag_168h` | Verbrauch vor 168h (selbe Stunde letzte Woche) |
-| `EnergyDemand_rolling_mean_24h` | 24h-Rollmittel Verbrauch (shift(1)) |
-| `EnergyDemand_rolling_mean_168h` | 168h-Rollmittel Verbrauch (shift(1)) |
+| `EnergyDemand_rolling_mean_24h` | 24h-Rollmittel Verbrauch (shift(24)) |
+| `EnergyDemand_rolling_mean_168h` | 168h-Rollmittel Verbrauch (shift(24)) |
 
-> `EnergyDemand_lag_8760h` und `EnergyDemand_rolling_mean_8760h` wurden nach Feature-Importance-Analyse entfernt (geringer Beitrag, erzwang Wegfall von 2019).
+> `EnergyDemand_lag_8760h` und `EnergyDemand_rolling_mean_8760h` wurden nach Feature-Importance-Analyse entfernt (geringer Beitrag, erzwang Wegfall des Jahres 2019).
+
+> **Hinweis Rolling-Features**: `shift(24)` stellt sicher, dass das Fenster auf gestern ausgerichtet ist (T-24h bis T-(24+n-1)h). Kein Datenleck durch unmittelbar vorangehende Stunden; konsistente temporale Ausrichtung mit `lag_24h`.
 
 ---
 
@@ -184,36 +193,28 @@ Für baumbasierte Modelle (Random Forest, XGBoost, LightGBM): kein Preprocessing
 
 ### Hyperparameter-Tuning
 
-`RandomizedSearchCV` mit `TimeSeriesSplit(n_splits=5)` — respektiert zeitliche Reihenfolge.  
+Schritt 1: `RandomizedSearchCV` mit `TimeSeriesSplit(n_splits=5)` — respektiert zeitliche Reihenfolge.  
+Schritt 2: Bayesian Optimization mit **Optuna** (`TPESampler`, 100 Trials) — bestes LightGBM-Modell gespeichert als `best_lgbm_model_bayesian_changed_rolling.pkl`.  
 Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorhersage).
 
 ### Bewertungsmetriken
 
 - **MAE** — mittlerer absoluter Fehler (primäre Metrik)
-- **MSE** — mittlerer quadratischer Fehler
+- **RMSE** — Wurzel mittlerer quadratischer Fehler (gleiche Skala wie MAE, stärker gewichtete Ausreißer)
 - **R²** — Erklärte Varianz
 
 ---
 
-## Erkenntnisse
+## Technische Erkenntnisse & Limitierungen
 
-- **Demand-Lag-Features** (v.a. `lag_168h`, `lag_8760h`) sind die wichtigsten Features für Saisonal-Erkennung — deutlich wirksamer als `month` oder `hour` als Integer
-- Baumbasierte Modelle übertreffen lineare Modelle deutlich
-- **SVR** skaliert schlecht auf große Datensätze ($O(n^2)$ bis $O(n^3)$)
+- **Demand-Lag-Features** (`lag_168h`, `lag_24h`) sind die stärksten Prädiktoren — deutlich wirksamer als Kalender-Integer-Features allein
+- Baumbasierte Modelle übertreffen lineare Modelle deutlich; **SVR** skaliert schlecht ($O(n^2)$–$O(n^3)$) auf den ~46k-Zeilen-Datensatz
 - Standard-k-Fold CV führt bei Lag-Features zu Datenleck → `TimeSeriesSplit` verwenden
-- Zyklische Kodierung (`sin`/`cos`) für `hour` und `month` empfohlen, da Integer keine Periodizität abbilden
-- Industrieller Verbrauch (~40%) nicht durch Wetterdaten abgedeckt — potenzielle Verbesserung durch Industrieproduktionsindex (Destatis) oder ENTSO-E Day-Ahead-Preise
-
----
-
-## Potenzielle Erweiterungen
-
-- ENTSO-E Day-Ahead-Preise als Feature
-- Industrieproduktionsindex (Destatis, monatlich)
-- Schulferienratio
-- Mehrere Länder wegen besonderem Klima (FI – Finnland, ES – Spanien)
-- 7-Tage-Forecast (iterative/rekursive Vorhersage)
-- Quantilregression (α > 0.5) für konservativere Vorhersagen analog SMARD
+- Zyklische Kodierung (`sin`/`cos`) für `hour` und `month` empfohlen (Integer bilden keine Periodizität ab)
+- Industrieller Verbrauch (~40% der Netzlast) wird durch Wetterdaten nicht abgebildet — größte verbleibende Fehlerquelle
+- **Timezone-Problem (offen)**: Open-Meteo mit `&timezone=auto` liefert CEST im Sommer (+2h UTC), CET im Winter (+1h UTC); SMARD/Kaggle in UTC → potenzielle 1h-Abweichung im Sommer; Fix: `&timezone=UTC` + UTC-Parsing in `fetch_weather_data_for_cities()` / `fetch_weather_forecast_for_cities()`
+- Bekannter SMARD-Zeitversatz in Notebook 08: ML-Prognose vs. SMARD-Prognose zeigt ~3h-Shift; Ursache: SMARD liefert Prognosedaten mit anderer Zeitauflösung/Offset im CSV-Export
+- **Bug (behoben): ~12h Musterverzug in Vorhersage-Lag-Features** — der frühere `tail(24)`-Ansatz in `prepare_for_prediction_tomorrow` hatte zwei Fehler: (1) *Grundlegender 24h-Offset*: `create_energy_features(df_history).tail(24)` berechnet `lag_24h` via `shift(24)` relativ zur Listenposition; die letzten 24 Zeilen (z.B. `2026-05-20 00–23 Uhr`) haben dadurch `lag_24h = Verbrauch 2026-05-19`, nicht `2026-05-20`. Nach Umetikettierung auf Vorhersagezeiten `2026-05-21` zeigt das Modell Lag-Werte von 48h statt 24h vor dem Vorhersagezeitpunkt. (2) *SMARD-Teiltag*: wird der Code tagsüber ausgeführt (z.B. 13:00), liefert SMARD den aktuellen Tag nur halb (Publikationsverzug ~1–2h). `tail(24)` greift dann auf 12h von gestern + 12h von heute zurück — zwei halbvolle Tage, die als morgiger Tag umetikettiert werden. Das Ergebnis ist ein ~12h invertiertes Tagesmuster (Mittagshoch erscheint bei Mitternacht). **Fix**: Lag-Features werden jetzt per direktem Zeitstempel-Lookup berechnet (`energy_idx.get(t - 24h)`); für noch nicht von SMARD veröffentlichte Stunden des heutigen Tages greift ein Fallback auf dieselbe Stunde der Vorwoche (`t - 168h`).
 
 ---
 
@@ -239,6 +240,7 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 |---|---|
 | `fetch_prepare_data.py` | Kaggle/SMARD (Filter 410 + 411)/Open-Meteo Datenabruf, Feature Engineering; `prepare_data_for_next_day_prediction()` für die Tagesvorhersage |
 | `train_model_predict.py` | Modelltraining, Hyperparameter-Tuning, Modell-Persistenz |
+| `streamlit_app.py` | Interaktive Web-App (2 Tabs: Morgen-Prognose + Historischer Vergleich) |
 
 ---
 
@@ -247,9 +249,48 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 - [Europe Electricity Load (Hourly, 2019–2025) – Kaggle](https://www.kaggle.com/datasets/dsersun/europe-electricity-load-hourly-20192025)
 - [SMARD Marktdaten - Bundesnetzagentur](https://www.smard.de/page/home/marktdaten/)
 - [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
+- [Open-Meteo Forecast API](https://open-meteo.com/en/docs)
 - [python-holidays](https://holidays.readthedocs.io/)
+- [Optuna – Hyperparameter Optimization Framework](https://optuna.readthedocs.io/)
 - [Deutsche Schulferien API](https://ferien-api.maxleistner.de/)
 
 ## GitHub
 
 - https://github.com/SW-oasen/electricity_demand_forecast
+
+
+## Implementierungshinweie
+
+### Zeitdiskrepanzen aus verschiedenen Quellen
+
+- SMARD ts_ms
+pd.to_datetime(df["ts_ms"], unit="ms", utc=True).dt.tz_convert("Europe/Berlin")
+
+- Open-Meteo archive mit timezone=UTC
+pd.to_datetime(df["time"], utc=True).dt.tz_convert("Europe/Berlin")
+
+- Open-Meteo forecast mit timezone=Europe/Berlin
+pd.to_datetime(df["time"]).dt.tz_localize("Europe/Berlin")
+
+### Vorhersage-Lag-Features: Zeitstempel-Lookup statt `tail(24)`
+
+In `prepare_for_prediction_tomorrow` werden die Energie-Lag-Features nicht mehr über `create_energy_features().tail(24)` + Zeitstempel-Überschreibung berechnet, sondern per direktem Lookup in der SMARD-History:
+
+```python
+energy_idx = df_history.set_index('time')['EnergyDemand']
+
+# lag_24h: Verbrauch genau 24h vor dem Vorhersagezeitpunkt
+lookup = energy_idx.get(t - pd.Timedelta(hours=24), np.nan)
+# Fallback auf selbe Stunde Vorwoche, wenn SMARD noch nicht veröffentlicht hat
+if pd.isna(lookup):
+    lookup = energy_idx.get(t - pd.Timedelta(hours=168), np.nan)
+
+# rolling_mean_24h: entspricht dem Trainings-Feature EnergyDemand.shift(24).rolling(24).mean()
+# = Mittelwert von EnergyDemand aus [T-47h, T-24h] (24 Werte)
+window = energy_idx.loc[
+    (energy_idx.index >= t - pd.Timedelta(hours=47)) &
+    (energy_idx.index <= t - pd.Timedelta(hours=24))
+]
+```
+
+Dies stellt sicher, dass `lag_24h` für den Vorhersagezeitpunkt T immer auf den Verbrauch von T−24h zeigt — identisch zur Trainingsdaten-Definition — unabhängig davon, wieviele Stunden SMARD für den aktuellen Tag bereits veröffentlicht hat.
