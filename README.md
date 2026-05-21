@@ -10,7 +10,8 @@ Portfolio-Projekt zur stündlichen Vorhersage des deutschen Stromverbrauchs auf 
 
 - **Tagesvorhersage**: Stündliche ML-Prognose für den nächsten Tag (00:00–23:00 UTC), verglichen mit der offiziellen SMARD-Prognose
 - **Historischer Vergleich**: Tatsächlicher Verbrauch vs. SMARD-Prognose vs. ML-Vorhersage für einen frei wählbaren Zeitraum (bis 1 Jahr) — inkl. MAE und RMSE
-- **Modelle**: LightGBM, Random Forest, XGBoost — trainiert auf 2019–2024, evaluiert auf 2025
+- **Modelle**: LightGBM, LightGBM_conservative, XGBoost und XGBoost_conservative — trainiert auf 2019–2024, evaluiert auf 2025
+- LightGBM_conservative und XGBoost_conservative sind die konservative Variante zu den beiden Baummodelle. Diese trebt bis zu 5% Unterschätzung, führt jedoch zu mehr Überschätzung. 
 
 ---
 
@@ -36,6 +37,7 @@ Der Browser öffnet sich automatisch unter **http://localhost:8501**.
 | Vorhersage (morgen) | ML-Prognose für den nächsten Tag inkl. SMARD-Vergleichslinie |
 | Historischer Vergleich | Actual / SMARD / ML — frei wählbarer Zeitraum bis 1 Jahr, mit MAE + RMSE |
 
+
 ---
 
 ## Datenquellen
@@ -54,10 +56,10 @@ Der Browser öffnet sich automatisch unter **http://localhost:8501**.
 ## Erkenntnisse
 
 - **Demand-Lag-Features** (`lag_168h`, `lag_24h`) sind die stärksten Prädiktoren — deutlich wirksamer als Kalender-Integer-Features allein
-- Baumbasierte Modelle (LightGBM, XGBoost, Random Forest) übertreffen lineare Modelle klar
+- Baumbasierte Modelle (LightGBM, XGBoost) übertreffen lineare Modelle klar
 - Industrieller Verbrauch (~40% der Netzlast) wird durch Wetterdaten nicht abgebildet — größte verbleibende Fehlerquelle
 - Feiertags- und Brückentag-Features (`holiday_ratio`, `is_bridge_day`, `holiday_weight`) verbessern die Vorhersage an Ausnahmetagen spürbar
-- SMARD offizielle Prognose (Filter 411) dient als starker Benchmark; das ML-Modell kommt ihr nah ohne Zugang zu internen Netzbetreiber-Daten
+- SMARD offizielle Prognose (Filter 411) dient als starker Benchmark; das ML-Modell kommt ihr nah ohne Zugang zu internen Netzbetreiber-Daten. Diese benutzt vermutlich Asymmetrische Verlustfunktionen und Quantilregression um die Unterschätzung zu mininieren. Diese werden auch in den LightGBM_conservative und XGBoost_conservative umgesetzt. 
 
 ---
 

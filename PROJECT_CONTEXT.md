@@ -22,13 +22,12 @@
 - [x] Rolling-Features auf `shift(24)` umgestellt (kein Datenleck durch unmittelbar vorangehende Stunden)
 - [x] Interaktives Notebook und Streamlit-App (Notebook 08): Tages-Vorhersage (morgen) + historischer Vergleich (Actual / SMARD / ML)
 - [x] Notebook 08 GUI-Trennung: Tab 1 = Tages-Vorhersage, Tab 2 = historischer Vergleich (max. 1 Jahr, europäischer Kalender)
-- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup statt `tail(24)`-Ansatz (behebt ~12h Musterverzug durch SMARD-Teiltag)
+- [x] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
+- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup 
 
 ### Offen
 
-- [ ] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
 - [ ] ETL Pipeline
-- [ ] Timezone-Fix: Open-Meteo gibt Wetterdaten mit `timezone=auto` zurück (lokale Zeit CEST/CET), während SMARD-Daten in UTC vorliegen — mögliche 1h-Verschiebung im Sommer oder Winter
 - [ ] Residuallast-Vorhersage — separates Folgeprojekt
 
 ---
@@ -194,7 +193,10 @@ Für baumbasierte Modelle (Random Forest, XGBoost, LightGBM): kein Preprocessing
 ### Hyperparameter-Tuning
 
 Schritt 1: `RandomizedSearchCV` mit `TimeSeriesSplit(n_splits=5)` — respektiert zeitliche Reihenfolge.  
-Schritt 2: Bayesian Optimization mit **Optuna** (`TPESampler`, 100 Trials) — bestes LightGBM-Modell gespeichert als `best_lgbm_model_bayesian_changed_rolling.pkl`.  
+Schritt 2: Bayesian Optimization mit **Optuna** (`TPESampler`, 100 Trials) 
+- bestes LightGBM-Modell gespeichert als `best_lgbm_model_bayesian.pkl`.  
+- bestes XGBoost-Modell gespeichert als `best_xgb_model_bayesian.pkl`.  
+
 Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorhersage).
 
 ### Bewertungsmetriken

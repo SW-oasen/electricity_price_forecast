@@ -49,8 +49,9 @@ def load_models():
     _base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models")
     return {
         "LGBM":          load_model_from_pickle(os.path.join(_base, "best_lgbm_model_bayesian.pkl")),
-        #"Random Forest": load_model_from_pickle(os.path.join(_base, "best_rf_model_bayesian.pkl")),
+        'LGBM_conservative': load_model_from_pickle(os.path.join(_base, "best_lgbm_model_bayesian_conservative.pkl")),
         "XGBoost":       load_model_from_pickle(os.path.join(_base, "best_xgb_model_bayesian.pkl")),
+        'XGBoost_conservative': load_model_from_pickle(os.path.join(_base, "best_xgb_model_bayesian_conservative.pkl")),
     }
 
 

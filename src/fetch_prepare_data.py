@@ -327,9 +327,7 @@ import time
 import requests
 import pandas as pd 
 
-# apparent_temperature is the perceived temperature, which takes into account factors such as humidity and wind speed to provide a more accurate representation of how the temperature feels to humans. It is calculated using a formula that combines the actual air temperature with the effects of humidity and wind chill. The apparent temperature can be higher than the actual temperature in hot and humid conditions, and lower than the actual temperature in cold and windy conditions.
-# precipitation is the amount of water that falls from the atmosphere to the ground in the form of rain, snow, sleet, or hail. It is typically measured in millimeters (mm) or inches (in) and can be used to assess the amount of moisture in the air and the likelihood of certain weather conditions, such as flooding or drought.
-# shortwave_radiation is the amount of solar radiation that reaches the Earth's surface in the form of shortwave electromagnetic waves. It is typically measured in watts per square meter (W/m²) and can be used to assess the amount of energy available for photosynthesis, as well as the potential for solar power generation.
+# TODO consider adding back 'weathercode'
 weather_variables = ['apparent_temperature', 'rain', 'snowfall', 'wind_speed_10m', 'shortwave_radiation']  # temperature_2m dropped: high correlation with apparent_temperature (see notebook 02 EDA)
 
 # get latitude and longitude of German cities: Berlin, Hamburg, München, Köln, Frankfurt
