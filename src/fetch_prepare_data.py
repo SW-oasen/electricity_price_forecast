@@ -277,9 +277,10 @@ def create_energy_features(in_df):
     # lag_8760h (1 year) is not useful, it leads to worse scoring and makes future prediction more difficult
     #out_df['EnergyDemand_lag_8760h'] = out_df['EnergyDemand'].shift(8760) # 1 year
 
-    # rolling after shift(24) to provide the recent historical context for the future rows; forward-fill NaN to avoid rolling mean becoming NaN 
-    out_df['EnergyDemand_rolling_mean_24h'] = out_df['EnergyDemand'].shift(24).rolling(24).mean()   # daily pattern
-    out_df['EnergyDemand_rolling_mean_168h'] = out_df['EnergyDemand'].shift(24).rolling(168).mean() # weekly pattern
+    # rolling after shift(1): each row sees the mean of the 24/168 hours immediately before it,
+    # without a 24-hour gap. This is safe because lag lookup (not shift+tail) is used for prediction.
+    out_df['EnergyDemand_rolling_mean_24h'] = out_df['EnergyDemand'].shift(1).rolling(24).mean()   # daily pattern
+    out_df['EnergyDemand_rolling_mean_168h'] = out_df['EnergyDemand'].shift(1).rolling(168).mean() # weekly pattern
     # rolling_mean_8760h (1 year) is not useful, it leads to worse scoring and makes future prediction more difficult
     #out_df['EnergyDemand_rolling_mean_8760h'] = out_df['EnergyDemand'].shift(1).rolling(8760).mean() # yearly pattern
 

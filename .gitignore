@@ -8,7 +8,7 @@ notebook_edit/*
 models/*
 
 # ignore .odp files in presentation folder
-presentation/*.odp
+presentation/orig/*
 
 # Python bytecode
 __pycache__/

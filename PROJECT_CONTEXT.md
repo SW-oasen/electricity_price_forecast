@@ -23,12 +23,76 @@
 - [x] Interaktives Notebook und Streamlit-App (Notebook 08): Tages-Vorhersage (morgen) + historischer Vergleich (Actual / SMARD / ML)
 - [x] Notebook 08 GUI-Trennung: Tab 1 = Tages-Vorhersage, Tab 2 = historischer Vergleich (max. 1 Jahr, europäischer Kalender)
 - [x] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
-- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup 
+- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup statt `tail(24)`
+- [x] **ETL-Pipeline** (`src/etl.py`): SQLite-DB mit inkrementellem Update; alle Features vorberechnet; Kaggle-CSV + SMARD-API + Open-Meteo-API als Quellen
+- [x] **ETL ML-Pipeline** (Notebook 10): Training der 4 Modellvarianten auf DB-Daten; Modelle mit `_etl`-Suffix gespeichert
+- [x] **ETL Interaktive Vorhersage** (Notebook 11): Energie-Lag-Kontext aus DB statt SMARD-API; historischer Vergleich per Single-SQL-Query
+- [x] **ETL Streamlit App** (`src/streamlit_app_etl.py`): DB-basierte Vorhersage-App; SMARD-Zeitversatz-Bug behoben (`_strip_tz` auf beide Serien)
+- [x] Bug behoben: `_parse_time_col` in `etl.py` — `pd.to_datetime(..., utc=True)` für gemischte UTC-Offsets (pandas 3.0)
 
 ### Offen
 
-- [ ] ETL Pipeline
 - [ ] Residuallast-Vorhersage — separates Folgeprojekt
+
+---
+
+## ETL-Pipeline (`src/etl.py`)
+
+### Überblick
+
+`update_database()` ist idempotent: beim ersten Aufruf wird die DB erstellt und aus der Kaggle-CSV + SMARD-API + Open-Meteo-API befüllt; bei späteren Aufrufen werden nur fehlende Tage ergänzt.
+
+```
+db/energy_demand.db
+├── energy_demand   (64 576 Zeilen, max: 2026-05-21)
+├── weather         (64 729 Zeilen, max: 2026-05-22)
+└── energy_weather_combined  (VIEW — JOIN beider Tabellen)
+```
+
+### DB-Spalten (View `energy_weather_combined`)
+
+```
+time, energy_demand_mwh, smard_forecast_mwh, data_source,
+year, hour, weekday, month, is_weekend, is_holiday, holiday_ratio,
+is_workday, is_bridge_day, holiday_weight, is_pandemic_time,
+energy_demand_lag_24h, energy_demand_lag_168h,
+energy_demand_rolling_mean_24h, energy_demand_rolling_mean_168h,
+apparent_temperature, rain, snowfall, wind_speed_10m, shortwave_radiation,
+apparent_temperature_lag_24h, apparent_temperature_rolling_mean_24h,
+shortwave_radiation_0m_lag_24h, shortwave_radiation_0m_rolling_mean_24h,
+heating_degree, cooling_degree
+```
+
+### Wichtige Konstanten
+
+| Konstante | Wert | Bedeutung |
+|---|---|---|
+| `ENERGY_CONTEXT_ROWS` | 168 | Kontext-Zeilen für korrekte Lag-Berechnung an der Naht |
+| `WEATHER_CONTEXT_ROWS` | 24 | Kontext-Zeilen für Wetter-Lags |
+| `KAGGLE_END_DATE` | 2025-09-30 | Letzter Kaggle-Datentag |
+| `SMARD_START_DATE` | 2025-10-01 | Erster SMARD-API-Datentag |
+
+### Spaltenumbenennung: Legacy → ETL
+
+Die DB verwendet snake_case statt PascalCase:
+
+| Legacy (`fetch_prepare_data.py`) | ETL DB-Schema |
+|---|---|
+| `EnergyDemand` | `energy_demand_mwh` |
+| `EnergyDemand_lag_24h` | `energy_demand_lag_24h` |
+| `EnergyDemand_lag_168h` | `energy_demand_lag_168h` |
+| `EnergyDemand_rolling_mean_24h` | `energy_demand_rolling_mean_24h` |
+| `EnergyDemand_rolling_mean_168h` | `energy_demand_rolling_mean_168h` |
+
+### Öffentliche Read-Helfer
+
+| Funktion | Beschreibung |
+|---|---|
+| `get_connection(db_path)` | SQLite-Verbindung |
+| `load_energy_data(conn)` | Energietabelle als DataFrame |
+| `load_weather_data(conn)` | Wettertabelle als DataFrame |
+| `load_combined_data(conn, start_date, end_date)` | View mit optionalem Datumsfilter |
+| `prepare_for_prediction_tomorrow_etl(date, db_path)` | Feature-Matrix für Morgen: Energie-Lag aus DB + Open-Meteo Wetter-Forecast |
 
 ---
 
@@ -149,12 +213,24 @@ Features:
 * Gewichtete Wetteraggregation nach Stadtbevölkerung
 
 ### Lag-Features Stromverbrauch (entscheidend für Saisonalität)
+
+**Legacy-Benennung** (in `fetch_prepare_data.py` und Notebooks 01–09):
+
 | Feature | Beschreibung |
 |---|---|
 | `EnergyDemand_lag_24h` | Verbrauch vor 24h (selbe Stunde gestern) |
 | `EnergyDemand_lag_168h` | Verbrauch vor 168h (selbe Stunde letzte Woche) |
 | `EnergyDemand_rolling_mean_24h` | 24h-Rollmittel Verbrauch (shift(24)) |
 | `EnergyDemand_rolling_mean_168h` | 168h-Rollmittel Verbrauch (shift(24)) |
+
+**ETL-Benennung** (in DB-Schema, `etl.py`, Notebooks 10–11, `streamlit_app_etl.py`):
+
+| Feature | Beschreibung |
+|---|---|
+| `energy_demand_lag_24h` | identisch, DB snake_case |
+| `energy_demand_lag_168h` | identisch, DB snake_case |
+| `energy_demand_rolling_mean_24h` | identisch, DB snake_case |
+| `energy_demand_rolling_mean_168h` | identisch, DB snake_case |
 
 > `EnergyDemand_lag_8760h` und `EnergyDemand_rolling_mean_8760h` wurden nach Feature-Importance-Analyse entfernt (geringer Beitrag, erzwang Wegfall des Jahres 2019).
 
@@ -212,15 +288,18 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 - **Demand-Lag-Features** (`lag_168h`, `lag_24h`) sind die stärksten Prädiktoren — deutlich wirksamer als Kalender-Integer-Features allein
 - Baumbasierte Modelle übertreffen lineare Modelle deutlich; **SVR** skaliert schlecht ($O(n^2)$–$O(n^3)$) auf den ~46k-Zeilen-Datensatz
 - Standard-k-Fold CV führt bei Lag-Features zu Datenleck → `TimeSeriesSplit` verwenden
-- Zyklische Kodierung (`sin`/`cos`) für `hour` und `month` empfohlen (Integer bilden keine Periodizität ab)
+- Zyklische Kodierung (`sin`/`cos`) für `hour` und `month` empfohlen (Integer bilden keine Periodikität ab)
 - Industrieller Verbrauch (~40% der Netzlast) wird durch Wetterdaten nicht abgebildet — größte verbleibende Fehlerquelle
-- **Timezone-Problem (offen)**: Open-Meteo mit `&timezone=auto` liefert CEST im Sommer (+2h UTC), CET im Winter (+1h UTC); SMARD/Kaggle in UTC → potenzielle 1h-Abweichung im Sommer; Fix: `&timezone=UTC` + UTC-Parsing in `fetch_weather_data_for_cities()` / `fetch_weather_forecast_for_cities()`
+- **Timezone-Problem (behoben in ETL-App)**: Matplotlib konvertiert tz-aware Timestamps intern nach UTC beim Plotten. In `streamlit_app_etl.py` werden beide Serien (ML + SMARD) über `_strip_tz()` zu tz-naive Europe/Berlin normiert, bevor sie an matplotlib übergeben werden. In `streamlit_app.py` (legacy) werden beide Serien direkt (tz-aware, gleich) übergeben — daher kein Shift.
+- **pandas 3.0 Mixed-Timezone-Bug (behoben)**: `pd.to_datetime(col)` wirft `ValueError: Mixed timezones` bei Spalten mit gemischten UTC-Offsets (`+0100`/`+0200`). Fix: `pd.to_datetime(col, utc=True)` in `_parse_time_col` in `etl.py`.
 - Bekannter SMARD-Zeitversatz in Notebook 08: ML-Prognose vs. SMARD-Prognose zeigt ~3h-Shift; Ursache: SMARD liefert Prognosedaten mit anderer Zeitauflösung/Offset im CSV-Export
 - **Bug (behoben): ~12h Musterverzug in Vorhersage-Lag-Features** — der frühere `tail(24)`-Ansatz in `prepare_for_prediction_tomorrow` hatte zwei Fehler: (1) *Grundlegender 24h-Offset*: `create_energy_features(df_history).tail(24)` berechnet `lag_24h` via `shift(24)` relativ zur Listenposition; die letzten 24 Zeilen (z.B. `2026-05-20 00–23 Uhr`) haben dadurch `lag_24h = Verbrauch 2026-05-19`, nicht `2026-05-20`. Nach Umetikettierung auf Vorhersagezeiten `2026-05-21` zeigt das Modell Lag-Werte von 48h statt 24h vor dem Vorhersagezeitpunkt. (2) *SMARD-Teiltag*: wird der Code tagsüber ausgeführt (z.B. 13:00), liefert SMARD den aktuellen Tag nur halb (Publikationsverzug ~1–2h). `tail(24)` greift dann auf 12h von gestern + 12h von heute zurück — zwei halbvolle Tage, die als morgiger Tag umetikettiert werden. Das Ergebnis ist ein ~12h invertiertes Tagesmuster (Mittagshoch erscheint bei Mitternacht). **Fix**: Lag-Features werden jetzt per direktem Zeitstempel-Lookup berechnet (`energy_idx.get(t - 24h)`); für noch nicht von SMARD veröffentlichte Stunden des heutigen Tages greift ein Fallback auf dieselbe Stunde der Vorwoche (`t - 168h`).
 
 ---
 
 ## Notebook-Übersicht
+
+> Notebooks unter `notebook/` sind die Originalversionen; `notebook_edit/` enthält die aktuellen (editierten) Versionen.
 
 | Notebook | Inhalt |
 |---|---|
@@ -231,8 +310,10 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 | `05_feature_importances.ipynb` | Feature Importance Analyse, Entfernung schwacher Features |
 | `06_scrape_smard.ipynb` | SMARD API Scraping für Stromverbrauch ab 2025-10-01 |
 | `07_complete_ml_pipeline.ipynb` | Vollständige ML-Pipeline: Training, Tuning, Persistenz |
-| `08_interactive_prediction.ipynb` | Interaktive Vorhersage: (1) Tagesvorhersage morgen mit SMARD-Prognoselinie; (2) historischer 3-Kurven-Vergleich Actual / SMARD / ML mit MAE+RMSE-Tabelle, max. 1 Jahr, europäischer Kalender |
-| `09_asymmetric_loss.ipynb` | Exploration asymmetrischer Verlustfunktionen und Quantilregression für konservativere Vorhersagen |
+| `08_interactive_prediction.ipynb` | Interaktive Vorhersage (legacy): Tagesvorhersage + historischer 3-Kurven-Vergleich; API-basiert |
+| `09_asymmetric_loss.ipynb` | Asymmetrische Verlustfunktionen und Quantilregression |
+| `10_ml_pipeline_etl.ipynb` | ETL ML-Pipeline: Training der 4 Modellvarianten auf SQLite-DB-Daten; speichert `*_etl.pkl` |
+| `11_interactive_prediction_etl.ipynb` | ETL Interaktive Vorhersage: Energie-Lag aus DB (kein SMARD-API) + historischer Vergleich per Single-SQL-Query |
 
 ---
 
@@ -240,9 +321,11 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 
 | Datei | Inhalt |
 |---|---|
-| `fetch_prepare_data.py` | Kaggle/SMARD (Filter 410 + 411)/Open-Meteo Datenabruf, Feature Engineering; `prepare_data_for_next_day_prediction()` für die Tagesvorhersage |
+| `fetch_prepare_data.py` | Kaggle/SMARD (Filter 410 + 411)/Open-Meteo Datenabruf, Feature Engineering; `prepare_for_prediction_tomorrow()` für Legacy-Tagesvorhersage |
 | `train_model_predict.py` | Modelltraining, Hyperparameter-Tuning, Modell-Persistenz |
-| `streamlit_app.py` | Interaktive Web-App (2 Tabs: Morgen-Prognose + Historischer Vergleich) |
+| `etl.py` | ETL-Pipeline: SQLite-DB erstellen/aktualisieren; Read-Helfer (`load_combined_data`, `prepare_for_prediction_tomorrow_etl`) |
+| `streamlit_app.py` | Legacy Web-App (API-basiert, Modelle `*_bayesian.pkl`) |
+| `streamlit_app_etl.py` | ETL Web-App (DB-basiert, Modelle `*_bayesian_etl.pkl`); Tages-Vorhersage mit Energie-Lag aus DB; historischer Vergleich per Single-SQL-Query |
 
 ---
 

@@ -8,34 +8,53 @@ Portfolio-Projekt zur stündlichen Vorhersage des deutschen Stromverbrauchs auf 
 
 ## Was macht dieses Projekt?
 
-- **Tagesvorhersage**: Stündliche ML-Prognose für den nächsten Tag (00:00–23:00 UTC), verglichen mit der offiziellen SMARD-Prognose
+- **Tagesvorhersage**: Stündliche ML-Prognose für den nächsten Tag (00:00–23:00 Europe/Berlin), verglichen mit der offiziellen SMARD-Prognose
 - **Historischer Vergleich**: Tatsächlicher Verbrauch vs. SMARD-Prognose vs. ML-Vorhersage für einen frei wählbaren Zeitraum (bis 1 Jahr) — inkl. MAE und RMSE
-- **Modelle**: LightGBM, LightGBM_conservative, XGBoost und XGBoost_conservative — trainiert auf 2019–2024, evaluiert auf 2025
-- LightGBM_conservative und XGBoost_conservative sind die konservative Variante zu den beiden Baummodelle. Diese trebt bis zu 5% Unterschätzung, führt jedoch zu mehr Überschätzung. 
+- **ETL-Pipeline**: Inkrementelles SQLite-Datenbank-Update (`etl.py`), das Kaggle-CSV, SMARD-API und Open-Meteo-API kombiniert und alle Features vorberechnet — Basis für schnelle historische Abfragen ohne Live-API-Aufrufe
+- **Modelle**: LightGBM, LightGBM_conservative, XGBoost und XGBoost_conservative — je zwei Varianten: legacy (CSV/API) und ETL (DB-basiert), trainiert auf 2019–2024, evaluiert auf 2025
+- LightGBM_conservative und XGBoost_conservative streben bis zu 5 % Unterschätzung an, führen jedoch zu mehr Überschätzung — analog zur asymmetrischen SMARD-Prognosestrategie.
 
 ---
 
-## Quick Start – Streamlit App
+## Quick Start – Streamlit Apps
 
 Voraussetzung: virtuelle Umgebung aktiviert, trainierte Modelle liegen unter `models/`.
 
+### Legacy App (API-basiert)
+
 ```powershell
-# 1. Ins Projektverzeichnis wechseln
 cd d:\Projects\DataScience\Portfolio\electricity_demand_forecast\workspace_energy_demand
-
-# 2. Virtuelle Umgebung aktivieren (einmalig pro Terminal-Session)
 .venv\Scripts\Activate.ps1
-
-# 3. Streamlit starten
 streamlit run src/streamlit_app.py
 ```
 
-Der Browser öffnet sich automatisch unter **http://localhost:8501**.
+Browser öffnet sich unter **http://localhost:8501**.
+
+### ETL App (SQLite-DB-basiert, empfohlen)
+
+```powershell
+cd d:\Projects\DataScience\Portfolio\electricity_demand_forecast\workspace_energy_demand
+.venv\Scripts\Activate.ps1
+streamlit run src/streamlit_app_etl.py
+```
+
+Browser öffnet sich unter **http://localhost:8501** (oder Port 8502 bei gleichzeitigem Betrieb).
+
+Beim ersten Start führt die App `update_database()` aus und befüllt/aktualisiert die SQLite-DB — danach idempotent (Sekunden).
 
 | Tab | Funktion |
 |---|---|
-| Vorhersage (morgen) | ML-Prognose für den nächsten Tag inkl. SMARD-Vergleichslinie |
-| Historischer Vergleich | Actual / SMARD / ML — frei wählbarer Zeitraum bis 1 Jahr, mit MAE + RMSE |
+| 🔮 Vorhersage (morgen) | Energie-Lag-Kontext aus DB + Open-Meteo Wetter-Forecast → ML-Prognose für morgen inkl. SMARD-Vergleichslinie |
+| 📊 Historischer Vergleich | Actual / SMARD / ML aus **einem einzigen DB-Query** — kein Live-API-Abruf, max. 1 Jahr, mit MAE + RMSE |
+
+### Vergleich: Legacy vs. ETL
+
+| Aspekt | Legacy (`streamlit_app.py`) | ETL (`streamlit_app_etl.py`) |
+|---|---|---|
+| Modelle | `*_bayesian.pkl` | `*_bayesian_etl.pkl` |
+| Morgen-Energie-Lag | SMARD API (re-fetch) | SQLite DB (letzte 168 Zeilen) |
+| Historische Daten | 3 API-Aufrufe + Feature-Berechnung | 1 SQL-Query |
+| Spaltenbenennung | `EnergyDemand_lag_*` | `energy_demand_lag_*` (DB-Schema) |
 
 
 ---
