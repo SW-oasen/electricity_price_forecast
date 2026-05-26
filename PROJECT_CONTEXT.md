@@ -32,7 +32,7 @@
 
 ### Offen
 
-- [ ] Residuallast-Vorhersage — separates Folgeprojekt
+- [ ] Strompreis-Vorhersage — separates Folgeprojekt
 
 ---
 
@@ -313,7 +313,37 @@ Scoring: `neg_mean_absolute_error` (MAE praxisrelevanter als R² für Lastvorher
 | `08_interactive_prediction.ipynb` | Interaktive Vorhersage (legacy): Tagesvorhersage + historischer 3-Kurven-Vergleich; API-basiert |
 | `09_asymmetric_loss.ipynb` | Asymmetrische Verlustfunktionen und Quantilregression |
 | `10_ml_pipeline_etl.ipynb` | ETL ML-Pipeline: Training der 4 Modellvarianten auf SQLite-DB-Daten; speichert `*_etl.pkl` |
-| `11_interactive_prediction_etl.ipynb` | ETL Interaktive Vorhersage: Energie-Lag aus DB (kein SMARD-API) + historischer Vergleich per Single-SQL-Query |
+| `11_interactive_prediction_etl.ipynb` | ETL Interaktive Vorhersage (empfohlen): Energie-Lag-Kontext aus SQLite-DB (kein SMARD-API); historischer Vergleich per Single-SQL-Query; Metriktabelle MAE/RMSE für ML + SMARD |
+
+### Notebook 11 — Implementierungsdetails
+
+**Teil 1 — Tagesvorhersage (morgen)**
+
+- `prepare_for_prediction_tomorrow_etl(tomorrow_str)` baut die Feature-Matrix:
+  - Energie-Lag-Kontext: letzte 168 DB-Zeilen (kein SMARD-API-Aufruf)
+  - Wetter-Forecast: live von Open-Meteo API
+  - Spaltennamen entsprechen direkt dem ETL-DB-Schema — kein Umbenennen nötig
+- SMARD-Tagesprognose (Filter 411) wird parallel per API abgerufen und als Vergleichslinie eingeblendet (sofern bereits veröffentlicht)
+- `_render_future`: Liniengrafik (2.5-Anteile) + stündliche Wertetabelle (1-Anteil) nebeneinander
+- `_strip_tz(series)`: konvertiert tz-aware Timestamps nach tz-naiver Europe/Berlin-Zeit, damit matplotlib keine UTC-Verschiebung erzeugt
+
+**Teil 2 — Historischer Vergleich**
+
+- Einzelner `load_combined_data(conn, start_date, end_date)`-Query liefert Features, Istwert und SMARD-Prognose in einem Schritt
+- Zeitraum frei wählbar (min. 2019-01-08, max. 1 Jahr); Live-Validierung über `_validate_range()` sperrt den Compare-Button bei ungültiger Auswahl
+- X-Achsen-Format passt sich automatisch an den gewählten Zeitraum an (≤3 Tage: `%m-%d %H:%M`, ≤31 Tage: `%Y-%m-%d`, sonst: `%Y-%m`)
+- Metriktabelle (MAE, RMSE, Datenpunkte) für ML-Prognose **und** SMARD-Prognose nebeneinander
+
+### Vergleich: Notebook 08 vs. Notebook 11
+
+| Aspekt | 08 (Legacy) | 11 (ETL) |
+|---|---|---|
+| Modelle | `*_bayesian.pkl` | `*_bayesian_etl.pkl` |
+| Historische Features | Re-fetch + Re-Berechnung via API | SQLite DB (vorberechnet) |
+| Historischer Istwert | SMARD API (Filter 410) | DB `energy_demand_mwh` |
+| SMARD-Prognose (hist.) | SMARD API (Filter 411) | DB `smard_forecast_mwh` |
+| Energie-Lag (morgen) | SMARD API (re-fetch) | SQLite DB (letzte 168 Zeilen) |
+| Spaltenbenennung | `EnergyDemand_lag_*` | `energy_demand_lag_*` (DB-Schema, kein Umbenennen) |
 
 ---
 

@@ -66,114 +66,65 @@ import requests
 import pandas as pd
 from datetime import datetime, timezone
 
-SMARD_BASE = "https://www.smard.de/app/chart_data"
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; smard-fetcher/1.0)"}
+# Project-specific config — single source of truth
+from config import (
+    SMARD_BASE, SMARD_HEADERS, SMARD_REGION, SMARD_RESOLUTION,
+    SMARD_FILTER_NETZLAST, SMARD_FILTER_FORECAST,
+    KAGGLE_END_DATE, SMARD_START_DATE,
+    DE_STATE_CODES, PANDEMIC_START, PANDEMIC_END,
+    WEATHER_VARIABLES, SELECTED_CITIES, CITY_POPULATION,
+    BASE_TEMPERATURE_HEATING, BASE_TEMPERATURE_COOLING,
+)
 
-# Filter IDs
-FILTER_NETZLAST = 410          # Realisierter Stromverbrauch – Netzlast
+# Generic utility classes
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))  # project root → util importable
+from util.smard_client import SmardClient
+from util.time_features import TimeFeatureCreator
+from util.openmeteo_client import OpenMeteoClient
 
-
-def _get_index(filter_id: int, region: str = "DE", resolution: str = "hour") -> list[int]:
-    """Return the list of weekly bucket timestamps (Unix ms) available for the given filter."""
-    url = f"{SMARD_BASE}/{filter_id}/{region}/index_{resolution}.json"
-    r = requests.get(url, headers=HEADERS, timeout=15)
-    r.raise_for_status()
-    return r.json()["timestamps"]
-
-
-def _fetch_week(filter_id: int, timestamp_ms: int, region: str = "DE", resolution: str = "hour") -> list:
-    """Fetch the raw series [[ts_ms, value], ...] for one weekly bucket."""
-    url = f"{SMARD_BASE}/{filter_id}/{region}/{filter_id}_{region}_{resolution}_{timestamp_ms}.json"
-    r = requests.get(url, headers=HEADERS, timeout=15)
-    r.raise_for_status()
-    return r.json().get("series", [])
+# Keep legacy aliases so any code that imports them directly still works
+HEADERS = SMARD_HEADERS
+FILTER_NETZLAST = SMARD_FILTER_NETZLAST
 
 
 def fetch_smard_netzlast(
     in_start_date: str,
     in_end_date: str,
     output_file: str | None = None,
-    region: str = "DE",
-    resolution: str = "hour",
-    filter_id: int = FILTER_NETZLAST,
+    region: str = SMARD_REGION,
+    resolution: str = SMARD_RESOLUTION,
+    filter_id: int = SMARD_FILTER_NETZLAST,
     sleep: float = 0.3
 ) -> pd.DataFrame:
     """
     Fetch Realisierter Stromverbrauch (Netzlast) from the SMARD chart_data API.
-
-    Parameters
-    ----------
-    in_start_date : str
-        Inclusive start in 'YYYY-MM-DD' format (local CET/CEST time).
-    in_end_date : str
-        Inclusive end in 'YYYY-MM-DD' format.
-    output_file : str | None
-        If given, save the result as CSV to this path.
-    region : str
-        SMARD region code, default 'DE'.
-    resolution : str
-        'hour' or 'quarterhour'.
-    filter_id : int
-        SMARD filter ID (410 = Netzlast).
-    sleep : float
-        Seconds to sleep between requests (be polite to the server).
-
-    Returns
-    -------
-    pd.DataFrame with columns ['timestamp', 'load_MWh'].
+    Delegates to SmardClient (util/smard_client.py); signature unchanged.
     """
-    # Convert date strings to UTC millisecond boundaries
-    start_dt = pd.to_datetime(in_start_date).tz_localize("Europe/Berlin")
-    end_dt   = pd.to_datetime(in_end_date).tz_localize("Europe/Berlin")
-    # Include the full end day
-    end_ms   = int(end_dt.timestamp() * 1000) + 86_400_000 - 1
-    start_ms = int(start_dt.timestamp() * 1000)
-
-    #print(f"Fetching index for filter {filter_id} / {region} / {resolution} ...")
-    all_timestamps = _get_index(filter_id, region, resolution)
-
-    # Keep only buckets that can overlap with [start_ms, end_ms].
-    # Each bucket covers roughly one week (604_800_000 ms).
-    week_ms = 7 * 24 * 3600 * 1000
-    relevant = [ts for ts in all_timestamps if ts <= end_ms and ts + week_ms >= start_ms]
-
-    if not relevant:
-        print("No data available for the requested period.")
-        return pd.DataFrame(columns=["timestamp", "load_MWh"])
-
-    #print(f"Fetching {len(relevant)} weekly bucket(s) ...")
-    rows = []
-    for ts in relevant:
-        series = _fetch_week(filter_id, ts, region, resolution)
-        rows.extend(series)
-        time.sleep(sleep)
-
-    # Build DataFrame and clip to the exact requested range
-    df = pd.DataFrame(rows, columns=["ts_ms", "load_MWh"])
-    df = df.dropna(subset=["load_MWh"])
-    df = df[(df["ts_ms"] >= start_ms) & (df["ts_ms"] <= end_ms)]
-    # Downcast ms → s: hourly data needs no sub-second precision; aligns with open-meteo datetime64[s]
-    df["timestamp"] = (pd.to_datetime(df["ts_ms"], unit="ms", utc=True)
-                       .dt.tz_convert("Europe/Berlin")
-                       .dt.as_unit('s'))
-    df = df[["timestamp", "load_MWh"]].sort_values("timestamp").reset_index(drop=True)
+    client = SmardClient(
+        filter_id=filter_id,
+        region=region,
+        base_url=SMARD_BASE,
+        headers=SMARD_HEADERS,
+        resolution=resolution,
+        sleep=sleep,
+    )
+    df = client.fetch(in_start_date, in_end_date)
+    df = df.rename(columns={'load_MWh': 'EnergyDemand'})
 
     if output_file:
         os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
         df.to_csv(output_file, index=False)
-        #print(f"Saved to {output_file}")
-    
-    # timestamp -> time
-    df = rename_time_column(df)     
-    # rename load_MWh -> EnergyDemand to match training data column name
-    df = df.rename(columns={'load_MWh': 'EnergyDemand'})
 
     return df
 
 # --------- add time based features for the energy demand data ----------
 
+import holidays
+
 # rename the time column to 'time' for consistency across datasets
-def rename_time_column(in_df):  
+def rename_time_column(in_df):
     known_time_cols = ('time', 'timestamp', 'DateUTC')
     for col in known_time_cols:
         if col in in_df.columns and col != 'time':
@@ -181,86 +132,27 @@ def rename_time_column(in_df):
             break
     return in_df
 
-# add holiday ratio depending the number of states in Germany with a holiday on that day
-import holidays 
+# Keep module-level aliases so any code that imports them directly still works
+pandemic_start = PANDEMIC_START
+pandemic_end   = PANDEMIC_END
 
-DE_STATE_CODES = ['BB', 'BE', 'BW', 'BY', 'HB', 'HE', 'HH', 'MV', 
-                  'NI', 'NW', 'RP', 'SH', 'SL', 'SN', 'ST', 'TH']
-
-# use lru_cache to cache the holiday data for each state and year, since the holiday data is static 
-# and can be reused across multiple calls to the holiday_ratio function, this can improve performance 
-# by avoiding redundant API calls or computations for the same state and year
-@lru_cache(maxsize=None)
-def _state_holidays(state_code, year):
-    return holidays.Germany(subdiv=state_code, years=[year])
-
-# calculate the holiday ratio for a given date, which is the number of states in Germany that have a holiday 
-# on that date divided by the total number of states (16), this feature can help capture the impact of holidays 
-# on energy demand, since holidays can lead to changes in energy consumption patterns due to factors 
-# such as reduced industrial activity, increased residential usage, and changes in transportation demand
 def holiday_ratio(date):
-    '''
-    Calculate the holiday ratio for a given date, which is the number of states in Germany that have a holiday 
-    on that date divided by the total number of states (16).'''
-    count = sum(1 for code in DE_STATE_CODES 
-                if date in _state_holidays(code, date.year))
-    return count / 16
+    '''Fraction of German states with a public holiday on date (delegates to TimeFeatureCreator).'''
+    _tfc = TimeFeatureCreator(country='DE', state_codes=DE_STATE_CODES)
+    return _tfc.holiday_ratio(date)
 
-pandemic_start = pd.to_datetime('2020-03-01', utc=True).tz_convert("Europe/Berlin")
-pandemic_end = pd.to_datetime('2021-12-31', utc=True).tz_convert("Europe/Berlin")
-
-def create_time_based_features(in_df, in_year, time_column='time', in_pandemic_start=pandemic_start, in_pandemic_end=pandemic_end):
-    '''
-    Create time-based features such as hour of day, day of week, and month of year.
-    '''
-    out_df = in_df.copy()
-    out_df['year'] = out_df[time_column].dt.year.astype(int)
-    out_df['hour'] = out_df[time_column].dt.hour.astype(int)
-    out_df['weekday'] = out_df[time_column].dt.dayofweek.astype(int)
-    out_df['month'] = out_df[time_column].dt.month.astype(int)
-    out_df['is_weekend'] = out_df[time_column].dt.dayofweek.apply(lambda x: 1 if x >= 5 else 0).astype(int)
-
-    de_holidays = holidays.Germany(years=range(2019, in_year + 1))
-    out_df['is_holiday'] = out_df[time_column].dt.date.apply(lambda x: 1 if x in de_holidays else 0).astype(int)
-    out_df['holiday_ratio'] = out_df[time_column].dt.date.apply(holiday_ratio).astype(float)
-
-    # is_workday: 1 only if it is neither a weekend nor a public holiday — direct signal for high-demand days
-    out_df['is_workday'] = ((out_df['is_weekend'] == 0) & (out_df['is_holiday'] == 0)).astype(int)
-
-    # is_bridge_day: a working day sandwiched between a public holiday and a weekend (or another holiday).
-    # These days typically see reduced industrial activity similar to a holiday.
-    dates = out_df[time_column].dt.date
-    out_df['is_bridge_day'] = dates.apply(
-        lambda d: 1 if (
-            d.weekday() not in (5, 6)           # the day itself is a weekday
-            and d not in de_holidays             # but not already a holiday
-            and (
-                # previous day is holiday or weekend
-                (
-                    (pd.Timestamp(d) - pd.Timedelta(days=1)).date() in de_holidays
-                    or (pd.Timestamp(d) - pd.Timedelta(days=1)).date().weekday() >= 5
-                )
-                # AND next day is holiday or weekend
-                and (
-                    (pd.Timestamp(d) + pd.Timedelta(days=1)).date() in de_holidays
-                    or (pd.Timestamp(d) + pd.Timedelta(days=1)).date().weekday() >= 5
-                )
-            )
-        ) else 0
-    ).astype(int)
-
-    # holiday_weight: combines holiday_ratio with the is_weekend flag so the model sees
-    # a single continuous "non-working-day intensity" signal in [0, 1].
-    # On a holiday with ratio=1.0 it equals 1.0; on a pure weekend it equals 0.5;
-    # on a bridge day it picks up a small boost from holiday_ratio of adjacent days.
-    out_df['holiday_weight'] = out_df[['holiday_ratio', 'is_weekend']].apply(
-        lambda row: max(row['holiday_ratio'], row['is_weekend'] * 0.5), axis=1
-    ).astype(float)
-
-    # add pandemic feature
-    out_df['is_pandemic_time'] = out_df[time_column].apply(lambda x: 1 if (x >= in_pandemic_start) and (x <= in_pandemic_end) else 0).astype(int)
-
-    return out_df
+def create_time_based_features(in_df, in_year, time_column='time',
+                               in_pandemic_start=PANDEMIC_START,
+                               in_pandemic_end=PANDEMIC_END):
+    '''Create time-based features. Delegates to TimeFeatureCreator (util/time_features.py).'''
+    tfc = TimeFeatureCreator(
+        country='DE',
+        state_codes=DE_STATE_CODES,
+        pandemic_start=in_pandemic_start,
+        pandemic_end=in_pandemic_end,
+        time_column=time_column,
+    )
+    return tfc.create(in_df, year=in_year)
 
 def create_energy_features(in_df):
     out_df = in_df.copy()   
@@ -324,102 +216,78 @@ def prepare_energy_data_for_prediction(prediction_date, history_days=15):
 
 # ----------- fetch weather data from open-meteo ----------
 
-import time
-import requests
-import pandas as pd 
 
-# TODO consider adding back 'weathercode'
-weather_variables = ['apparent_temperature', 'rain', 'snowfall', 'wind_speed_10m', 'shortwave_radiation']  # temperature_2m dropped: high correlation with apparent_temperature (see notebook 02 EDA)
-
-# get latitude and longitude of German cities: Berlin, Hamburg, München, Köln, Frankfurt
-selected_cities = {  
-    'Berlin': {'latitude': 52.5200, 'longitude': 13.4050},
-    'Hamburg': {'latitude': 53.5511, 'longitude': 9.9937},
-    'München': {'latitude': 48.1351, 'longitude': 11.5820},
-    'Köln': {'latitude': 50.9375, 'longitude': 6.9603},
-    'Frankfurt': {'latitude': 50.1109, 'longitude': 8.6821}
-}
-
-start_date = "2019-01-01" # Kaggle dataset starts from 2019-01-01
-end_date = "2025-09-30" # Kaggle dataset ends at 2025-09-30
-
-def fetch_weather_data_for_cities(in_start_date=start_date, 
-                                  in_end_date=end_date, 
-                                  in_selected_cities=selected_cities,
-                                  in_weather_variables=weather_variables):
-    '''
-    Fetch weather data from open-meteo archive API for the selected cities 
-    and return a dictionary of city name to weather DataFrame.
-    '''
-    # Fetch 1 day before in_start_date in UTC so Berlin midnight (00:00+02:00 = 22:00 UTC prior day) is included
-    api_start_date = (pd.to_datetime(in_start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
-    berlin_clip_start = pd.Timestamp(in_start_date, tz="Europe/Berlin")
-
-    weather_city_dict = {}
-    for city, coords in in_selected_cities.items():
-        url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['latitude']}&longitude={coords['longitude']}&start_date={api_start_date}&end_date={in_end_date}&hourly={','.join(in_weather_variables)}&timezone=UTC"
-        for attempt in range(3):
-            try:
-                response = requests.get(url, timeout=30)
-                response.raise_for_status()
-                weather_data = response.json()
-                break
-            except requests.exceptions.RequestException:
-                if attempt == 2:
-                    raise
-                time.sleep(5)
-        df_weather_city = pd.DataFrame(weather_data['hourly'])
-
-        # UTC has no DST ambiguity — safe to localize then convert to Berlin
-        df_weather_city['time'] = pd.to_datetime(df_weather_city['time'], utc=True).dt.tz_convert("Europe/Berlin").dt.as_unit('s')
-        # Clip to requested start in Berlin time (drop the extra day fetched for UTC offset coverage)
-        df_weather_city = df_weather_city[df_weather_city['time'] >= berlin_clip_start].reset_index(drop=True)
-        #print(f"weather for {city}: {len(df_weather_city)} rows")
-        #print(df_weather_city.head(3))
-        weather_city_dict.update({city:df_weather_city})
-        time.sleep(1)  # sleep for 1 second to avoid hitting API rate limits
-    return weather_city_dict
-
-city_population = {
-    'Berlin': 3644826, 
-    'Hamburg': 1841179, 
-    'München': 1471508,     
-    'Köln': 1085664, 
-    'Frankfurt': 753056 
-}
+# Local aliases — kept for any code that still references them by the old names
+weather_variables = WEATHER_VARIABLES
+selected_cities   = SELECTED_CITIES
+city_population   = CITY_POPULATION
 
 raw_tmp_path = "../data/raw/tmp/"
 
-# calculate the weight of the cities based on their population size and use it to create a weighted average of the weather variables for Germany
-def merge_weather_data_with_city_weights(in_weather_city_dict, 
-                                         in_city_population=city_population, 
-                                         in_weather_variables=weather_variables):
-    '''
-    Merge the weather data for the selected cities into a single DataFrame for Germany, 
-    using population weights to calculate a weighted average of the weather variables.
-    '''
-    total_population = sum(in_city_population.values())
-    df_weather_germany = pd.DataFrame() 
-    for city, df_city in in_weather_city_dict.items():
-        weight = in_city_population[city] / total_population
-        df_city_weighted = df_city.copy()
-        for var in in_weather_variables:
-            df_city_weighted[var] = df_city[var] * weight
-        if df_weather_germany.empty:
-            df_weather_germany = df_city_weighted
-        else:
-            df_weather_germany[in_weather_variables] += df_city_weighted[in_weather_variables]
+def fetch_weather_data_for_cities(in_start_date=KAGGLE_END_DATE,
+                                  in_end_date=KAGGLE_END_DATE,
+                                  in_selected_cities=None,
+                                  in_weather_variables=None):
+    '''Fetch archive weather for cities. Delegates to OpenMeteoClient (util/openmeteo_client.py).'''
+    cities    = in_selected_cities or SELECTED_CITIES
+    variables = in_weather_variables or WEATHER_VARIABLES
+    client = OpenMeteoClient(
+        cities=cities,
+        city_population={c: CITY_POPULATION[c] for c in cities},
+        weather_variables=variables,
+    )
+    # Return the raw per-city dict for backward compat with callers that iterate over cities
+    import requests as _requests, time as _time
+    api_start = (pd.to_datetime(in_start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+    clip_start = pd.Timestamp(in_start_date, tz='Europe/Berlin')
+    vars_str = ','.join(variables)
+    city_dict = {}
+    for city, coords in cities.items():
+        url = (
+            f"https://archive-api.open-meteo.com/v1/archive"
+            f"?latitude={coords['latitude']}&longitude={coords['longitude']}"
+            f"&start_date={api_start}&end_date={in_end_date}"
+            f"&hourly={vars_str}&timezone=UTC"
+        )
+        for attempt in range(3):
+            try:
+                r = _requests.get(url, timeout=30); r.raise_for_status()
+                data = r.json(); break
+            except _requests.exceptions.RequestException:
+                if attempt == 2: raise
+                _time.sleep(5)
+        df_city = pd.DataFrame(data['hourly'])
+        df_city['time'] = (
+            pd.to_datetime(df_city['time'], utc=True)
+            .dt.tz_convert('Europe/Berlin').dt.as_unit('s')
+        )
+        df_city = df_city[df_city['time'] >= clip_start].reset_index(drop=True)
+        city_dict[city] = df_city
+        _time.sleep(1)
+    return city_dict
 
-    return df_weather_germany
+def merge_weather_data_with_city_weights(in_weather_city_dict,
+                                         in_city_population=None,
+                                         in_weather_variables=None):
+    '''Merge city weather DataFrames with population weights. Delegates to OpenMeteoClient._merge_cities.'''
+    pop  = in_city_population or CITY_POPULATION
+    vars_ = in_weather_variables or WEATHER_VARIABLES
+    cities_subset = {c: SELECTED_CITIES[c] for c in in_weather_city_dict if c in SELECTED_CITIES}
+    client = OpenMeteoClient(
+        cities=cities_subset,
+        city_population={c: pop[c] for c in cities_subset},
+        weather_variables=vars_,
+    )
+    return client._merge_cities(in_weather_city_dict)
 
 # feature engineering: create new features based on existing ones, such as rolling averages, lagged variables, or interaction terms
 
-base_temperature_heating = 18  # base temperature for heating degree days
-base_temperature_cooling = 25  # base temperature for cooling degree days
+base_temperature_heating = BASE_TEMPERATURE_HEATING
+base_temperature_cooling = BASE_TEMPERATURE_COOLING
 
-def create_weather_features(in_df, 
-                    in_base_temperature_heating=base_temperature_heating, 
-                    in_base_temperature_cooling=base_temperature_cooling):
+def create_weather_features(in_df,
+                    in_base_temperature_heating=BASE_TEMPERATURE_HEATING,
+                    in_base_temperature_cooling=BASE_TEMPERATURE_COOLING):
     '''
     Create new features based on existing ones, such as rolling averages, lagged variables, or interaction terms.
     '''
@@ -441,133 +309,93 @@ def create_weather_features(in_df,
 
 # ============ prepare weather data ============
 
-# fetch weather data for the selected cities, merge it with population weights to get a Germany-wide weather dataset, and save it to the processed data folder
 def prepare_weather_data(in_start_date,
-                        in_end_date, 
-                        in_selected_cities=selected_cities,
-                        in_weather_variables=weather_variables, 
-                        in_city_population=city_population):
-    '''
-    Prepare weather data for modeling: fetch weather data for the selected cities, 
-    merge it with population weights to get a Germany-wide weather dataset, and save it to the processed data folder.
-    '''
-    weather_city_dict = fetch_weather_data_for_cities(in_start_date, in_end_date)
-    out_df = merge_weather_data_with_city_weights(weather_city_dict, in_city_population, in_weather_variables)
+                        in_end_date,
+                        in_selected_cities=None,
+                        in_weather_variables=None,
+                        in_city_population=None):
+    '''Fetch + merge + feature-engineer archive weather. Delegates to OpenMeteoClient.'''
+    cities    = in_selected_cities or SELECTED_CITIES
+    variables = in_weather_variables or WEATHER_VARIABLES
+    pop       = in_city_population   or CITY_POPULATION
+    client = OpenMeteoClient(cities=cities, city_population=pop, weather_variables=variables)
+    out_df = client.fetch_archive(in_start_date, in_end_date)
     out_df = rename_time_column(out_df)
     out_df = out_df.sort_values('time').reset_index(drop=True)
     out_df = create_weather_features(out_df)
- 
     return out_df
 
 # ============ prepare weather forecast data ============
 
 def fetch_weather_forecast_for_cities(
-        in_selected_cities=selected_cities,
-        in_weather_variables=weather_variables,
-        forecast_days: int = 2): # forecast_days is set to 2 by default, otherwise only the same day forecast is fetched
-    '''
-    Fetch hourly weather forecast from open-meteo forecast API for the selected cities.
-    forecast_days: 1-16 (free tier max is 16)
-    '''
-    out_weather_city_dict = {}
-    for city, coords in in_selected_cities.items():
-        # past_days=1 ensures Berlin midnight (= UTC-2 the day before) is included.
-        # After converting UTC→Berlin we clip to today's Berlin 00:00 so the series
-        # always starts at midnight, mirroring the archive API behaviour.
+        in_selected_cities=None,
+        in_weather_variables=None,
+        forecast_days: int = 2):
+    '''Fetch forecast weather per city. Delegates to OpenMeteoClient.fetch_forecast internals.'''
+    cities    = in_selected_cities or SELECTED_CITIES
+    variables = in_weather_variables or WEATHER_VARIABLES
+    client = OpenMeteoClient(
+        cities=cities,
+        city_population={c: CITY_POPULATION[c] for c in cities},
+        weather_variables=variables,
+    )
+    # Re-implement per-city dict return for backward compat
+    import requests as _requests, time as _time
+    vars_str = ','.join(variables)
+    today_midnight = pd.Timestamp.now(tz='Europe/Berlin').normalize()
+    out = {}
+    for city, coords in cities.items():
         url = (
             f"https://api.open-meteo.com/v1/forecast"
             f"?latitude={coords['latitude']}&longitude={coords['longitude']}"
-            f"&hourly={','.join(in_weather_variables)}"
-            f"&forecast_days={forecast_days}"
-            f"&past_days=1"
-            f"&timezone=UTC"
+            f"&hourly={vars_str}&forecast_days={forecast_days}&past_days=1&timezone=UTC"
         )
-        response = requests.get(url)
-        response.raise_for_status()
-        weather_data = response.json()
-        '''
         for attempt in range(3):
             try:
-                response = requests.get(url, timeout=30)
-                print('open-meteo API response status code:', response.status_code)
-                response.raise_for_status()
-                weather_data = response.json()
-                break
-            except requests.exceptions.RequestException:
-                if attempt == 2:
-                    raise
-                time.sleep(5)
-        '''
-        df_weather_city = pd.DataFrame(weather_data['hourly'])
-        # UTC has no DST ambiguity — safe to localize then convert to Berlin
-        df_weather_city['time'] = (
-            pd.to_datetime(df_weather_city['time'], utc=True)
-            .dt.tz_convert("Europe/Berlin")
-            .dt.as_unit('s')
+                r = _requests.get(url, timeout=30); r.raise_for_status()
+                data = r.json(); break
+            except _requests.exceptions.RequestException:
+                if attempt == 2: raise
+                _time.sleep(5)
+        df_city = pd.DataFrame(data['hourly'])
+        df_city['time'] = (
+            pd.to_datetime(df_city['time'], utc=True)
+            .dt.tz_convert('Europe/Berlin').dt.as_unit('s')
         )
-        # Clip to today's Berlin midnight so the series starts at 00:00+02:00
-        today_berlin_midnight = pd.Timestamp.now(tz="Europe/Berlin").normalize()
-        df_weather_city = df_weather_city[
-            df_weather_city['time'] >= today_berlin_midnight
-        ].reset_index(drop=True)
-        out_weather_city_dict[city] = df_weather_city
-        time.sleep(1)
-    return out_weather_city_dict
+        df_city = df_city[df_city['time'] >= today_midnight].reset_index(drop=True)
+        out[city] = df_city
+        _time.sleep(1)
+    return out
 
 
 def prepare_weather_forecast(
-        in_selected_cities=selected_cities,
-        in_weather_variables=weather_variables,
-        in_city_population=city_population,
+        in_selected_cities=None,
+        in_weather_variables=None,
+        in_city_population=None,
         forecast_days: int = 2):
-    '''
-    Prepare forecast weather data: fetch forecast for cities, merge with 
-    population weights, and create weather features.
-    forecast_days=2 ensures tomorrow is always fully covered regardless of
-    the current UTC hour when the API is called.
-    '''
-    weather_city_dict = fetch_weather_forecast_for_cities(forecast_days=forecast_days)
-    out_df = merge_weather_data_with_city_weights(weather_city_dict)
+    '''Prepare forecast weather DataFrame. Delegates to OpenMeteoClient.fetch_forecast.'''
+    cities    = in_selected_cities or SELECTED_CITIES
+    variables = in_weather_variables or WEATHER_VARIABLES
+    pop       = in_city_population   or CITY_POPULATION
+    client = OpenMeteoClient(cities=cities, city_population=pop, weather_variables=variables)
+    out_df = client.fetch_forecast(forecast_days=forecast_days)
     out_df = rename_time_column(out_df)
-    
     return out_df
 
 
 def prepare_weather_for_prediction(prediction_date, lookback_days=2, forecast_days=3):
-    '''
-    Fetch archive + forecast weather, combine them, and apply create_weather_features.
-    lookback_days of archive data provides the lag/rolling context needed for tomorrow's
-    weather features (apparent_temperature_lag_24h, rolling_mean_24h, etc.).
-    The model was trained with these features; without them predictions are unreliable.
-    '''
-    # --- archive: lookback_days before prediction_date (for lag/rolling context) ---
-    archive_start = (pd.to_datetime(prediction_date) - pd.Timedelta(days=lookback_days)).strftime('%Y-%m-%d')
-    archive_end   = (pd.to_datetime(prediction_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
-
-    archive_city_dict = fetch_weather_data_for_cities(archive_start, archive_end)
-    df_archive = merge_weather_data_with_city_weights(archive_city_dict)
-    df_archive = rename_time_column(df_archive)
-
-    # --- forecast: covers prediction_date and beyond ---
-    fc_city_dict = fetch_weather_forecast_for_cities(forecast_days=forecast_days)
-    df_forecast = merge_weather_data_with_city_weights(fc_city_dict)
-    df_forecast = rename_time_column(df_forecast)
-
-    # Keep archive rows strictly before prediction_date to avoid overlap with forecast
-    pred_start = pd.Timestamp(prediction_date, tz="Europe/Berlin")
-    df_archive = df_archive[df_archive['time'] < pred_start].copy()
-
-    # Combine, deduplicate (forecast wins for any overlap), sort
-    df_combined = pd.concat([df_archive, df_forecast], ignore_index=True)
-    df_combined = (df_combined
-                   .sort_values('time')
-                   .drop_duplicates(subset=['time'])
-                   .reset_index(drop=True))
-
-    # Apply weather feature engineering (same as training path)
-    df_combined = create_weather_features(df_combined)
-
-    return df_combined
+    '''Fetch archive + forecast weather combined for a prediction date. Delegates to OpenMeteoClient.'''
+    client = OpenMeteoClient(
+        cities=SELECTED_CITIES,
+        city_population=CITY_POPULATION,
+        weather_variables=WEATHER_VARIABLES,
+    )
+    out_df = client.prepare_for_prediction(
+        prediction_date, lookback_days=lookback_days, forecast_days=forecast_days
+    )
+    out_df = rename_time_column(out_df)
+    out_df = create_weather_features(out_df)
+    return out_df
 
 
 # ---------- comnbine energy and weather dataset for modeling ----------

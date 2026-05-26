@@ -56,6 +56,42 @@ Beim ersten Start führt die App `update_database()` aus und befüllt/aktualisie
 | Historische Daten | 3 API-Aufrufe + Feature-Berechnung | 1 SQL-Query |
 | Spaltenbenennung | `EnergyDemand_lag_*` | `energy_demand_lag_*` (DB-Schema) |
 
+---
+
+## Interaktive Notebooks
+
+Neben den Streamlit-Apps stehen zwei interaktive Jupyter-Notebooks bereit (in `notebook/`):
+
+| Notebook | Art | Beschreibung |
+|---|---|---|
+| `08_interactive_prediction.ipynb` | Legacy (API-basiert) | Tagesvorhersage + historischer 3-Kurven-Vergleich; alle Daten werden live von SMARD / Open-Meteo abgerufen |
+| `11_interactive_prediction_etl.ipynb` | ETL (DB-basiert, empfohlen) | Energie-Lag-Kontext aus SQLite-DB; historischer Vergleich per Single-SQL-Query — kein Live-API-Abruf |
+
+### Notebook 11 — Aufbau
+
+**Teil 1 — Tagesvorhersage (morgen)**
+- Energie-Lag-Kontext wird aus der SQLite-DB geladen (letzte 168 Zeilen, kein SMARD-API-Aufruf)
+- Wetter-Forecast wird live von der Open-Meteo API abgerufen
+- Spaltennamen entsprechen bereits dem ETL-DB-Schema — kein Umbenennen nötig
+- Ergebnis: Liniengrafik + stündliche Wertetabelle nebeneinander; SMARD-Tagesprognose als Vergleichslinie (sofern veröffentlicht)
+
+**Teil 2 — Historischer Vergleich (Actual vs. SMARD vs. ML)**
+- Einzelner DB-Query lädt Features, Istwert (`energy_demand_mwh`) und SMARD-Prognose (`smard_forecast_mwh`) in einem Schritt
+- Kein erneuter API-Abruf, kein erneutes Feature-Engineering — deutlich schneller als die Legacy-Version
+- Auswählbarer Zeitraum bis maximal 1 Jahr; Live-Validierung verhindert ungültige Auswahl
+- Metriktabelle (MAE, RMSE, Datenpunkte) für ML-Prognose **und** SMARD-Prognose im Vergleich
+
+### Vergleich: Notebook 08 vs. Notebook 11
+
+| Aspekt | 08 (Legacy) | 11 (ETL) |
+|---|---|---|
+| Modelle | `*_bayesian.pkl` | `*_bayesian_etl.pkl` |
+| Historische Features | Re-fetch + Re-Berechnung | SQLite DB (vorberechnet) |
+| Historischer Istwert | SMARD API (Filter 410) | DB `energy_demand_mwh` |
+| SMARD-Prognose (hist.) | SMARD API (Filter 411) | DB `smard_forecast_mwh` |
+| Energie-Lag (morgen) | SMARD API (re-fetch) | SQLite DB (letzte 168 Zeilen) |
+| Spaltenbenennung | `EnergyDemand_lag_*` | `energy_demand_lag_*` (DB-Schema) |
+
 
 ---
 
@@ -68,7 +104,20 @@ Beim ersten Start führt die App `update_database()` aus und befüllt/aktualisie
 | [Open-Meteo](https://open-meteo.com/en/docs) | Stündliche Wetterdaten 5 Städte DE (Archiv + Forecast) | CC BY 4.0 |
 | [python-holidays](https://holidays.readthedocs.io/) | Deutsche Feiertage, alle 16 Bundesländer | — |
 
----
+
+### Electricity Market Data
+Quelle: Bundesnetzagentur | SMARD.de  
+https://www.smard.de/
+
+SMARD Daten ist lizensiert unter CC BY 4.0.
+
+### Weather Data
+Quelle: Open-Meteo  
+https://open-meteo.com/
+
+Wetterdaten ist lizensiert unter CC BY 4.0.
+
+Die orginal Daten sind bereinigt, aggregiert und transformiert für Machine Learning und Visualisierung. 
 
 ---
 

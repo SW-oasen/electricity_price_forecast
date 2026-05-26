@@ -55,12 +55,15 @@ from fetch_prepare_data import (
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-FILTER_NETZLAST_ACTUAL   = 410   # Realisierter Stromverbrauch – Netzlast
-FILTER_NETZLAST_FORECAST = 411   # Prognostizierter Stromverbrauch – Netzlast
+from config import (
+    SMARD_FILTER_NETZLAST  as FILTER_NETZLAST_ACTUAL,
+    SMARD_FILTER_FORECAST  as FILTER_NETZLAST_FORECAST,
+    KAGGLE_END_DATE,
+    SMARD_START_DATE,
+)
 
 KAGGLE_RAW_PATH  = ROOT_DIR / "data" / "raw" / "MHLV_2019_2025_combined.csv"
-KAGGLE_END_DATE  = "2025-09-30"   # last date fully covered by the Kaggle dataset
-SMARD_START_DATE = "2025-10-01"   # first date fetched from SMARD actual
+
 
 DB_DIR          = ROOT_DIR / "db"
 DEFAULT_DB_PATH = DB_DIR / "energy_demand.db"

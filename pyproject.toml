@@ -27,4 +27,5 @@ dependencies = [
     "xgboost>=3.2.0",
     "pytz>=2026.2",
     "streamlit>=1.45.0",
+    "scikit-optimize>=0.10.2",
 ]
