@@ -57,6 +57,76 @@ def load_models():
 
 models = load_models()
 
+
+def _set_padded_ylim(ax: plt.Axes, df_plot: pd.DataFrame) -> None:
+    plotted_values = pd.Series(
+        df_plot[["Actual", "ML Prediction", "SMARD Forecast"]].to_numpy().ravel()
+    ).dropna()
+    if plotted_values.empty:
+        return
+
+    y_min = float(plotted_values.min())
+    y_max = float(plotted_values.max())
+    padding = (y_max - y_min) * 0.10
+    if padding == 0:
+        padding = max(abs(y_max) * 0.10, 1.0)
+    ax.set_ylim(y_min - padding, y_max + padding)
+
+
+def _render_metric_comparison(
+    model_name: str,
+    mae_ml: float,
+    rmse_ml: float,
+    ml_points: int,
+    mae_smard: float | None = None,
+    rmse_smard: float | None = None,
+    smard_points: int | None = None,
+) -> None:
+    rows = [
+        {
+            "Series": f"ML Prediction ({model_name})",
+            "MAE (MWh)": f"{mae_ml:,.0f}",
+            "RMSE (MWh)": f"{rmse_ml:,.0f}",
+            "Points": f"{ml_points:,}",
+        }
+    ]
+    if mae_smard is not None and rmse_smard is not None and smard_points is not None:
+        rows.append(
+            {
+                "Series": "SMARD official forecast",
+                "MAE (MWh)": f"{mae_smard:,.0f}",
+                "RMSE (MWh)": f"{rmse_smard:,.0f}",
+                "Points": f"{smard_points:,}",
+            }
+        )
+
+    st.markdown("### **Metrikvergleich**")
+    df_metrics = pd.DataFrame(rows)
+    html = df_metrics.to_html(index=False, border=0)
+    st.markdown(
+        """
+        <style>
+        .metric-comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+        }
+        .metric-comparison-table th,
+        .metric-comparison-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border: 1px solid rgba(49, 51, 63, 0.2);
+        }
+        .metric-comparison-table th {
+            background: rgba(240, 242, 246, 0.9);
+            font-weight: 700;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(f'<div class="metric-comparison-table">{html}</div>', unsafe_allow_html=True)
+
 # ── page header ────────────────────────────────────────────────────────────────
 st.title("⚡ Stromverbrauchsprognose Deutschland")
 st.markdown("Stündliche Vorhersage und Vergleich der deutschen Netzlast (SMARD).")
@@ -280,14 +350,6 @@ with tab_hist:
             st.success(f"Vergleich abgeschlossen — {from_str} → {to_str} ({hist_model})")
 
             # 6. Plot ──────────────────────────────────────────────────────────
-            days_in_range = delta_days + 1
-            if days_in_range <= 3:
-                x_fmt = "%m-%d %H:%M"
-            elif days_in_range <= 31:
-                x_fmt = "%Y-%m-%d"
-            else:
-                x_fmt = "%Y-%m"
-
             fig, ax = plt.subplots(figsize=(14, 5))
             ax.plot(df_plot.index, df_plot["Actual"],
                     color="steelblue", linewidth=1.5,
@@ -299,7 +361,10 @@ with tab_hist:
             ax.plot(df_plot.index, df_plot["ML Prediction"],
                     color="darkorange", linewidth=1.5, linestyle="--",
                     label=f"ML Vorhersage ({hist_model})")
-            ax.xaxis.set_major_formatter(mdates.DateFormatter(x_fmt))
+            locator = mdates.AutoDateLocator(minticks=6, maxticks=10)
+            ax.xaxis.set_major_locator(locator)
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+            _set_padded_ylim(ax, df_plot)
             ax.set_xlabel("Datum / Uhrzeit (UTC)")
             ax.set_ylabel("Netzlast (MWh)")
             ax.set_title(
@@ -321,14 +386,19 @@ with tab_hist:
                 df_sm_cmp  = df_plot[["Actual", "SMARD Forecast"]].dropna()
                 mae_smard  = (df_sm_cmp["Actual"] - df_sm_cmp["SMARD Forecast"]).abs().mean()
                 rmse_smard = ((df_sm_cmp["Actual"] - df_sm_cmp["SMARD Forecast"]) ** 2).mean() ** 0.5
-                col_a, col_b, col_c, col_d, col_e = st.columns(5)
-                col_a.metric(f"MAE – ML ({hist_model})",  f"{mae_ml:,.0f} MWh")
-                col_b.metric(f"RMSE – ML ({hist_model})", f"{rmse_ml:,.0f} MWh")
-                col_c.metric("MAE – SMARD",              f"{mae_smard:,.0f} MWh")
-                col_d.metric("RMSE – SMARD",             f"{rmse_smard:,.0f} MWh")
-                col_e.metric("Datenpunkte",               f"{len(df_ml_cmp):,}")
+                _render_metric_comparison(
+                    model_name=hist_model,
+                    mae_ml=mae_ml,
+                    rmse_ml=rmse_ml,
+                    ml_points=len(df_ml_cmp),
+                    mae_smard=mae_smard,
+                    rmse_smard=rmse_smard,
+                    smard_points=len(df_sm_cmp),
+                )
             else:
-                m1, m2, m3 = st.columns(3)
-                m1.metric("MAE",         f"{mae_ml:,.0f} MWh")
-                m2.metric("RMSE",        f"{rmse_ml:,.0f} MWh")
-                m3.metric("Datenpunkte", f"{len(df_ml_cmp):,}")
+                _render_metric_comparison(
+                    model_name=hist_model,
+                    mae_ml=mae_ml,
+                    rmse_ml=rmse_ml,
+                    ml_points=len(df_ml_cmp),
+                )

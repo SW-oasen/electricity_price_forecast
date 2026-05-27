@@ -138,11 +138,10 @@ Die orginal Daten sind bereinigt, aggregiert und transformiert für Machine Lear
 - Schulferienratio
 - Mehrere Länder wegen besonderem Klima (FI – Finnland, ES – Spanien)
 - 7-Tage-Forecast (iterative/rekursive Vorhersage)
-- Quantilregression (α > 0.5) für konservative Planungsszenarien analog SMARD
 
 ### Folgeprojekt
 
-- Residuallast-Vorhersage: `Residuallast = Netzlast − PV − Wind Onshore − konventionelle Erzeugung`
+- Strompreis-Vorhersage: `Abhängig von PV und Wind-Energie Produktion, Gas- und Kohlepreise (für konventionelle Erzeugung als Ergänzung zu erneuerbarer Energie, und Stromverbrauch. Parallelle und stacked Prognose.`
 
 ---
 

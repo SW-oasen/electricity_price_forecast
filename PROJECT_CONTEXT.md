@@ -6,36 +6,6 @@
 
 ---
 
-## Projektstatus
-
-### Abgeschlossen
-
-- [x] EDA Stromverbrauch Deutschland (Notebook 01)
-- [x] EDA Wetterdaten (Notebook 02)
-- [x] Feature Engineering & EDA kombinierter Datensatz (Notebook 03)
-- [x] Baseline- und ML-Modell-Evaluation (Notebook 04)
-- [x] Feature Importances Analyse (Notebook 05)
-- [x] Web Scraping SMARD Stromverbrauch-Daten ab 2025-10-01 (Notebook 06)
-- [x] Python Source Refactoring /src (`fetch_prepare_data.py`, `train_model_predict.py`)
-- [x] Vollständige ML-Pipeline: Training, Tuning, Persistenz (Notebook 07)
-- [x] Bayesian Hyperparameter-Optimierung mit Optuna auf AI PC
-- [x] Rolling-Features auf `shift(24)` umgestellt (kein Datenleck durch unmittelbar vorangehende Stunden)
-- [x] Interaktives Notebook und Streamlit-App (Notebook 08): Tages-Vorhersage (morgen) + historischer Vergleich (Actual / SMARD / ML)
-- [x] Notebook 08 GUI-Trennung: Tab 1 = Tages-Vorhersage, Tab 2 = historischer Vergleich (max. 1 Jahr, europäischer Kalender)
-- [x] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
-- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup statt `tail(24)`
-- [x] **ETL-Pipeline** (`src/etl.py`): SQLite-DB mit inkrementellem Update; alle Features vorberechnet; Kaggle-CSV + SMARD-API + Open-Meteo-API als Quellen
-- [x] **ETL ML-Pipeline** (Notebook 10): Training der 4 Modellvarianten auf DB-Daten; Modelle mit `_etl`-Suffix gespeichert
-- [x] **ETL Interaktive Vorhersage** (Notebook 11): Energie-Lag-Kontext aus DB statt SMARD-API; historischer Vergleich per Single-SQL-Query
-- [x] **ETL Streamlit App** (`src/streamlit_app_etl.py`): DB-basierte Vorhersage-App; SMARD-Zeitversatz-Bug behoben (`_strip_tz` auf beide Serien)
-- [x] Bug behoben: `_parse_time_col` in `etl.py` — `pd.to_datetime(..., utc=True)` für gemischte UTC-Offsets (pandas 3.0)
-
-### Offen
-
-- [ ] Strompreis-Vorhersage — separates Folgeprojekt
-
----
-
 ## ETL-Pipeline (`src/etl.py`)
 
 ### Überblick
@@ -387,25 +357,36 @@ pd.to_datetime(df["time"], utc=True).dt.tz_convert("Europe/Berlin")
 - Open-Meteo forecast mit timezone=Europe/Berlin
 pd.to_datetime(df["time"]).dt.tz_localize("Europe/Berlin")
 
-### Vorhersage-Lag-Features: Zeitstempel-Lookup statt `tail(24)`
+### Vorhersage-Lag-Features: Zeitstempel-Lookup
 
-In `prepare_for_prediction_tomorrow` werden die Energie-Lag-Features nicht mehr über `create_energy_features().tail(24)` + Zeitstempel-Überschreibung berechnet, sondern per direktem Lookup in der SMARD-History:
+In `prepare_for_prediction_tomorrow` werden die Energie-Lag-Features nicht mehr über `create_energy_features().tail(24)` + Zeitstempel-Überschreibung berechnet, sondern per direktem Lookup in der SMARD-History.
 
-```python
-energy_idx = df_history.set_index('time')['EnergyDemand']
+---
 
-# lag_24h: Verbrauch genau 24h vor dem Vorhersagezeitpunkt
-lookup = energy_idx.get(t - pd.Timedelta(hours=24), np.nan)
-# Fallback auf selbe Stunde Vorwoche, wenn SMARD noch nicht veröffentlicht hat
-if pd.isna(lookup):
-    lookup = energy_idx.get(t - pd.Timedelta(hours=168), np.nan)
+## Projektstatus
 
-# rolling_mean_24h: entspricht dem Trainings-Feature EnergyDemand.shift(24).rolling(24).mean()
-# = Mittelwert von EnergyDemand aus [T-47h, T-24h] (24 Werte)
-window = energy_idx.loc[
-    (energy_idx.index >= t - pd.Timedelta(hours=47)) &
-    (energy_idx.index <= t - pd.Timedelta(hours=24))
-]
-```
+### Abgeschlossen
 
-Dies stellt sicher, dass `lag_24h` für den Vorhersagezeitpunkt T immer auf den Verbrauch von T−24h zeigt — identisch zur Trainingsdaten-Definition — unabhängig davon, wieviele Stunden SMARD für den aktuellen Tag bereits veröffentlicht hat.
+- [x] EDA Stromverbrauch Deutschland (Notebook 01)
+- [x] EDA Wetterdaten (Notebook 02)
+- [x] Feature Engineering & EDA kombinierter Datensatz (Notebook 03)
+- [x] Baseline- und ML-Modell-Evaluation (Notebook 04)
+- [x] Feature Importances Analyse (Notebook 05)
+- [x] Web Scraping SMARD Stromverbrauch-Daten ab 2025-10-01 (Notebook 06)
+- [x] Python Source Refactoring /src (`fetch_prepare_data.py`, `train_model_predict.py`)
+- [x] Vollständige ML-Pipeline: Training, Tuning, Persistenz (Notebook 07)
+- [x] Bayesian Hyperparameter-Optimierung mit Optuna auf AI PC
+- [x] Rolling-Features auf `shift(24)` umgestellt (kein Datenleck durch unmittelbar vorangehende Stunden)
+- [x] Interaktives Notebook und Streamlit-App (Notebook 08): Tages-Vorhersage (morgen) + historischer Vergleich (Actual / SMARD / ML)
+- [x] Notebook 08 GUI-Trennung: Tab 1 = Tages-Vorhersage, Tab 2 = historischer Vergleich (max. 1 Jahr, europäischer Kalender)
+- [x] Asymmetrische Verlustfunktionen und Quantilregression (Notebook 09)
+- [x] Bug behoben: `prepare_for_prediction_tomorrow` — Lag-Features via direktem Zeitstempel-Lookup statt `tail(24)`
+- [x] **ETL-Pipeline** (`src/etl.py`): SQLite-DB mit inkrementellem Update; alle Features vorberechnet; Kaggle-CSV + SMARD-API + Open-Meteo-API als Quellen
+- [x] **ETL ML-Pipeline** (Notebook 10): Training der 4 Modellvarianten auf DB-Daten; Modelle mit `_etl`-Suffix gespeichert
+- [x] **ETL Interaktive Vorhersage** (Notebook 11): Energie-Lag-Kontext aus DB statt SMARD-API; historischer Vergleich per Single-SQL-Query
+- [x] **ETL Streamlit App** (`src/streamlit_app_etl.py`): DB-basierte Vorhersage-App; SMARD-Zeitversatz-Bug behoben (`_strip_tz` auf beide Serien)
+- [x] Bug behoben: `_parse_time_col` in `etl.py` — `pd.to_datetime(..., utc=True)` für gemischte UTC-Offsets (pandas 3.0)
+
+### Offen
+
+- [ ] Strompreis-Vorhersage — separates Folgeprojekt
