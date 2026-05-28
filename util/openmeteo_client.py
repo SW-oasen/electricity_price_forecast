@@ -225,7 +225,7 @@ class OpenMeteoClient:
         Combine archive (lookback context) and forecast data for a prediction date.
 
         The archive lookback provides the lag/rolling context rows that the
-        feature engineering step (create_weather_features in fetch_prepare_data.py)
+        feature engineering step (create_weather_features in fetch_prepare_data_demand.py)
         needs.  Without it, lag/rolling values for the prediction day would be NaN.
 
         Parameters

@@ -41,7 +41,7 @@ ROOT_DIR = SRC_DIR.parent
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from fetch_prepare_data import (
+from fetch_prepare_data_demand import (
     fetch_smard_netzlast,
     prepare_weather_data,
     fetch_weather_data_for_cities,
@@ -576,38 +576,39 @@ def get_connection(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     """Return an open connection to the database."""
     return sqlite3.connect(db_path)
 
+from typing import Optional
 
 def load_energy_data(conn: sqlite3.Connection,
-                     start_date: str = None,
-                     end_date: str = None) -> pd.DataFrame:
+                     start_date: Optional[str] = None,  
+                     end_date: Optional[str] = None) -> pd.DataFrame:
     """
     Load energy_demand rows with optional date filter (inclusive, 'YYYY-MM-DD').
     Returns DataFrame with tz-aware 'time' column (Europe/Berlin).
     """
     query, params = _build_query("SELECT * FROM energy_demand", start_date, end_date)
-    return _parse_time_col(pd.read_sql(query, conn, params=params or None))
+    return _parse_time_col(pd.read_sql(query, conn, params=params if params else None))
 
 
 def load_weather_data(conn: sqlite3.Connection,
-                      start_date: str = None,
-                      end_date: str = None) -> pd.DataFrame:
+                      start_date: Optional[str] = None,
+                      end_date: Optional[str] = None) -> pd.DataFrame:
     """
     Load weather rows with optional date filter (inclusive, 'YYYY-MM-DD').
     Returns DataFrame with tz-aware 'time' column (Europe/Berlin).
     """
     query, params = _build_query("SELECT * FROM weather", start_date, end_date)
-    return _parse_time_col(pd.read_sql(query, conn, params=params or None))
+    return _parse_time_col(pd.read_sql(query, conn, params=params if params else None))
 
 
 def load_combined_data(conn: sqlite3.Connection,
-                       start_date: str = None,
-                       end_date: str = None) -> pd.DataFrame:
+                       start_date: Optional[str] = None,
+                       end_date: Optional[str] = None) -> pd.DataFrame:
     """
     Load from the energy_weather_combined VIEW with optional date filter.
     Returns DataFrame with tz-aware 'time' column (Europe/Berlin).
     """
     query, params = _build_query("SELECT * FROM energy_weather_combined", start_date, end_date)
-    return _parse_time_col(pd.read_sql(query, conn, params=params or None))
+    return _parse_time_col(pd.read_sql(query, conn, params=params if params else None))
 
 
 def _build_query(base: str, start_date: str, end_date: str) -> tuple:
@@ -652,7 +653,7 @@ def prepare_for_prediction_tomorrow_etl(
         by the ETL-trained models.
     """
     import numpy as np
-    from fetch_prepare_data import (
+    from fetch_prepare_data_demand import (
         prepare_weather_for_prediction,
         create_tomorrow_time,
     )

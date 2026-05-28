@@ -3,7 +3,7 @@ config.py — project-specific configuration for the Germany electricity demand 
 
 All domain constants live here so that:
 - util/ classes remain fully generic (no hardcoded country/city defaults)
-- etl.py and fetch_prepare_data.py import from one place instead of each defining their own
+- etl_demand.py and fetch_prepare_data_demand.py import from one place instead of each defining their own
 """
 
 import pandas as pd
@@ -23,6 +23,34 @@ SMARD_FILTER_FORECAST   = 411   # Prognostizierter Stromverbrauch – Netzlast (
 # ---------------------------------------------------------------------------
 KAGGLE_END_DATE  = "2025-09-30"   # last date fully covered by the Kaggle dataset
 SMARD_START_DATE = "2025-10-01"   # first date fetched from SMARD actual
+
+# ---------------------------------------------------------------------------
+# Price project — initial scope (phase 1)
+# ---------------------------------------------------------------------------
+# Target series
+SMARD_FILTER_PRICE_DE_LU = 4169  # Day-ahead market price DE/LU (EUR/MWh)
+SMARD_REGION_PRICE_DE_LU = "DE-LU"
+
+# Initial generation predictors from SMARD
+SMARD_FILTER_WIND_ONSHORE = 4067
+SMARD_FILTER_WIND_OFFSHORE = 1225
+SMARD_FILTER_PV = 4068
+SMARD_FILTER_OTHER_CONVENTIONAL = 1227
+
+# Initial fetch plan (series_id -> SMARD filter)
+SMARD_PRICE_START_FILTERS = {
+    "price_de_lu_eur_mwh": SMARD_FILTER_PRICE_DE_LU,
+    "gen_wind_onshore_mwh": SMARD_FILTER_WIND_ONSHORE,
+    "gen_wind_offshore_mwh": SMARD_FILTER_WIND_OFFSHORE,
+    "gen_pv_mwh": SMARD_FILTER_PV,
+    "gen_other_conventional_mwh": SMARD_FILTER_OTHER_CONVENTIONAL,
+}
+
+# New normalized tables for price pipeline
+TABLE_SERIES_CATALOG = "series_catalog"
+TABLE_TIMESERIES_VALUES = "timeseries_values"
+TABLE_INGESTION_RUNS = "ingestion_runs"
+TABLE_DATA_QUALITY_LOG = "data_quality_log"
 
 # ---------------------------------------------------------------------------
 # Calendar / holiday features
