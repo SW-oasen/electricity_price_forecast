@@ -98,3 +98,49 @@ CITY_POPULATION = {
 # ---------------------------------------------------------------------------
 BASE_TEMPERATURE_HEATING = 18   # °C — heating degree days threshold
 BASE_TEMPERATURE_COOLING = 25   # °C — cooling degree days threshold
+
+# TODO double check - old source till 2023
+# Capacity-weighted average location of top 10 PV plants in Germany (for solar radiation feature) 
+PV_PLANTS = [
+    #{"name": "Energiepark Witznitz", "capacity_mw": 605, "latitude": 51.1638, "longitude": 12.4186}, # seit 2024, aber nicht auf Marktdatenregister, daher rausgenommen
+    {"name": "Solarpark Weesow-Willmersdorf", "capacity_mw": 187, "latitude": 52.5000, "longitude": 14.0000},
+    {"name": "Solarpark Senftenberg", "capacity_mw": 187, "latitude": 51.5333, "longitude": 14.0167},
+    {"name": "Solarpark Meuro", "capacity_mw": 166, "latitude": 51.5000, "longitude": 14.0000},
+    {"name": "Solarpark Lieberose", "capacity_mw": 165, "latitude": 51.5833, "longitude": 14.2000},
+    {"name": "Solarpark Jänschwalde", "capacity_mw": 145, "latitude": 51.6500, "longitude": 14.3000},
+    {"name": "Solarpark Schwarzheide", "capacity_mw": 120, "latitude": 51.5000, "longitude": 14.1000},
+    {"name": "Solarpark Schipkau", "capacity_mw": 110, "latitude": 51.6000, "longitude": 14.1500},
+    {"name": "Solarpark Finsterwalde", "capacity_mw": 100, "latitude": 51.7000, "longitude": 14.2500},
+    {"name": "Solarpark Drebkau", "capacity_mw": 90, "latitude": 51.5500, "longitude": 14.0500},
+    {"name": "Solarpark Großräschen", "capacity_mw": 80, "latitude": 51.4500, "longitude": 14.0000},
+    {"name": "Solarpark Ruhland", "capacity_mw": 75, "latitude": 51.6500, "longitude": 14.2000},
+]
+
+# Capacity-weighted average location of top 10 onshore wind farms in Germany (for wind speed feature)
+WIND_FARMS = [
+    {"name": "Windpark Kölleda", "capacity_mw": 200, "latitude": 51.2000, "longitude": 11.5000},
+    {"name": "Windpark Holtriem", "capacity_mw": 150, "latitude": 53.5000, "longitude": 7.5000},
+    {"name": "Windpark Hohenwarsleben", "capacity_mw": 120, "latitude": 52.0000, "longitude": 11.0000},
+    {"name": "Windpark Borkum Riffgrund 1", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Borkum Riffgrund 2", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Gode Wind 1", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Gode Wind 2", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Nordsee One", "capacity_mw": 110, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Amrumbank West", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Trianel Borkum", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+]
+
+# Capacity-weighted average location of top 10 offshore wind farms in Germany (for offshore wind speed feature)
+OFFSHORE_WIND_FARMS = [ 
+    {"name": "Windpark Borkum Riffgrund 1", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Borkum Riffgrund 2", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Gode Wind 1", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Gode Wind 2", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Nordsee One", "capacity_mw": 110, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Amrumbank West", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Trianel Borkum", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark Meerwind Süd/Ost", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark EnBW Baltic 2", "capacity_mw": 48, "latitude": 54.0000, "longitude": 6.5000},
+    {"name": "Windpark EnBW Baltic 1", "capacity_mw": 48, "latitude": 54.0000, "longitude": 6.5000},
+]
+

@@ -1,0 +1,4973 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_92bef1f40b27170fda1c56157105acce {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_92bef1f40b27170fda1c56157105acce" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_92bef1f40b27170fda1c56157105acce = L.map(
+                "map_92bef1f40b27170fda1c56157105acce",
+                {
+                    center: [51.1657, 10.4515],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 6,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_1575f381f16990b051f797870a0ba3ee = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_1575f381f16990b051f797870a0ba3ee.addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+            var marker_8d18acb1b9e83903a462fc91122d027f = L.marker(
+                [51.358546, 13.332229],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5e48b3ab82a4fbbfa2f83221eb77bd21 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_29aff77cc4ff800f5f62f54659e9192b = $(`<div id="html_29aff77cc4ff800f5f62f54659e9192b" style="width: 100.0%; height: 100.0%;">Zeithain BA5 (18546.0 MW)</div>`)[0];
+                popup_5e48b3ab82a4fbbfa2f83221eb77bd21.setContent(html_29aff77cc4ff800f5f62f54659e9192b);
+            
+        
+
+        marker_8d18acb1b9e83903a462fc91122d027f.bindPopup(popup_5e48b3ab82a4fbbfa2f83221eb77bd21)
+        ;
+
+        
+    
+    
+            var marker_a7e9d9ceb16ccccfbe1694c59018f470 = L.marker(
+                [52.35, 7.080029],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b44a1170898da737baef80aca5284ab3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ab82e47b7381de2e3d936057771a8469 = $(`<div id="html_ab82e47b7381de2e3d936057771a8469" style="width: 100.0%; height: 100.0%;">LHI Solar Georgsdorf GmbH & Co. KG (20460.0 MW)</div>`)[0];
+                popup_b44a1170898da737baef80aca5284ab3.setContent(html_ab82e47b7381de2e3d936057771a8469);
+            
+        
+
+        marker_a7e9d9ceb16ccccfbe1694c59018f470.bindPopup(popup_b44a1170898da737baef80aca5284ab3)
+        ;
+
+        
+    
+    
+            var marker_9dda33b51a2e897adb1b861cf302fa1c = L.marker(
+                [52.479, 14.077],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_409be773a07eb2921fb76819675b4108 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c54da0c2c03c55f7933619227882f9f4 = $(`<div id="html_c54da0c2c03c55f7933619227882f9f4" style="width: 100.0%; height: 100.0%;">PVF Eggersdorf (17760.0 MW)</div>`)[0];
+                popup_409be773a07eb2921fb76819675b4108.setContent(html_c54da0c2c03c55f7933619227882f9f4);
+            
+        
+
+        marker_9dda33b51a2e897adb1b861cf302fa1c.bindPopup(popup_409be773a07eb2921fb76819675b4108)
+        ;
+
+        
+    
+    
+            var marker_101a4935685e908c5e6e8eb057c0fc31 = L.marker(
+                [51.473, 14.305],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f5be67a155874eb6fff79b2300f416bf = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_81dafc43608abf7373e98348720dc696 = $(`<div id="html_81dafc43608abf7373e98348720dc696" style="width: 100.0%; height: 100.0%;">PVF Elsterheide (17820.0 MW)</div>`)[0];
+                popup_f5be67a155874eb6fff79b2300f416bf.setContent(html_81dafc43608abf7373e98348720dc696);
+            
+        
+
+        marker_101a4935685e908c5e6e8eb057c0fc31.bindPopup(popup_f5be67a155874eb6fff79b2300f416bf)
+        ;
+
+        
+    
+    
+            var marker_852ff5a1e5c4baf416406ee514283d4a = L.marker(
+                [52.647481, 13.690069],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_7ee0cc18faeef7ac7caf487ab9e5696f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5bb80114c18ff5e9cc6e0a155b2b2dda = $(`<div id="html_5bb80114c18ff5e9cc6e0a155b2b2dda" style="width: 100.0%; height: 100.0%;">PV Weesow-Willmersdorf 1 (50302.0 MW)</div>`)[0];
+                popup_7ee0cc18faeef7ac7caf487ab9e5696f.setContent(html_5bb80114c18ff5e9cc6e0a155b2b2dda);
+            
+        
+
+        marker_852ff5a1e5c4baf416406ee514283d4a.bindPopup(popup_7ee0cc18faeef7ac7caf487ab9e5696f)
+        ;
+
+        
+    
+    
+            var marker_b516b8dc882188323f1ac36728f559e2 = L.marker(
+                [52.822032, 13.697538],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2a70c14ab01f95dc1dfe7c829f497a3b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d01732c337f9b8066e512f76c4726c44 = $(`<div id="html_d01732c337f9b8066e512f76c4726c44" style="width: 100.0%; height: 100.0%;">Solarpark Finowtower 1 (23140.0 MW)</div>`)[0];
+                popup_2a70c14ab01f95dc1dfe7c829f497a3b.setContent(html_d01732c337f9b8066e512f76c4726c44);
+            
+        
+
+        marker_b516b8dc882188323f1ac36728f559e2.bindPopup(popup_2a70c14ab01f95dc1dfe7c829f497a3b)
+        ;
+
+        
+    
+    
+            var marker_af9899e7229aff2e530dd8495655f025 = L.marker(
+                [52.616505, 14.245872],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4e0761c24c65d42ab48c5a7ab34904dc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_26f1a19b90f0f5d3b938c19286f7cc4d = $(`<div id="html_26f1a19b90f0f5d3b938c19286f7cc4d" style="width: 100.0%; height: 100.0%;">PVA Neuhardenberg Flugplatz (16316.0 MW)</div>`)[0];
+                popup_4e0761c24c65d42ab48c5a7ab34904dc.setContent(html_26f1a19b90f0f5d3b938c19286f7cc4d);
+            
+        
+
+        marker_af9899e7229aff2e530dd8495655f025.bindPopup(popup_4e0761c24c65d42ab48c5a7ab34904dc)
+        ;
+
+        
+    
+    
+            var marker_c9c5fcb86b29211ce473421e84265ddc = L.marker(
+                [52.616505, 14.245872],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5058edcebbef7293f77eac74e3e7861d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2767aba2cc6d70f7c448212d4a142a02 = $(`<div id="html_2767aba2cc6d70f7c448212d4a142a02" style="width: 100.0%; height: 100.0%;">PVA Neuhardenberg Flugplatz (19022.0 MW)</div>`)[0];
+                popup_5058edcebbef7293f77eac74e3e7861d.setContent(html_2767aba2cc6d70f7c448212d4a142a02);
+            
+        
+
+        marker_c9c5fcb86b29211ce473421e84265ddc.bindPopup(popup_5058edcebbef7293f77eac74e3e7861d)
+        ;
+
+        
+    
+    
+            var marker_3c8659d25019cb7d617201089f2fb177 = L.marker(
+                [49.225747, 11.757634],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_02f3e6f8dab615a6d9d83cd017fd4831 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_84c4ba591f1b094fe3d999209118a469 = $(`<div id="html_84c4ba591f1b094fe3d999209118a469" style="width: 100.0%; height: 100.0%;">Parsberg Eichensee 2 (17040.0 MW)</div>`)[0];
+                popup_02f3e6f8dab615a6d9d83cd017fd4831.setContent(html_84c4ba591f1b094fe3d999209118a469);
+            
+        
+
+        marker_3c8659d25019cb7d617201089f2fb177.bindPopup(popup_02f3e6f8dab615a6d9d83cd017fd4831)
+        ;
+
+        
+    
+    
+            var marker_49e86470da8cce21b78c953bafaf512c = L.marker(
+                [53.341528, 12.056083],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_0491226b75245f8284f420ea8dbfd330 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_01012d51dfc1b0f7d387011a13756bdc = $(`<div id="html_01012d51dfc1b0f7d387011a13756bdc" style="width: 100.0%; height: 100.0%;">Solarpark Jännersdorf Süd (23040.0 MW)</div>`)[0];
+                popup_0491226b75245f8284f420ea8dbfd330.setContent(html_01012d51dfc1b0f7d387011a13756bdc);
+            
+        
+
+        marker_49e86470da8cce21b78c953bafaf512c.bindPopup(popup_0491226b75245f8284f420ea8dbfd330)
+        ;
+
+        
+    
+    
+            var marker_b28e08f6863ba282547734ed1344f876 = L.marker(
+                [53.337139, 12.200028],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_12570343bfad38323e0a488d0a54754d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ebb47a39df47752047be65dd09f8432d = $(`<div id="html_ebb47a39df47752047be65dd09f8432d" style="width: 100.0%; height: 100.0%;">Solarpark Krempendorf I (22478.4 MW)</div>`)[0];
+                popup_12570343bfad38323e0a488d0a54754d.setContent(html_ebb47a39df47752047be65dd09f8432d);
+            
+        
+
+        marker_b28e08f6863ba282547734ed1344f876.bindPopup(popup_12570343bfad38323e0a488d0a54754d)
+        ;
+
+        
+    
+    
+            var marker_d8889ae23d8891b4c9e3953cc66fb85a = L.marker(
+                [53.412069, 12.243754],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2851af4f1fa9523696edf06e08c83f5a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_674f6ca71d9023b28670009616e53e92 = $(`<div id="html_674f6ca71d9023b28670009616e53e92" style="width: 100.0%; height: 100.0%;">Gaarz 2.1 (67164.056 MW)</div>`)[0];
+                popup_2851af4f1fa9523696edf06e08c83f5a.setContent(html_674f6ca71d9023b28670009616e53e92);
+            
+        
+
+        marker_d8889ae23d8891b4c9e3953cc66fb85a.bindPopup(popup_2851af4f1fa9523696edf06e08c83f5a)
+        ;
+
+        
+    
+    
+            var marker_c528d439b42d59c79bbc2b5e6d77689d = L.marker(
+                [48.804628, 12.757375],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e23310d6b24ec19902fc4201be76762b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_48660e56eea11d3806d0d35b56e6d1d0 = $(`<div id="html_48660e56eea11d3806d0d35b56e6d1d0" style="width: 100.0%; height: 100.0%;">PVA-Straßkirchen (54356.0 MW)</div>`)[0];
+                popup_e23310d6b24ec19902fc4201be76762b.setContent(html_48660e56eea11d3806d0d35b56e6d1d0);
+            
+        
+
+        marker_c528d439b42d59c79bbc2b5e6d77689d.bindPopup(popup_e23310d6b24ec19902fc4201be76762b)
+        ;
+
+        
+    
+    
+            var marker_64cb1fc152b03b90c6eefc01509a268e = L.marker(
+                [53.382053, 12.268927],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_526bfdf0f955cc3c1dbe86a1526fd163 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_cdff1c9175437875f7b28b1a9a84beec = $(`<div id="html_cdff1c9175437875f7b28b1a9a84beec" style="width: 100.0%; height: 100.0%;">Ganzlin I (26040.0 MW)</div>`)[0];
+                popup_526bfdf0f955cc3c1dbe86a1526fd163.setContent(html_cdff1c9175437875f7b28b1a9a84beec);
+            
+        
+
+        marker_64cb1fc152b03b90c6eefc01509a268e.bindPopup(popup_526bfdf0f955cc3c1dbe86a1526fd163)
+        ;
+
+        
+    
+    
+            var marker_f4ed79da7c23b258f72fcc2130a1cbca = L.marker(
+                [51.659128, 14.632017],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_938e99b9585a022776e8f0fa2804abdf = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_832609fd3cf899481b375f5266c5c107 = $(`<div id="html_832609fd3cf899481b375f5266c5c107" style="width: 100.0%; height: 100.0%;">DE00.005 Preschen (19530.0 MW)</div>`)[0];
+                popup_938e99b9585a022776e8f0fa2804abdf.setContent(html_832609fd3cf899481b375f5266c5c107);
+            
+        
+
+        marker_f4ed79da7c23b258f72fcc2130a1cbca.bindPopup(popup_938e99b9585a022776e8f0fa2804abdf)
+        ;
+
+        
+    
+    
+            var marker_2d17a595a59772494a230cd2afd12ab2 = L.marker(
+                [52.609919, 14.247127],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_98aba7d21c1e4ca34f62c73953639ea4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_758a07448ecd187e756cf0724c87b7d7 = $(`<div id="html_758a07448ecd187e756cf0724c87b7d7" style="width: 100.0%; height: 100.0%;">Energiepark Neuhardenberg (20782.8 MW)</div>`)[0];
+                popup_98aba7d21c1e4ca34f62c73953639ea4.setContent(html_758a07448ecd187e756cf0724c87b7d7);
+            
+        
+
+        marker_2d17a595a59772494a230cd2afd12ab2.bindPopup(popup_98aba7d21c1e4ca34f62c73953639ea4)
+        ;
+
+        
+    
+    
+            var marker_9d13581fc31109fb87630fb267939060 = L.marker(
+                [53.181233, 8.155151],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1a8fc83e50d8bb1094325de78405d0a9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_91082642a0dbb39d6d13d45fdd9be7b8 = $(`<div id="html_91082642a0dbb39d6d13d45fdd9be7b8" style="width: 100.0%; height: 100.0%;">Solarpark Ammerland (18816.0 MW)</div>`)[0];
+                popup_1a8fc83e50d8bb1094325de78405d0a9.setContent(html_91082642a0dbb39d6d13d45fdd9be7b8);
+            
+        
+
+        marker_9d13581fc31109fb87630fb267939060.bindPopup(popup_1a8fc83e50d8bb1094325de78405d0a9)
+        ;
+
+        
+    
+    
+            var marker_33c81234062c6c64b58013f17420f829 = L.marker(
+                [51.356052, 14.957973],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f31019745a12ecb3e11fa8cf191c4d7b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c60973dd7ab7deeedf06ba0b2e9cf7c7 = $(`<div id="html_c60973dd7ab7deeedf06ba0b2e9cf7c7" style="width: 100.0%; height: 100.0%;">Rothenburg I (20492.7 MW)</div>`)[0];
+                popup_f31019745a12ecb3e11fa8cf191c4d7b.setContent(html_c60973dd7ab7deeedf06ba0b2e9cf7c7);
+            
+        
+
+        marker_33c81234062c6c64b58013f17420f829.bindPopup(popup_f31019745a12ecb3e11fa8cf191c4d7b)
+        ;
+
+        
+    
+    
+            var marker_53ee595f784178b116a930f88c8c5fb1 = L.marker(
+                [51.510639, 13.970417],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_aa17b17bcda86746535023a9a938029d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0f2bf4d347b8031f32e8a55e4f8c41ce = $(`<div id="html_0f2bf4d347b8031f32e8a55e4f8c41ce" style="width: 100.0%; height: 100.0%;">Senftenberg IV (20640.0 MW)</div>`)[0];
+                popup_aa17b17bcda86746535023a9a938029d.setContent(html_0f2bf4d347b8031f32e8a55e4f8c41ce);
+            
+        
+
+        marker_53ee595f784178b116a930f88c8c5fb1.bindPopup(popup_aa17b17bcda86746535023a9a938029d)
+        ;
+
+        
+    
+    
+            var marker_5b3c138e95c9525a95e335e6ff093a15 = L.marker(
+                [48.699875, 12.385041],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_d07556b132116c7ea71dbb652c326e58 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c81af915c30f77fd8fbfd68fe6f4b991 = $(`<div id="html_c81af915c30f77fd8fbfd68fe6f4b991" style="width: 100.0%; height: 100.0%;">Solarpark Mengkofen (20159.0 MW)</div>`)[0];
+                popup_d07556b132116c7ea71dbb652c326e58.setContent(html_c81af915c30f77fd8fbfd68fe6f4b991);
+            
+        
+
+        marker_5b3c138e95c9525a95e335e6ff093a15.bindPopup(popup_d07556b132116c7ea71dbb652c326e58)
+        ;
+
+        
+    
+    
+            var marker_b9df5a0d240e288f206113e80ac2c10a = L.marker(
+                [48.653043, 11.276223],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_083877ef33d10c8b787068a9efe72d9e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e3925d521a42ce97a870f3e6fb6ee6f8 = $(`<div id="html_e3925d521a42ce97a870f3e6fb6ee6f8" style="width: 100.0%; height: 100.0%;">Solarpark Schornhof (J05.1) - P10-031 (19080.0 MW)</div>`)[0];
+                popup_083877ef33d10c8b787068a9efe72d9e.setContent(html_e3925d521a42ce97a870f3e6fb6ee6f8);
+            
+        
+
+        marker_b9df5a0d240e288f206113e80ac2c10a.bindPopup(popup_083877ef33d10c8b787068a9efe72d9e)
+        ;
+
+        
+    
+    
+            var marker_17e957576482e57b1221919cbb4baf02 = L.marker(
+                [52.693698, 14.239078],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b7d27ccc17dbd33cc701b61002c019a9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_65cb73f4d88c518baf33fee7e83db7b0 = $(`<div id="html_65cb73f4d88c518baf33fee7e83db7b0" style="width: 100.0%; height: 100.0%;">Solarpark Alttrebbin (144000.0 MW)</div>`)[0];
+                popup_b7d27ccc17dbd33cc701b61002c019a9.setContent(html_65cb73f4d88c518baf33fee7e83db7b0);
+            
+        
+
+        marker_17e957576482e57b1221919cbb4baf02.bindPopup(popup_b7d27ccc17dbd33cc701b61002c019a9)
+        ;
+
+        
+    
+    
+            var marker_0ac41cf77e24217a37805b574650557a = L.marker(
+                [52.639405, 14.189378],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3dc1f62f1ced0ca13b28ecdd635943e4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b4b356bd154d175c86ccef4abbeb5c35 = $(`<div id="html_b4b356bd154d175c86ccef4abbeb5c35" style="width: 100.0%; height: 100.0%;">Solarpark Gottesgabe (144000.0 MW)</div>`)[0];
+                popup_3dc1f62f1ced0ca13b28ecdd635943e4.setContent(html_b4b356bd154d175c86ccef4abbeb5c35);
+            
+        
+
+        marker_0ac41cf77e24217a37805b574650557a.bindPopup(popup_3dc1f62f1ced0ca13b28ecdd635943e4)
+        ;
+
+        
+    
+    
+            var marker_5876d8d1a1417b47cf77399d94a8e76a = L.marker(
+                [51.510494, 13.970696],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c74ba470c0f31c5d6cc3f3130347b89b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9a1fb62c0446ad1c5a25cbaefa9fa671 = $(`<div id="html_9a1fb62c0446ad1c5a25cbaefa9fa671" style="width: 100.0%; height: 100.0%;">Senftenberg VII (20030.0 MW)</div>`)[0];
+                popup_c74ba470c0f31c5d6cc3f3130347b89b.setContent(html_9a1fb62c0446ad1c5a25cbaefa9fa671);
+            
+        
+
+        marker_5876d8d1a1417b47cf77399d94a8e76a.bindPopup(popup_c74ba470c0f31c5d6cc3f3130347b89b)
+        ;
+
+        
+    
+    
+            var marker_b22840a4d40fd1293beb510aecc61a9b = L.marker(
+                [52.532512, 13.11475],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a7967438db39c77cc04b2c08e31ae95c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_be4f3f6d50d997dd36d7f17c02521584 = $(`<div id="html_be4f3f6d50d997dd36d7f17c02521584" style="width: 100.0%; height: 100.0%;">PVA Dallgow-Döberitz (19575.0 MW)</div>`)[0];
+                popup_a7967438db39c77cc04b2c08e31ae95c.setContent(html_be4f3f6d50d997dd36d7f17c02521584);
+            
+        
+
+        marker_b22840a4d40fd1293beb510aecc61a9b.bindPopup(popup_a7967438db39c77cc04b2c08e31ae95c)
+        ;
+
+        
+    
+    
+            var marker_2b76a3733bcf2a7bedf59a9d25fd41a2 = L.marker(
+                [52.646883, 13.700882],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a5849a58d58b757bfdd00c0c272fc609 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e7f90b0de063e6c1b7fcfbf427b9d57a = $(`<div id="html_e7f90b0de063e6c1b7fcfbf427b9d57a" style="width: 100.0%; height: 100.0%;">PV Weesow-Willmersdorf 2 (50302.0 MW)</div>`)[0];
+                popup_a5849a58d58b757bfdd00c0c272fc609.setContent(html_e7f90b0de063e6c1b7fcfbf427b9d57a);
+            
+        
+
+        marker_2b76a3733bcf2a7bedf59a9d25fd41a2.bindPopup(popup_a5849a58d58b757bfdd00c0c272fc609)
+        ;
+
+        
+    
+    
+            var marker_10a0a4c82d2067e3515b4fae7a2150ee = L.marker(
+                [54.265258, 12.450017],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_19016fad80d8382171ae48f5efcb3449 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_fbc827fb44114f5dccb52a35ce6a5967 = $(`<div id="html_fbc827fb44114f5dccb52a35ce6a5967" style="width: 100.0%; height: 100.0%;">WOC-PUE-01_2012 (20250.0 MW)</div>`)[0];
+                popup_19016fad80d8382171ae48f5efcb3449.setContent(html_fbc827fb44114f5dccb52a35ce6a5967);
+            
+        
+
+        marker_10a0a4c82d2067e3515b4fae7a2150ee.bindPopup(popup_19016fad80d8382171ae48f5efcb3449)
+        ;
+
+        
+    
+    
+            var marker_6f446f94942ee647b94b2770e2bc72d0 = L.marker(
+                [52.651063, 13.691721],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c4413405356545dcd0523764ae831fcc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dbec6958dd4e7c2c324f3bf0288fd372 = $(`<div id="html_dbec6958dd4e7c2c324f3bf0288fd372" style="width: 100.0%; height: 100.0%;">PV Weesow-Wilmersdorf 3 (50302.0 MW)</div>`)[0];
+                popup_c4413405356545dcd0523764ae831fcc.setContent(html_dbec6958dd4e7c2c324f3bf0288fd372);
+            
+        
+
+        marker_6f446f94942ee647b94b2770e2bc72d0.bindPopup(popup_c4413405356545dcd0523764ae831fcc)
+        ;
+
+        
+    
+    
+            var marker_bc3b124413da7a22947deb065a3af1a2 = L.marker(
+                [53.639553, 12.364287],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_81189fd66916094dc6e67b7769691912 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_df9ead7efd70158af8e9f66e99bb9131 = $(`<div id="html_df9ead7efd70158af8e9f66e99bb9131" style="width: 100.0%; height: 100.0%;">Balder B01 - Bereich III (14401.91 MW)</div>`)[0];
+                popup_81189fd66916094dc6e67b7769691912.setContent(html_df9ead7efd70158af8e9f66e99bb9131);
+            
+        
+
+        marker_bc3b124413da7a22947deb065a3af1a2.bindPopup(popup_81189fd66916094dc6e67b7769691912)
+        ;
+
+        
+    
+    
+            var marker_07a617313fcddc719fd5415f3df49a71 = L.marker(
+                [53.381687, 12.271378],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5894a90643c2ba7044ccec6af77343b8 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d6194fcbb81ef5ae6d38d3ff4bb36fb5 = $(`<div id="html_d6194fcbb81ef5ae6d38d3ff4bb36fb5" style="width: 100.0%; height: 100.0%;">Ganzlin II (27720.0 MW)</div>`)[0];
+                popup_5894a90643c2ba7044ccec6af77343b8.setContent(html_d6194fcbb81ef5ae6d38d3ff4bb36fb5);
+            
+        
+
+        marker_07a617313fcddc719fd5415f3df49a71.bindPopup(popup_5894a90643c2ba7044ccec6af77343b8)
+        ;
+
+        
+    
+    
+            var marker_776eb32667d5439816384c9b2ca1586c = L.marker(
+                [53.64, 12.365211],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f122616d1f783dfd820802ff17a657ef = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5d6e515736761b960d75548d92a83661 = $(`<div id="html_5d6e515736761b960d75548d92a83661" style="width: 100.0%; height: 100.0%;">Balder B01 - Bereich IV - Teil 1 (37527.77 MW)</div>`)[0];
+                popup_f122616d1f783dfd820802ff17a657ef.setContent(html_5d6e515736761b960d75548d92a83661);
+            
+        
+
+        marker_776eb32667d5439816384c9b2ca1586c.bindPopup(popup_f122616d1f783dfd820802ff17a657ef)
+        ;
+
+        
+    
+    
+            var marker_cf7863280dd82e4b3bbadc46a92aa59a = L.marker(
+                [48.65634, 11.28223],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_18ff259483cdad0487426ed7a34454a6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dd1ace0d738b9dec20ad50ef4669b7e0 = $(`<div id="html_dd1ace0d738b9dec20ad50ef4669b7e0" style="width: 100.0%; height: 100.0%;">Solarpark Schornhof (J06.1) - P10-031 (19010.0 MW)</div>`)[0];
+                popup_18ff259483cdad0487426ed7a34454a6.setContent(html_dd1ace0d738b9dec20ad50ef4669b7e0);
+            
+        
+
+        marker_cf7863280dd82e4b3bbadc46a92aa59a.bindPopup(popup_18ff259483cdad0487426ed7a34454a6)
+        ;
+
+        
+    
+    
+            var marker_c8e1ccdc06aee9d4f40ce3b4319927da = L.marker(
+                [48.63869, 11.278987],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_53dae1d4b20e3795cdae2100709d52f6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_59a58384eaa79c998c91ed760bb0ca9b = $(`<div id="html_59a58384eaa79c998c91ed760bb0ca9b" style="width: 100.0%; height: 100.0%;">Solarpark Schornhof (J05.2) - P10-031 (19190.0 MW)</div>`)[0];
+                popup_53dae1d4b20e3795cdae2100709d52f6.setContent(html_59a58384eaa79c998c91ed760bb0ca9b);
+            
+        
+
+        marker_c8e1ccdc06aee9d4f40ce3b4319927da.bindPopup(popup_53dae1d4b20e3795cdae2100709d52f6)
+        ;
+
+        
+    
+    
+            var marker_4fffdde7125f53a4a636a2f709b6c307 = L.marker(
+                [48.744123, 12.937051],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_648aeb12fc91d4d1018f045bf40faa1b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_decff1ecf84b3eaddfb66ae6c3ba4f01 = $(`<div id="html_decff1ecf84b3eaddfb66ae6c3ba4f01" style="width: 100.0%; height: 100.0%;">Burgstall West (21700.0 MW)</div>`)[0];
+                popup_648aeb12fc91d4d1018f045bf40faa1b.setContent(html_decff1ecf84b3eaddfb66ae6c3ba4f01);
+            
+        
+
+        marker_4fffdde7125f53a4a636a2f709b6c307.bindPopup(popup_648aeb12fc91d4d1018f045bf40faa1b)
+        ;
+
+        
+    
+    
+            var marker_a7eac6acd1364129ab8ecc8c897e5549 = L.marker(
+                [51.036717, 11.880972],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_131d234f6f811e1b5d2302fbd76e678f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_08f2977c928d59b3dd199f40ac3ae0ca = $(`<div id="html_08f2977c928d59b3dd199f40ac3ae0ca" style="width: 100.0%; height: 100.0%;">Schkölen 1.1 (26750.0 MW)</div>`)[0];
+                popup_131d234f6f811e1b5d2302fbd76e678f.setContent(html_08f2977c928d59b3dd199f40ac3ae0ca);
+            
+        
+
+        marker_a7eac6acd1364129ab8ecc8c897e5549.bindPopup(popup_131d234f6f811e1b5d2302fbd76e678f)
+        ;
+
+        
+    
+    
+            var marker_c59e7774a226c9d0e9d50c8458c893f8 = L.marker(
+                [52.584317, 12.77856],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1352ebe1d2039ccf4be7cb750ab5627b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_bd41459b7d14a86fc16a396fa73460a2 = $(`<div id="html_bd41459b7d14a86fc16a396fa73460a2" style="width: 100.0%; height: 100.0%;">Solarpark Groß Behnitz Nord II (20640.0 MW)</div>`)[0];
+                popup_1352ebe1d2039ccf4be7cb750ab5627b.setContent(html_bd41459b7d14a86fc16a396fa73460a2);
+            
+        
+
+        marker_c59e7774a226c9d0e9d50c8458c893f8.bindPopup(popup_1352ebe1d2039ccf4be7cb750ab5627b)
+        ;
+
+        
+    
+    
+            var marker_1e78f856118180fca42942828002dca2 = L.marker(
+                [53.571138, 11.698668],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4a04f58aa5078f33021dcf3c65743900 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_aa88400a55ccceaef0845a8eefdbd7ca = $(`<div id="html_aa88400a55ccceaef0845a8eefdbd7ca" style="width: 100.0%; height: 100.0%;">TG_Trafo 104 (64674.0 MW)</div>`)[0];
+                popup_4a04f58aa5078f33021dcf3c65743900.setContent(html_aa88400a55ccceaef0845a8eefdbd7ca);
+            
+        
+
+        marker_1e78f856118180fca42942828002dca2.bindPopup(popup_4a04f58aa5078f33021dcf3c65743900)
+        ;
+
+        
+    
+    
+            var marker_7d104c19f7e9ea71f29eb261751ccfb7 = L.marker(
+                [53.571138, 11.698668],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1919daf9b7309f9bd919a662e1e2588f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9f79e2c92f2e957a00f6f2b596bdc41c = $(`<div id="html_9f79e2c92f2e957a00f6f2b596bdc41c" style="width: 100.0%; height: 100.0%;">TG_Trafo 105 (68267.0 MW)</div>`)[0];
+                popup_1919daf9b7309f9bd919a662e1e2588f.setContent(html_9f79e2c92f2e957a00f6f2b596bdc41c);
+            
+        
+
+        marker_7d104c19f7e9ea71f29eb261751ccfb7.bindPopup(popup_1919daf9b7309f9bd919a662e1e2588f)
+        ;
+
+        
+    
+    
+            var marker_25289533927d53366ca9cab9e4bd7fdf = L.marker(
+                [51.552323, 13.86359],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b11b7d117de4118788748b70b8568ea3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2214adb9f57a5e525b45db60d2810b42 = $(`<div id="html_2214adb9f57a5e525b45db60d2810b42" style="width: 100.0%; height: 100.0%;">Klettwitz Nord 1. BA (44400.0 MW)</div>`)[0];
+                popup_b11b7d117de4118788748b70b8568ea3.setContent(html_2214adb9f57a5e525b45db60d2810b42);
+            
+        
+
+        marker_25289533927d53366ca9cab9e4bd7fdf.bindPopup(popup_b11b7d117de4118788748b70b8568ea3)
+        ;
+
+        
+    
+    
+            var marker_6e092eb4008ee8cb3a6bc2650ea600f9 = L.marker(
+                [51.548345, 13.867275],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_9ac4cb06d157cda4d22543f08969cfa2 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_981bdfce92fa58abb82b09ffb6a0057b = $(`<div id="html_981bdfce92fa58abb82b09ffb6a0057b" style="width: 100.0%; height: 100.0%;">Klettwitz Nord 2. BA (20598.8 MW)</div>`)[0];
+                popup_9ac4cb06d157cda4d22543f08969cfa2.setContent(html_981bdfce92fa58abb82b09ffb6a0057b);
+            
+        
+
+        marker_6e092eb4008ee8cb3a6bc2650ea600f9.bindPopup(popup_9ac4cb06d157cda4d22543f08969cfa2)
+        ;
+
+        
+    
+    
+            var marker_92a067454c75ed4425af03622fde68c7 = L.marker(
+                [51.468496, 13.875577],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_17dbe7ff1abca9998e6868ce4152f4e3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f82185761636adc9e1d13e639a902de1 = $(`<div id="html_f82185761636adc9e1d13e639a902de1" style="width: 100.0%; height: 100.0%;">PVA Schwarzheide (22000.0 MW)</div>`)[0];
+                popup_17dbe7ff1abca9998e6868ce4152f4e3.setContent(html_f82185761636adc9e1d13e639a902de1);
+            
+        
+
+        marker_92a067454c75ed4425af03622fde68c7.bindPopup(popup_17dbe7ff1abca9998e6868ce4152f4e3)
+        ;
+
+        
+    
+    
+            var marker_a691e9933040d979f35158d1b104e7c2 = L.marker(
+                [50.597524, 9.3711],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_80a1c04db73fca21c965879326e3e8de = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5682c7e805d7293bfe5726f6d169030e = $(`<div id="html_5682c7e805d7293bfe5726f6d169030e" style="width: 100.0%; height: 100.0%;">Lauterbach 2 (28575.0 MW)</div>`)[0];
+                popup_80a1c04db73fca21c965879326e3e8de.setContent(html_5682c7e805d7293bfe5726f6d169030e);
+            
+        
+
+        marker_a691e9933040d979f35158d1b104e7c2.bindPopup(popup_80a1c04db73fca21c965879326e3e8de)
+        ;
+
+        
+    
+    
+            var marker_2c00041e2928fe3e0d93c1cc47b5bbd0 = L.marker(
+                [51.52887, 13.873354],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_8e6cc828fcfbce8a0a70e695a3793cf7 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_da3915183bef3f098a2e2c85a556fb08 = $(`<div id="html_da3915183bef3f098a2e2c85a556fb08" style="width: 100.0%; height: 100.0%;">Klettwitz Süd Teil 1 (42365.0 MW)</div>`)[0];
+                popup_8e6cc828fcfbce8a0a70e695a3793cf7.setContent(html_da3915183bef3f098a2e2c85a556fb08);
+            
+        
+
+        marker_2c00041e2928fe3e0d93c1cc47b5bbd0.bindPopup(popup_8e6cc828fcfbce8a0a70e695a3793cf7)
+        ;
+
+        
+    
+    
+            var marker_46aa2fbd023d07ae88e7125c1d2cfe0d = L.marker(
+                [53.121363, 13.003778],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_17895a3c523be0112e2707a45f264ae0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_49b3e17510f0ca973695611a35afc5f2 = $(`<div id="html_49b3e17510f0ca973695611a35afc5f2" style="width: 100.0%; height: 100.0%;">PVA Strasen (24000.0 MW)</div>`)[0];
+                popup_17895a3c523be0112e2707a45f264ae0.setContent(html_49b3e17510f0ca973695611a35afc5f2);
+            
+        
+
+        marker_46aa2fbd023d07ae88e7125c1d2cfe0d.bindPopup(popup_17895a3c523be0112e2707a45f264ae0)
+        ;
+
+        
+    
+    
+            var marker_0a47a41eb3b87b86c10b22e7c0b853a4 = L.marker(
+                [51.527586, 13.874835],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_10f1657175c100c156410316b285f11e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1ce0d37570f4855a96ad060a8fe71881 = $(`<div id="html_1ce0d37570f4855a96ad060a8fe71881" style="width: 100.0%; height: 100.0%;">Klettwitz Süd Teil 2 (27195.0 MW)</div>`)[0];
+                popup_10f1657175c100c156410316b285f11e.setContent(html_1ce0d37570f4855a96ad060a8fe71881);
+            
+        
+
+        marker_0a47a41eb3b87b86c10b22e7c0b853a4.bindPopup(popup_10f1657175c100c156410316b285f11e)
+        ;
+
+        
+    
+    
+            var marker_51f96241c39e61d3a42136a48d2de41f = L.marker(
+                [54.020957, 9.196321],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ca4fe2f84812be8cbe0f635f076a21fd = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f4de5d42509daefc05c00b0b2ebb271b = $(`<div id="html_f4de5d42509daefc05c00b0b2ebb271b" style="width: 100.0%; height: 100.0%;">Solarfeld Frestedt (25600.0 MW)</div>`)[0];
+                popup_ca4fe2f84812be8cbe0f635f076a21fd.setContent(html_f4de5d42509daefc05c00b0b2ebb271b);
+            
+        
+
+        marker_51f96241c39e61d3a42136a48d2de41f.bindPopup(popup_ca4fe2f84812be8cbe0f635f076a21fd)
+        ;
+
+        
+    
+    
+            var marker_16fe6907c17b1abd95f2f37807b716dd = L.marker(
+                [51.724876, 13.916018],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3044e24e1fb0a70fa6e6ed196461db38 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_067ad99abd86cffd4a6402cc73ac27fc = $(`<div id="html_067ad99abd86cffd4a6402cc73ac27fc" style="width: 100.0%; height: 100.0%;">PVA Kemmen (30530.0 MW)</div>`)[0];
+                popup_3044e24e1fb0a70fa6e6ed196461db38.setContent(html_067ad99abd86cffd4a6402cc73ac27fc);
+            
+        
+
+        marker_16fe6907c17b1abd95f2f37807b716dd.bindPopup(popup_3044e24e1fb0a70fa6e6ed196461db38)
+        ;
+
+        
+    
+    
+            var marker_3f46358c457b5d6f3041fddba5d43681 = L.marker(
+                [48.655, 10.089],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3aada5b227e9eac9eb9dcb66683ecfee = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8c119504195ede002833ba1aa655555e = $(`<div id="html_8c119504195ede002833ba1aa655555e" style="width: 100.0%; height: 100.0%;">PV Küpfendorf GmbH (20000.0 MW)</div>`)[0];
+                popup_3aada5b227e9eac9eb9dcb66683ecfee.setContent(html_8c119504195ede002833ba1aa655555e);
+            
+        
+
+        marker_3f46358c457b5d6f3041fddba5d43681.bindPopup(popup_3aada5b227e9eac9eb9dcb66683ecfee)
+        ;
+
+        
+    
+    
+            var marker_886fecfb83e90b645d5d72ca2452f14a = L.marker(
+                [51.161627, 12.331217],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_8a2785d9868b0b7e4a8b7eb77d33e3d2 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_026251b07c379cda887cddb9ea6450bf = $(`<div id="html_026251b07c379cda887cddb9ea6450bf" style="width: 100.0%; height: 100.0%;">PV Peres West II (30100.0 MW)</div>`)[0];
+                popup_8a2785d9868b0b7e4a8b7eb77d33e3d2.setContent(html_026251b07c379cda887cddb9ea6450bf);
+            
+        
+
+        marker_886fecfb83e90b645d5d72ca2452f14a.bindPopup(popup_8a2785d9868b0b7e4a8b7eb77d33e3d2)
+        ;
+
+        
+    
+    
+            var marker_e9f054908adea67d15bad4e6138de944 = L.marker(
+                [53.91701, 9.215601],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_0ed0d693b9943243ee304120bd682f07 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b3a810b2c3dc1e43757f432103b203a3 = $(`<div id="html_b3a810b2c3dc1e43757f432103b203a3" style="width: 100.0%; height: 100.0%;">Büttel 1.1 (28350.0 MW)</div>`)[0];
+                popup_0ed0d693b9943243ee304120bd682f07.setContent(html_b3a810b2c3dc1e43757f432103b203a3);
+            
+        
+
+        marker_e9f054908adea67d15bad4e6138de944.bindPopup(popup_0ed0d693b9943243ee304120bd682f07)
+        ;
+
+        
+    
+    
+            var marker_40f3813221da577d608dedfb0b1da22a = L.marker(
+                [48.257692, 9.646006],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_d30a78559d0e4c8d1705ebe768621fd6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6189cd4531d5e7027cb6546ad4b7ddc7 = $(`<div id="html_6189cd4531d5e7027cb6546ad4b7ddc7" style="width: 100.0%; height: 100.0%;">Energiepark Ehingen (32795.0 MW)</div>`)[0];
+                popup_d30a78559d0e4c8d1705ebe768621fd6.setContent(html_6189cd4531d5e7027cb6546ad4b7ddc7);
+            
+        
+
+        marker_40f3813221da577d608dedfb0b1da22a.bindPopup(popup_d30a78559d0e4c8d1705ebe768621fd6)
+        ;
+
+        
+    
+    
+            var marker_0bac7c84d378b7c61e7f8aeb5279cb25 = L.marker(
+                [53.817355, 11.59122],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_42f713437aa3abb56e1bc41dfdd361f8 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f3bc8cb26c55f46254134dec5eeb3b36 = $(`<div id="html_f3bc8cb26c55f46254134dec5eeb3b36" style="width: 100.0%; height: 100.0%;">PVA-Tarzow (22750.0 MW)</div>`)[0];
+                popup_42f713437aa3abb56e1bc41dfdd361f8.setContent(html_f3bc8cb26c55f46254134dec5eeb3b36);
+            
+        
+
+        marker_0bac7c84d378b7c61e7f8aeb5279cb25.bindPopup(popup_42f713437aa3abb56e1bc41dfdd361f8)
+        ;
+
+        
+    
+    
+            var marker_7540ddab6a15d2dad0024bcc83239fd2 = L.marker(
+                [49.935424, 9.842709],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b1175bb834bd6b442639593f35c9b08b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6c2b0f3faa7fbcdda102a8e12a6d18f6 = $(`<div id="html_6c2b0f3faa7fbcdda102a8e12a6d18f6" style="width: 100.0%; height: 100.0%;">Thüngen II (18000.0 MW)</div>`)[0];
+                popup_b1175bb834bd6b442639593f35c9b08b.setContent(html_6c2b0f3faa7fbcdda102a8e12a6d18f6);
+            
+        
+
+        marker_7540ddab6a15d2dad0024bcc83239fd2.bindPopup(popup_b1175bb834bd6b442639593f35c9b08b)
+        ;
+
+        
+    
+    
+            var marker_f120463216d62e20187817d9b835efe1 = L.marker(
+                [52.998105, 12.19501],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_231af1d05eb81227df6ad42f21b03d18 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b2ac0213bd99f2f9eb9b4b5f563c5932 = $(`<div id="html_b2ac0213bd99f2f9eb9b4b5f563c5932" style="width: 100.0%; height: 100.0%;">Döllen I - Block B - Trafo 102 - Station 2.2/2.3/2.5 (20210.0 MW)</div>`)[0];
+                popup_231af1d05eb81227df6ad42f21b03d18.setContent(html_b2ac0213bd99f2f9eb9b4b5f563c5932);
+            
+        
+
+        marker_f120463216d62e20187817d9b835efe1.bindPopup(popup_231af1d05eb81227df6ad42f21b03d18)
+        ;
+
+        
+    
+    
+            var marker_6eb05fdedf736f35ccc73ba9e4a6bbb7 = L.marker(
+                [52.998396, 12.195387],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e4da8a521adc6630c8bf9a989df7ae0c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_06bf14be2e4be819bec822947e067d60 = $(`<div id="html_06bf14be2e4be819bec822947e067d60" style="width: 100.0%; height: 100.0%;">Döllen II - Block A - Trafo 101 - Station 3.4/4.2/4.3/4.4 (27520.0 MW)</div>`)[0];
+                popup_e4da8a521adc6630c8bf9a989df7ae0c.setContent(html_06bf14be2e4be819bec822947e067d60);
+            
+        
+
+        marker_6eb05fdedf736f35ccc73ba9e4a6bbb7.bindPopup(popup_e4da8a521adc6630c8bf9a989df7ae0c)
+        ;
+
+        
+    
+    
+            var marker_4d77a0ffdfaf7eb294b8bc7a382f6f8e = L.marker(
+                [54.09302, 9.923452],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b98767a32a10ce3778a48980fee5653a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_da72c66846ad05d90f14f09d0f396e9c = $(`<div id="html_da72c66846ad05d90f14f09d0f396e9c" style="width: 100.0%; height: 100.0%;">Wasbek 2.1 (37840.0 MW)</div>`)[0];
+                popup_b98767a32a10ce3778a48980fee5653a.setContent(html_da72c66846ad05d90f14f09d0f396e9c);
+            
+        
+
+        marker_4d77a0ffdfaf7eb294b8bc7a382f6f8e.bindPopup(popup_b98767a32a10ce3778a48980fee5653a)
+        ;
+
+        
+    
+    
+            var marker_384cadbf0fa908fa0e5f13da4119bdbd = L.marker(
+                [50.241238, 10.356984],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1936dacd832283414cb37a85644e8722 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d7e5b0743ae614dd3a9433770db884a6 = $(`<div id="html_d7e5b0743ae614dd3a9433770db884a6" style="width: 100.0%; height: 100.0%;">PV Großbardorf (27675.0 MW)</div>`)[0];
+                popup_1936dacd832283414cb37a85644e8722.setContent(html_d7e5b0743ae614dd3a9433770db884a6);
+            
+        
+
+        marker_384cadbf0fa908fa0e5f13da4119bdbd.bindPopup(popup_1936dacd832283414cb37a85644e8722)
+        ;
+
+        
+    
+    
+            var marker_07fdb8367a359cd6501e1e6558d03bd7 = L.marker(
+                [54.610076, 9.343779],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_d2320fe6a33fcebac6c5f98052a47c98 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0c7bc558a5e0ed1ca7a229ea827a5f64 = $(`<div id="html_0c7bc558a5e0ed1ca7a229ea827a5f64" style="width: 100.0%; height: 100.0%;">Eggebek 2.1 (22050.0 MW)</div>`)[0];
+                popup_d2320fe6a33fcebac6c5f98052a47c98.setContent(html_0c7bc558a5e0ed1ca7a229ea827a5f64);
+            
+        
+
+        marker_07fdb8367a359cd6501e1e6558d03bd7.bindPopup(popup_d2320fe6a33fcebac6c5f98052a47c98)
+        ;
+
+        
+    
+    
+            var marker_15040a2119df2717e781425a44c27fbc = L.marker(
+                [51.490316, 13.373192],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_7ec18b0c8cdab3e745f26df04fd62946 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dab0c9bf59098c7d9c81994d09522c6f = $(`<div id="html_dab0c9bf59098c7d9c81994d09522c6f" style="width: 100.0%; height: 100.0%;">Bad Liebenwerda (16995.0 MW)</div>`)[0];
+                popup_7ec18b0c8cdab3e745f26df04fd62946.setContent(html_dab0c9bf59098c7d9c81994d09522c6f);
+            
+        
+
+        marker_15040a2119df2717e781425a44c27fbc.bindPopup(popup_7ec18b0c8cdab3e745f26df04fd62946)
+        ;
+
+        
+    
+    
+            var marker_a35925bd68ea76066b6cd6124b18df44 = L.marker(
+                [51.97525, 12.119583],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_93b6f722498281a51cfc28fd320efb48 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6217c2e55e4ddac5e94be8fc4c27a570 = $(`<div id="html_6217c2e55e4ddac5e94be8fc4c27a570" style="width: 100.0%; height: 100.0%;">Solar Zerbst PV (38400.0 MW)</div>`)[0];
+                popup_93b6f722498281a51cfc28fd320efb48.setContent(html_6217c2e55e4ddac5e94be8fc4c27a570);
+            
+        
+
+        marker_a35925bd68ea76066b6cd6124b18df44.bindPopup(popup_93b6f722498281a51cfc28fd320efb48)
+        ;
+
+        
+    
+    
+            var marker_b264509d8d6d8d267f02eab32730c8cd = L.marker(
+                [50.360754, 11.715166],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_943a2b208067f6816946f4b4aff5b872 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b54c310f8e6874efca57a930eccf22b2 = $(`<div id="html_b54c310f8e6874efca57a930eccf22b2" style="width: 100.0%; height: 100.0%;">Anlage Teilbauabschnitt 2 - Teilbauabschnitt 6 (33300.0 MW)</div>`)[0];
+                popup_943a2b208067f6816946f4b4aff5b872.setContent(html_b54c310f8e6874efca57a930eccf22b2);
+            
+        
+
+        marker_b264509d8d6d8d267f02eab32730c8cd.bindPopup(popup_943a2b208067f6816946f4b4aff5b872)
+        ;
+
+        
+    
+    
+            var marker_b71f1da32b7b8a1c039678046eb0152c = L.marker(
+                [53.237557, 13.65939],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_59a6a2e1473e8afabac482bc32a513f5 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_118036d6acb801cb5905e42743755ace = $(`<div id="html_118036d6acb801cb5905e42743755ace" style="width: 100.0%; height: 100.0%;">PV Park Boitzenburger Land 1 (53082.77 MW)</div>`)[0];
+                popup_59a6a2e1473e8afabac482bc32a513f5.setContent(html_118036d6acb801cb5905e42743755ace);
+            
+        
+
+        marker_b71f1da32b7b8a1c039678046eb0152c.bindPopup(popup_59a6a2e1473e8afabac482bc32a513f5)
+        ;
+
+        
+    
+    
+            var marker_377f32abe2a8071b62176af5a413e1ca = L.marker(
+                [53.237557, 13.65939],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_55d1bb82c058c30bc9812541539be265 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_787ef56ab7a26c57cc08026c29e07473 = $(`<div id="html_787ef56ab7a26c57cc08026c29e07473" style="width: 100.0%; height: 100.0%;">PV Park Boitzenburger Land 2 (53082.77 MW)</div>`)[0];
+                popup_55d1bb82c058c30bc9812541539be265.setContent(html_787ef56ab7a26c57cc08026c29e07473);
+            
+        
+
+        marker_377f32abe2a8071b62176af5a413e1ca.bindPopup(popup_55d1bb82c058c30bc9812541539be265)
+        ;
+
+        
+    
+    
+            var marker_7d503c49a2b29abe32542faed39a4558 = L.marker(
+                [53.237557, 13.65939],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_6a815b23f6af27f78a64472544383495 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f20bf6f6c2861f447b9c87af63842879 = $(`<div id="html_f20bf6f6c2861f447b9c87af63842879" style="width: 100.0%; height: 100.0%;">PV Park Boitzenburger Land 3 (53082.77 MW)</div>`)[0];
+                popup_6a815b23f6af27f78a64472544383495.setContent(html_f20bf6f6c2861f447b9c87af63842879);
+            
+        
+
+        marker_7d503c49a2b29abe32542faed39a4558.bindPopup(popup_6a815b23f6af27f78a64472544383495)
+        ;
+
+        
+    
+    
+            var marker_01129816b343999a729db7aa208be73b = L.marker(
+                [48.650938, 11.28264],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a86381d3f8b146033fb33a76ab0c2d25 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c899081f11e7c1f1ac37401575c611d7 = $(`<div id="html_c899081f11e7c1f1ac37401575c611d7" style="width: 100.0%; height: 100.0%;">Solarpark Schornhof - P20-053 - 40 MW (35970.0 MW)</div>`)[0];
+                popup_a86381d3f8b146033fb33a76ab0c2d25.setContent(html_c899081f11e7c1f1ac37401575c611d7);
+            
+        
+
+        marker_01129816b343999a729db7aa208be73b.bindPopup(popup_a86381d3f8b146033fb33a76ab0c2d25)
+        ;
+
+        
+    
+    
+            var marker_34aa5a72c53ec8037bd5fe0b94e45358 = L.marker(
+                [49.701094, 9.4223],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_6785d64b6c655a32ce6e662ef31c4d24 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9c44eb32d75382d1ca413bfa7acc4971 = $(`<div id="html_9c44eb32d75382d1ca413bfa7acc4971" style="width: 100.0%; height: 100.0%;">PV Park Külsheim Gickelfeld (29400.0 MW)</div>`)[0];
+                popup_6785d64b6c655a32ce6e662ef31c4d24.setContent(html_9c44eb32d75382d1ca413bfa7acc4971);
+            
+        
+
+        marker_34aa5a72c53ec8037bd5fe0b94e45358.bindPopup(popup_6785d64b6c655a32ce6e662ef31c4d24)
+        ;
+
+        
+    
+    
+            var marker_c64e9cd8c1cc5178c028d7d11da62f1c = L.marker(
+                [52.580183, 13.947668],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e932b45a96334ca2d2061a516a3d6674 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_74d6039737938d64b1b7bf7f6c6f3d47 = $(`<div id="html_74d6039737938d64b1b7bf7f6c6f3d47" style="width: 100.0%; height: 100.0%;">Solarpark-Klosterdorf_I (25800.0 MW)</div>`)[0];
+                popup_e932b45a96334ca2d2061a516a3d6674.setContent(html_74d6039737938d64b1b7bf7f6c6f3d47);
+            
+        
+
+        marker_c64e9cd8c1cc5178c028d7d11da62f1c.bindPopup(popup_e932b45a96334ca2d2061a516a3d6674)
+        ;
+
+        
+    
+    
+            var marker_75d94961b02a1b9ccbb6abc2917ed7e4 = L.marker(
+                [52.58115, 13.950414],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4a7e40a43f215318624ac38aadf61211 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0e907a01ca421284813bbad1eae17d7c = $(`<div id="html_0e907a01ca421284813bbad1eae17d7c" style="width: 100.0%; height: 100.0%;">Solarpark-Klosterdorf_II (24000.0 MW)</div>`)[0];
+                popup_4a7e40a43f215318624ac38aadf61211.setContent(html_0e907a01ca421284813bbad1eae17d7c);
+            
+        
+
+        marker_75d94961b02a1b9ccbb6abc2917ed7e4.bindPopup(popup_4a7e40a43f215318624ac38aadf61211)
+        ;
+
+        
+    
+    
+            var marker_510ccdf00c6f66664a7f862173e6a01a = L.marker(
+                [53.507485, 7.985662],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_865e6296572d677b6d88a5c7108dfb45 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6b874cb674e4039d57c7f33be7b89d71 = $(`<div id="html_6b874cb674e4039d57c7f33be7b89d71" style="width: 100.0%; height: 100.0%;">Friesen Elektra PV Sande I (68400.0 MW)</div>`)[0];
+                popup_865e6296572d677b6d88a5c7108dfb45.setContent(html_6b874cb674e4039d57c7f33be7b89d71);
+            
+        
+
+        marker_510ccdf00c6f66664a7f862173e6a01a.bindPopup(popup_865e6296572d677b6d88a5c7108dfb45)
+        ;
+
+        
+    
+    
+            var marker_ed26f23ecd6f5b46c652396504fdeb94 = L.marker(
+                [50.083807, 9.947011],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_38f6a2fe15732535498edbf90cf8f5e0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a2bd1729dd997db3be38b863760e1c16 = $(`<div id="html_a2bd1729dd997db3be38b863760e1c16" style="width: 100.0%; height: 100.0%;">Fuchsstadt Abschnitt 2 (30600.0 MW)</div>`)[0];
+                popup_38f6a2fe15732535498edbf90cf8f5e0.setContent(html_a2bd1729dd997db3be38b863760e1c16);
+            
+        
+
+        marker_ed26f23ecd6f5b46c652396504fdeb94.bindPopup(popup_38f6a2fe15732535498edbf90cf8f5e0)
+        ;
+
+        
+    
+    
+            var marker_30880ef2a36eabc4e6c02da26cd5b7c3 = L.marker(
+                [53.35045, 11.795134],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_d906168ac39773720351619b9a84f528 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_aa20a53052480bedb7b144d6628a4ad0 = $(`<div id="html_aa20a53052480bedb7b144d6628a4ad0" style="width: 100.0%; height: 100.0%;">Karrenzin BA II 50 MW (22950.0 MW)</div>`)[0];
+                popup_d906168ac39773720351619b9a84f528.setContent(html_aa20a53052480bedb7b144d6628a4ad0);
+            
+        
+
+        marker_30880ef2a36eabc4e6c02da26cd5b7c3.bindPopup(popup_d906168ac39773720351619b9a84f528)
+        ;
+
+        
+    
+    
+            var marker_68e71fa50cb92e93d54a92bdfe261927 = L.marker(
+                [49.5638, 9.7746],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_86fea9f29b76a8ee7f752870f3e0693d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_49af4c41c03946c54c89e3d6c553e810 = $(`<div id="html_49af4c41c03946c54c89e3d6c553e810" style="width: 100.0%; height: 100.0%;">Deubach (39250.0 MW)</div>`)[0];
+                popup_86fea9f29b76a8ee7f752870f3e0693d.setContent(html_49af4c41c03946c54c89e3d6c553e810);
+            
+        
+
+        marker_68e71fa50cb92e93d54a92bdfe261927.bindPopup(popup_86fea9f29b76a8ee7f752870f3e0693d)
+        ;
+
+        
+    
+    
+            var marker_c27bf7d50d60e3228c07191310169612 = L.marker(
+                [48.732569, 12.973015],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_85199cb40f87f663e0def739627b19ed = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_10c10ca1d09e6b218beecbb5be014945 = $(`<div id="html_10c10ca1d09e6b218beecbb5be014945" style="width: 100.0%; height: 100.0%;">Stockert EEG (19500.0 MW)</div>`)[0];
+                popup_85199cb40f87f663e0def739627b19ed.setContent(html_10c10ca1d09e6b218beecbb5be014945);
+            
+        
+
+        marker_c27bf7d50d60e3228c07191310169612.bindPopup(popup_85199cb40f87f663e0def739627b19ed)
+        ;
+
+        
+    
+    
+            var marker_c96f90fc0e48a8d514f646072d9106a7 = L.marker(
+                [51.57639, 13.09149],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_93e56d63c464e7a5be7039582272a20d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5133cc1a439dec76db38a9e1192db957 = $(`<div id="html_5133cc1a439dec76db38a9e1192db957" style="width: 100.0%; height: 100.0%;">Solarpark Beilrode II - Teilanlage 1 (25585.0 MW)</div>`)[0];
+                popup_93e56d63c464e7a5be7039582272a20d.setContent(html_5133cc1a439dec76db38a9e1192db957);
+            
+        
+
+        marker_c96f90fc0e48a8d514f646072d9106a7.bindPopup(popup_93e56d63c464e7a5be7039582272a20d)
+        ;
+
+        
+    
+    
+            var marker_84fc02cf29cf1d364e9a05d0f91b3894 = L.marker(
+                [50.226429, 10.536575],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f2ca811e446a284db8ce8c0f23d3f440 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f75aac29ebd4234549520ef5aca08b42 = $(`<div id="html_f75aac29ebd4234549520ef5aca08b42" style="width: 100.0%; height: 100.0%;">Bundorf Feld 4 (23000.0 MW)</div>`)[0];
+                popup_f2ca811e446a284db8ce8c0f23d3f440.setContent(html_f75aac29ebd4234549520ef5aca08b42);
+            
+        
+
+        marker_84fc02cf29cf1d364e9a05d0f91b3894.bindPopup(popup_f2ca811e446a284db8ce8c0f23d3f440)
+        ;
+
+        
+    
+    
+            var marker_5552705794e22794619289f3c51eb5aa = L.marker(
+                [50.22571, 10.523706],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2ad90999c12bca8f81ee7990d964f8f5 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1452621589df633ece64cf59237ec005 = $(`<div id="html_1452621589df633ece64cf59237ec005" style="width: 100.0%; height: 100.0%;">Bundorf Feld 6 (18400.0 MW)</div>`)[0];
+                popup_2ad90999c12bca8f81ee7990d964f8f5.setContent(html_1452621589df633ece64cf59237ec005);
+            
+        
+
+        marker_5552705794e22794619289f3c51eb5aa.bindPopup(popup_2ad90999c12bca8f81ee7990d964f8f5)
+        ;
+
+        
+    
+    
+            var marker_b61b89cd0cbce86056c430e9e72b2f77 = L.marker(
+                [53.524703, 12.777898],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_34108606a02c1238c5b101a3f7a075d9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_58146b7ae48553b3fb7b17414a9a14e8 = $(`<div id="html_58146b7ae48553b3fb7b17414a9a14e8" style="width: 100.0%; height: 100.0%;">PVA Schloen (44000.0 MW)</div>`)[0];
+                popup_34108606a02c1238c5b101a3f7a075d9.setContent(html_58146b7ae48553b3fb7b17414a9a14e8);
+            
+        
+
+        marker_b61b89cd0cbce86056c430e9e72b2f77.bindPopup(popup_34108606a02c1238c5b101a3f7a075d9)
+        ;
+
+        
+    
+    
+            var marker_32aebd22a1b15e87bfe88b8bbe060c33 = L.marker(
+                [51.172721, 12.402396],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3192f072b4537fd24f5e7b2292e6f2d6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_52a92395322381f62e9d0e75ec5f1fee = $(`<div id="html_52a92395322381f62e9d0e75ec5f1fee" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 1 GmbH & Co. KG (111250.0 MW)</div>`)[0];
+                popup_3192f072b4537fd24f5e7b2292e6f2d6.setContent(html_52a92395322381f62e9d0e75ec5f1fee);
+            
+        
+
+        marker_32aebd22a1b15e87bfe88b8bbe060c33.bindPopup(popup_3192f072b4537fd24f5e7b2292e6f2d6)
+        ;
+
+        
+    
+    
+            var marker_cf40e967cb5aa0eb29531b0971f6d583 = L.marker(
+                [51.176645, 12.413346],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b3c1d917bdf13fc8a5cff125c1239efb = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_924863a25c5b90f1674e5d975e661666 = $(`<div id="html_924863a25c5b90f1674e5d975e661666" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 2 GmbH & Co. KG (74750.0 MW)</div>`)[0];
+                popup_b3c1d917bdf13fc8a5cff125c1239efb.setContent(html_924863a25c5b90f1674e5d975e661666);
+            
+        
+
+        marker_cf40e967cb5aa0eb29531b0971f6d583.bindPopup(popup_b3c1d917bdf13fc8a5cff125c1239efb)
+        ;
+
+        
+    
+    
+            var marker_3e82a5740260a803511fb28afb24d753 = L.marker(
+                [51.16957, 12.415107],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_96ad42171a6e8decf954254c2cffe8bf = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c7e015aebe514880c9cb69b458e5164c = $(`<div id="html_c7e015aebe514880c9cb69b458e5164c" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 3 GmbH & Co. KG (37125.0 MW)</div>`)[0];
+                popup_96ad42171a6e8decf954254c2cffe8bf.setContent(html_c7e015aebe514880c9cb69b458e5164c);
+            
+        
+
+        marker_3e82a5740260a803511fb28afb24d753.bindPopup(popup_96ad42171a6e8decf954254c2cffe8bf)
+        ;
+
+        
+    
+    
+            var marker_d2afe834998fff679d57f5822bafa169 = L.marker(
+                [51.160733, 12.413805],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5711ed0223bec62d571bbd83e1902d21 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_48cf14da84a5cbd2b6447d5f4a9997e7 = $(`<div id="html_48cf14da84a5cbd2b6447d5f4a9997e7" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 4 GmbH & Co. KG (99875.0 MW)</div>`)[0];
+                popup_5711ed0223bec62d571bbd83e1902d21.setContent(html_48cf14da84a5cbd2b6447d5f4a9997e7);
+            
+        
+
+        marker_d2afe834998fff679d57f5822bafa169.bindPopup(popup_5711ed0223bec62d571bbd83e1902d21)
+        ;
+
+        
+    
+    
+            var marker_1eb2a4ff59643f4ee0d994f6701362bb = L.marker(
+                [51.161729, 12.424512],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_61f610c795a8f898221ea50fb7b148b6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_bfe45a68ec95b555da8fe10ead205ece = $(`<div id="html_bfe45a68ec95b555da8fe10ead205ece" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 5 GmbH & Co. KG (39375.0 MW)</div>`)[0];
+                popup_61f610c795a8f898221ea50fb7b148b6.setContent(html_bfe45a68ec95b555da8fe10ead205ece);
+            
+        
+
+        marker_1eb2a4ff59643f4ee0d994f6701362bb.bindPopup(popup_61f610c795a8f898221ea50fb7b148b6)
+        ;
+
+        
+    
+    
+            var marker_f7b55968ba3e8980f704ee622a218e47 = L.marker(
+                [51.157124, 12.426862],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_bfab6bc05efe14c5e57d99a355efd829 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a825bdb3f39d859baeb1eadf7129fa5d = $(`<div id="html_a825bdb3f39d859baeb1eadf7129fa5d" style="width: 100.0%; height: 100.0%;">SILUX Solarpark 6 GmbH & Co. KG (52875.0 MW)</div>`)[0];
+                popup_bfab6bc05efe14c5e57d99a355efd829.setContent(html_a825bdb3f39d859baeb1eadf7129fa5d);
+            
+        
+
+        marker_f7b55968ba3e8980f704ee622a218e47.bindPopup(popup_bfab6bc05efe14c5e57d99a355efd829)
+        ;
+
+        
+    
+    
+            var marker_dcadc9fde81082b1480039a824db9efe = L.marker(
+                [50.074179, 7.141614],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e7c638af5e603840fbfa66b10e0a26a4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e5af0454c97960579f8bc7b89291feb5 = $(`<div id="html_e5af0454c97960579f8bc7b89291feb5" style="width: 100.0%; height: 100.0%;">Neef 1 (26730.0 MW)</div>`)[0];
+                popup_e7c638af5e603840fbfa66b10e0a26a4.setContent(html_e5af0454c97960579f8bc7b89291feb5);
+            
+        
+
+        marker_dcadc9fde81082b1480039a824db9efe.bindPopup(popup_e7c638af5e603840fbfa66b10e0a26a4)
+        ;
+
+        
+    
+    
+            var marker_a6a0952a6dd23a3bc2b3e966ce1dbf7d = L.marker(
+                [51.434, 14.5958],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_9ddf897848f26df3afb7055766bbdef4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5d6a5fce46a87e6bc0f26875653e26a3 = $(`<div id="html_5d6a5fce46a87e6bc0f26875653e26a3" style="width: 100.0%; height: 100.0%;">PVA KW Boxberg (20400.0 MW)</div>`)[0];
+                popup_9ddf897848f26df3afb7055766bbdef4.setContent(html_5d6a5fce46a87e6bc0f26875653e26a3);
+            
+        
+
+        marker_a6a0952a6dd23a3bc2b3e966ce1dbf7d.bindPopup(popup_9ddf897848f26df3afb7055766bbdef4)
+        ;
+
+        
+    
+    
+            var marker_acc4b52947333be67ec7ab6cc513f980 = L.marker(
+                [53.234, 12.216],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_92c615f964f3401af6aa1b67668223a0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5bcfe2f05132ff29f65538d968d4b79c = $(`<div id="html_5bcfe2f05132ff29f65538d968d4b79c" style="width: 100.0%; height: 100.0%;">E.ON Solarpark Gerdshagen GmbH & Co. KG (18810.0 MW)</div>`)[0];
+                popup_92c615f964f3401af6aa1b67668223a0.setContent(html_5bcfe2f05132ff29f65538d968d4b79c);
+            
+        
+
+        marker_acc4b52947333be67ec7ab6cc513f980.bindPopup(popup_92c615f964f3401af6aa1b67668223a0)
+        ;
+
+        
+    
+    
+            var marker_bdd4290d7446057fcd73f0a33febf6ab = L.marker(
+                [54.032, 9.446],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4babd8b7789461f0a6af104ef20fbbf3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d44a447e98883307db6e7ab99dd14ffe = $(`<div id="html_d44a447e98883307db6e7ab99dd14ffe" style="width: 100.0%; height: 100.0%;">Agethorst (30720.0 MW)</div>`)[0];
+                popup_4babd8b7789461f0a6af104ef20fbbf3.setContent(html_d44a447e98883307db6e7ab99dd14ffe);
+            
+        
+
+        marker_bdd4290d7446057fcd73f0a33febf6ab.bindPopup(popup_4babd8b7789461f0a6af104ef20fbbf3)
+        ;
+
+        
+    
+    
+            var marker_569499fb0613cba317b1198a645c9419 = L.marker(
+                [52.862182, 12.387094],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_0639361e8cf941a62bab618d980b89ad = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_86c9a8c4a046ec80ac81299b5b77fa32 = $(`<div id="html_86c9a8c4a046ec80ac81299b5b77fa32" style="width: 100.0%; height: 100.0%;">PV Wolfsgarten (31680.0 MW)</div>`)[0];
+                popup_0639361e8cf941a62bab618d980b89ad.setContent(html_86c9a8c4a046ec80ac81299b5b77fa32);
+            
+        
+
+        marker_569499fb0613cba317b1198a645c9419.bindPopup(popup_0639361e8cf941a62bab618d980b89ad)
+        ;
+
+        
+    
+    
+            var marker_b0b685aacb09a55a3a68da7cf87ac124 = L.marker(
+                [49.673198, 9.417098],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2367ddd2c62c70c201883886856fcaab = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1060c0510ef696746b04b9b22a1bae58 = $(`<div id="html_1060c0510ef696746b04b9b22a1bae58" style="width: 100.0%; height: 100.0%;">Solarpark Gickelfeld (35200.0 MW)</div>`)[0];
+                popup_2367ddd2c62c70c201883886856fcaab.setContent(html_1060c0510ef696746b04b9b22a1bae58);
+            
+        
+
+        marker_b0b685aacb09a55a3a68da7cf87ac124.bindPopup(popup_2367ddd2c62c70c201883886856fcaab)
+        ;
+
+        
+    
+    
+            var marker_a5bd31dc8006b08e4bb40a97f912ee7f = L.marker(
+                [50.25, 10.36],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_dc8e0907c1c237d339da537607457955 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8f7881e68402a6bab9e85da2202205fb = $(`<div id="html_8f7881e68402a6bab9e85da2202205fb" style="width: 100.0%; height: 100.0%;">Bürgersolar Lerchenleite (16000.0 MW)</div>`)[0];
+                popup_dc8e0907c1c237d339da537607457955.setContent(html_8f7881e68402a6bab9e85da2202205fb);
+            
+        
+
+        marker_a5bd31dc8006b08e4bb40a97f912ee7f.bindPopup(popup_dc8e0907c1c237d339da537607457955)
+        ;
+
+        
+    
+    
+            var marker_48e8aff110c7eac1802d829ac6500fc1 = L.marker(
+                [51.650915, 8.286021],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_8920bfecb0ecb29fa1b3aa6f7e82c17a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6011eabde48c7808c64564b33980a686 = $(`<div id="html_6011eabde48c7808c64564b33980a686" style="width: 100.0%; height: 100.0%;">ABR966098019341 (17500.0 MW)</div>`)[0];
+                popup_8920bfecb0ecb29fa1b3aa6f7e82c17a.setContent(html_6011eabde48c7808c64564b33980a686);
+            
+        
+
+        marker_48e8aff110c7eac1802d829ac6500fc1.bindPopup(popup_8920bfecb0ecb29fa1b3aa6f7e82c17a)
+        ;
+
+        
+    
+    
+            var marker_88fda8690acd94e1c713511b528caa71 = L.marker(
+                [52.614514, 14.356242],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1ae06ea972092f4576b33c9e99712c79 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_3f1cb6e7a893e4ed121af83c8630a96e = $(`<div id="html_3f1cb6e7a893e4ed121af83c8630a96e" style="width: 100.0%; height: 100.0%;">SP Letschin (46200.0 MW)</div>`)[0];
+                popup_1ae06ea972092f4576b33c9e99712c79.setContent(html_3f1cb6e7a893e4ed121af83c8630a96e);
+            
+        
+
+        marker_88fda8690acd94e1c713511b528caa71.bindPopup(popup_1ae06ea972092f4576b33c9e99712c79)
+        ;
+
+        
+    
+    
+            var marker_776d28553b65b64b0ccf62ee1bc3dc77 = L.marker(
+                [51.54592, 14.264468],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_562a1cf847dc55868e18fdd8600c6bc1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_cef3d14a87ddcbc5bca864084e7cde9b = $(`<div id="html_cef3d14a87ddcbc5bca864084e7cde9b" style="width: 100.0%; height: 100.0%;">PVA Haidemühl (18810.0 MW)</div>`)[0];
+                popup_562a1cf847dc55868e18fdd8600c6bc1.setContent(html_cef3d14a87ddcbc5bca864084e7cde9b);
+            
+        
+
+        marker_776d28553b65b64b0ccf62ee1bc3dc77.bindPopup(popup_562a1cf847dc55868e18fdd8600c6bc1)
+        ;
+
+        
+    
+    
+            var marker_e54d2928d39cbbc4e102fd5d2552f39c = L.marker(
+                [48.345788, 9.866139],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_8fe18fcc2bc56a6428e3cf48f8e1c5c3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_69c6555bb44707d60182122db3a7f57c = $(`<div id="html_69c6555bb44707d60182122db3a7f57c" style="width: 100.0%; height: 100.0%;">Solarpark in Erbach (26500.0 MW)</div>`)[0];
+                popup_8fe18fcc2bc56a6428e3cf48f8e1c5c3.setContent(html_69c6555bb44707d60182122db3a7f57c);
+            
+        
+
+        marker_e54d2928d39cbbc4e102fd5d2552f39c.bindPopup(popup_8fe18fcc2bc56a6428e3cf48f8e1c5c3)
+        ;
+
+        
+    
+    
+            var marker_72c6aa491c689c8bfb574b6c4c1950c9 = L.marker(
+                [49.549627, 9.485624],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e86ed7d3e6b30e639499e2a898fe92f7 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_771bd59c16054d91261fc6fd6fda039b = $(`<div id="html_771bd59c16054d91261fc6fd6fda039b" style="width: 100.0%; height: 100.0%;">PV Hardheim-Erfeld (17600.0 MW)</div>`)[0];
+                popup_e86ed7d3e6b30e639499e2a898fe92f7.setContent(html_771bd59c16054d91261fc6fd6fda039b);
+            
+        
+
+        marker_72c6aa491c689c8bfb574b6c4c1950c9.bindPopup(popup_e86ed7d3e6b30e639499e2a898fe92f7)
+        ;
+
+        
+    
+    
+            var marker_8e053988783d6a3690ef68e92fa19e02 = L.marker(
+                [50.922393, 6.525157],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c4862127c443a7e4f0eb05906eea4aca = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_3dfd74cf4416e63312665a6408692ec7 = $(`<div id="html_3dfd74cf4416e63312665a6408692ec7" style="width: 100.0%; height: 100.0%;">RWE Neuland I Solarpark (17600.0 MW)</div>`)[0];
+                popup_c4862127c443a7e4f0eb05906eea4aca.setContent(html_3dfd74cf4416e63312665a6408692ec7);
+            
+        
+
+        marker_8e053988783d6a3690ef68e92fa19e02.bindPopup(popup_c4862127c443a7e4f0eb05906eea4aca)
+        ;
+
+        
+    
+    
+            var marker_f0361dc08ed93b6ac429d2c7351af348 = L.marker(
+                [52.632257, 10.245586],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b6645bd73de9c0b9334629d61e140896 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_359aeee744c1e08d32e63e819a174629 = $(`<div id="html_359aeee744c1e08d32e63e819a174629" style="width: 100.0%; height: 100.0%;">PV Schwarzer Kamp 1 (19800.0 MW)</div>`)[0];
+                popup_b6645bd73de9c0b9334629d61e140896.setContent(html_359aeee744c1e08d32e63e819a174629);
+            
+        
+
+        marker_f0361dc08ed93b6ac429d2c7351af348.bindPopup(popup_b6645bd73de9c0b9334629d61e140896)
+        ;
+
+        
+    
+    
+            var marker_c746b6e45a90370391b56a69d60f9b13 = L.marker(
+                [54.257895, 9.802885],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_50292a7bb943fb9195ac3f867c24216d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_78487a9803ef7f748bd7fd02980b17e0 = $(`<div id="html_78487a9803ef7f748bd7fd02980b17e0" style="width: 100.0%; height: 100.0%;">Emkendorf Nord 1.1 (31200.0 MW)</div>`)[0];
+                popup_50292a7bb943fb9195ac3f867c24216d.setContent(html_78487a9803ef7f748bd7fd02980b17e0);
+            
+        
+
+        marker_c746b6e45a90370391b56a69d60f9b13.bindPopup(popup_50292a7bb943fb9195ac3f867c24216d)
+        ;
+
+        
+    
+    
+            var marker_1b32db034c50a02fbe8b0eea91f778c0 = L.marker(
+                [52.408318, 14.296291],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_9c24b3200b7f3d5459353de8624908a1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_362934cab9122317608b108c05823933 = $(`<div id="html_362934cab9122317608b108c05823933" style="width: 100.0%; height: 100.0%;">PVA Georgental 2 Falkenhagen Solar UW Sieversdorf (23450.0 MW)</div>`)[0];
+                popup_9c24b3200b7f3d5459353de8624908a1.setContent(html_362934cab9122317608b108c05823933);
+            
+        
+
+        marker_1b32db034c50a02fbe8b0eea91f778c0.bindPopup(popup_9c24b3200b7f3d5459353de8624908a1)
+        ;
+
+        
+    
+    
+            var marker_4e1d80cffa789ba0cb132bfb49e2973e = L.marker(
+                [52.408091, 14.296709],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2dcc41ee344735d1096fe7d55b3e26dc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_26538e5c954eae73ae9b16e305828aed = $(`<div id="html_26538e5c954eae73ae9b16e305828aed" style="width: 100.0%; height: 100.0%;">PVA Georgental 1 Falkenhagen Solar UW Jacobsdorf (22750.0 MW)</div>`)[0];
+                popup_2dcc41ee344735d1096fe7d55b3e26dc.setContent(html_26538e5c954eae73ae9b16e305828aed);
+            
+        
+
+        marker_4e1d80cffa789ba0cb132bfb49e2973e.bindPopup(popup_2dcc41ee344735d1096fe7d55b3e26dc)
+        ;
+
+        
+    
+    
+            var marker_309d9f199d9ff2ad3d2a42efbe6579f1 = L.marker(
+                [52.984906, 12.976381],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_525ff1819ea28a0534fe3d69e664de36 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0a957f0962e2b89ef21dd4dc7b866084 = $(`<div id="html_0a957f0962e2b89ef21dd4dc7b866084" style="width: 100.0%; height: 100.0%;">PVA Klosterheide TA I (17820.0 MW)</div>`)[0];
+                popup_525ff1819ea28a0534fe3d69e664de36.setContent(html_0a957f0962e2b89ef21dd4dc7b866084);
+            
+        
+
+        marker_309d9f199d9ff2ad3d2a42efbe6579f1.bindPopup(popup_525ff1819ea28a0534fe3d69e664de36)
+        ;
+
+        
+    
+    
+            var marker_f254175ac6e5cbcbc9a19a669f817d1b = L.marker(
+                [50.004353, 6.82311],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c8b6faa09256a6e5f3649f41e942f346 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0894b6dc824c3c5234fd4a1b6f27bfdf = $(`<div id="html_0894b6dc824c3c5234fd4a1b6f27bfdf" style="width: 100.0%; height: 100.0%;">SE_Minderlittgen_WIL (22000.0 MW)</div>`)[0];
+                popup_c8b6faa09256a6e5f3649f41e942f346.setContent(html_0894b6dc824c3c5234fd4a1b6f27bfdf);
+            
+        
+
+        marker_f254175ac6e5cbcbc9a19a669f817d1b.bindPopup(popup_c8b6faa09256a6e5f3649f41e942f346)
+        ;
+
+        
+    
+    
+            var marker_8f2eac32a41e4412ce10f6742857888e = L.marker(
+                [53.068087, 11.818202],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_63088e61613111a69239a0e920c3b122 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_afc641d5f2ef1f159d4fcf08c770b919 = $(`<div id="html_afc641d5f2ef1f159d4fcf08c770b919" style="width: 100.0%; height: 100.0%;">Qair Solarpark Perleberg (19800.0 MW)</div>`)[0];
+                popup_63088e61613111a69239a0e920c3b122.setContent(html_afc641d5f2ef1f159d4fcf08c770b919);
+            
+        
+
+        marker_8f2eac32a41e4412ce10f6742857888e.bindPopup(popup_63088e61613111a69239a0e920c3b122)
+        ;
+
+        
+    
+    
+            var marker_b9e8db44a1320b3f095f11d26b0ed73f = L.marker(
+                [51.14495, 10.29522],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3d91ae128543503072997c4d82b0b550 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ad22b260a6d3dbd7836334320a90bbe9 = $(`<div id="html_ad22b260a6d3dbd7836334320a90bbe9" style="width: 100.0%; height: 100.0%;">PVA Mühlhausen_Schröterode_EEG (19800.0 MW)</div>`)[0];
+                popup_3d91ae128543503072997c4d82b0b550.setContent(html_ad22b260a6d3dbd7836334320a90bbe9);
+            
+        
+
+        marker_b9e8db44a1320b3f095f11d26b0ed73f.bindPopup(popup_3d91ae128543503072997c4d82b0b550)
+        ;
+
+        
+    
+    
+            var marker_92fc6fe66c9ff06e9e560d6a674ee9fc = L.marker(
+                [53.432838, 13.361112],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2f821ec5a036cab990401ec7e34609c7 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_39b2a0664dc9e49dda0eba53d462c767 = $(`<div id="html_39b2a0664dc9e49dda0eba53d462c767" style="width: 100.0%; height: 100.0%;">Solarpark Boldekow (41600.0 MW)</div>`)[0];
+                popup_2f821ec5a036cab990401ec7e34609c7.setContent(html_39b2a0664dc9e49dda0eba53d462c767);
+            
+        
+
+        marker_92fc6fe66c9ff06e9e560d6a674ee9fc.bindPopup(popup_2f821ec5a036cab990401ec7e34609c7)
+        ;
+
+        
+    
+    
+            var marker_d339c02357a360570c922186be47f68c = L.marker(
+                [50.911546, 13.273821],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a502fa7d4d45946394ac59249893fbaa = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_303f001124605218d943a41ba5cb0373 = $(`<div id="html_303f001124605218d943a41ba5cb0373" style="width: 100.0%; height: 100.0%;">Kleinschirma 1 (24750.0 MW)</div>`)[0];
+                popup_a502fa7d4d45946394ac59249893fbaa.setContent(html_303f001124605218d943a41ba5cb0373);
+            
+        
+
+        marker_d339c02357a360570c922186be47f68c.bindPopup(popup_a502fa7d4d45946394ac59249893fbaa)
+        ;
+
+        
+    
+    
+            var marker_0dd2d9aae83a5a135ce4469b053bc4ae = L.marker(
+                [52.646927, 14.269131],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ed350f9c659925cf68779073082f0573 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_63d2cc602e0e3c2ff46b5f61cf692063 = $(`<div id="html_63d2cc602e0e3c2ff46b5f61cf692063" style="width: 100.0%; height: 100.0%;">PVA Wuschewier (46500.0 MW)</div>`)[0];
+                popup_ed350f9c659925cf68779073082f0573.setContent(html_63d2cc602e0e3c2ff46b5f61cf692063);
+            
+        
+
+        marker_0dd2d9aae83a5a135ce4469b053bc4ae.bindPopup(popup_ed350f9c659925cf68779073082f0573)
+        ;
+
+        
+    
+    
+            var marker_dd9f4515cee2c89a6b4fb85c19286889 = L.marker(
+                [50.11563, 6.16135],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_29b254c1dbb3ace00ad38280d22cec45 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_61c4014dfe12cbfd40ec0144dbca22e2 = $(`<div id="html_61c4014dfe12cbfd40ec0144dbca22e2" style="width: 100.0%; height: 100.0%;">PVA Habscheid (19712.0 MW)</div>`)[0];
+                popup_29b254c1dbb3ace00ad38280d22cec45.setContent(html_61c4014dfe12cbfd40ec0144dbca22e2);
+            
+        
+
+        marker_dd9f4515cee2c89a6b4fb85c19286889.bindPopup(popup_29b254c1dbb3ace00ad38280d22cec45)
+        ;
+
+        
+    
+    
+            var marker_541e686659dcebb37f7f92f991c7767b = L.marker(
+                [53.85725, 13.00776],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_bde851e1b404655c67eda1b3d8473ae9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e64a97417f39da901a6b525ee9ee4bdb = $(`<div id="html_e64a97417f39da901a6b525ee9ee4bdb" style="width: 100.0%; height: 100.0%;">PVA Borrentin Nord (48400.0 MW)</div>`)[0];
+                popup_bde851e1b404655c67eda1b3d8473ae9.setContent(html_e64a97417f39da901a6b525ee9ee4bdb);
+            
+        
+
+        marker_541e686659dcebb37f7f92f991c7767b.bindPopup(popup_bde851e1b404655c67eda1b3d8473ae9)
+        ;
+
+        
+    
+    
+            var marker_3771ed03027e5a403775db92e7ac7a16 = L.marker(
+                [53.857, 13.0078],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f5cdcc20f7f6f731fb5438105df65f95 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0573ab6f422661cc094b315abb4ec974 = $(`<div id="html_0573ab6f422661cc094b315abb4ec974" style="width: 100.0%; height: 100.0%;">PVA Borrentin Süd (44000.0 MW)</div>`)[0];
+                popup_f5cdcc20f7f6f731fb5438105df65f95.setContent(html_0573ab6f422661cc094b315abb4ec974);
+            
+        
+
+        marker_3771ed03027e5a403775db92e7ac7a16.bindPopup(popup_f5cdcc20f7f6f731fb5438105df65f95)
+        ;
+
+        
+    
+    
+            var marker_0bf6f2db8452f212988448532a07900b = L.marker(
+                [51.418669, 9.842482],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_668208776b0539cb6e8b4bcd7d24b01a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1ca7f245d8090c8034447428996ed6bb = $(`<div id="html_1ca7f245d8090c8034447428996ed6bb" style="width: 100.0%; height: 100.0%;">Friedland Rosdorf (Anlagenteil Friedland) (74274.165 MW)</div>`)[0];
+                popup_668208776b0539cb6e8b4bcd7d24b01a.setContent(html_1ca7f245d8090c8034447428996ed6bb);
+            
+        
+
+        marker_0bf6f2db8452f212988448532a07900b.bindPopup(popup_668208776b0539cb6e8b4bcd7d24b01a)
+        ;
+
+        
+    
+    
+            var marker_3ec370e4d50abc9e6c54c0103d4c1331 = L.marker(
+                [53.512188, 9.357393],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_701589c51dd274172be7677b3be51c5b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_68a335a6863b6514330997537588a25c = $(`<div id="html_68a335a6863b6514330997537588a25c" style="width: 100.0%; height: 100.0%;">Fredenbeck23414 (18810.0 MW)</div>`)[0];
+                popup_701589c51dd274172be7677b3be51c5b.setContent(html_68a335a6863b6514330997537588a25c);
+            
+        
+
+        marker_3ec370e4d50abc9e6c54c0103d4c1331.bindPopup(popup_701589c51dd274172be7677b3be51c5b)
+        ;
+
+        
+    
+    
+            var marker_02d728dea38c2310f18c558a9d7cd62b = L.marker(
+                [52.403463, 11.307249],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_fcc65bf5457aeb2f90343e7ded70d00c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5501c924c5085c343034449ec435edf7 = $(`<div id="html_5501c924c5085c343034449ec435edf7" style="width: 100.0%; height: 100.0%;">FFPVA Calvörde Ost 20,914 MWp (17100.0 MW)</div>`)[0];
+                popup_fcc65bf5457aeb2f90343e7ded70d00c.setContent(html_5501c924c5085c343034449ec435edf7);
+            
+        
+
+        marker_02d728dea38c2310f18c558a9d7cd62b.bindPopup(popup_fcc65bf5457aeb2f90343e7ded70d00c)
+        ;
+
+        
+    
+    
+            var marker_f70fa968b0ade27e9ed73e88bac8c297 = L.marker(
+                [51.037609, 6.492509],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ae654170cf9f68811fd9e874247f173f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_4ebe09a79a84f91c5d1e602298fd93e3 = $(`<div id="html_4ebe09a79a84f91c5d1e602298fd93e3" style="width: 100.0%; height: 100.0%;">PV Bedburg (15680.0 MW)</div>`)[0];
+                popup_ae654170cf9f68811fd9e874247f173f.setContent(html_4ebe09a79a84f91c5d1e602298fd93e3);
+            
+        
+
+        marker_f70fa968b0ade27e9ed73e88bac8c297.bindPopup(popup_ae654170cf9f68811fd9e874247f173f)
+        ;
+
+        
+    
+    
+            var marker_8272bb088196a8fabf4e8f0b14a20ca6 = L.marker(
+                [51.933, 13.746],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_095b7bf83dcfdfc164b8df1628e84b71 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dd73b2e9435820c334cf562d97751109 = $(`<div id="html_dd73b2e9435820c334cf562d97751109" style="width: 100.0%; height: 100.0%;">PVA Schiebsdorf 2 (50820.0 MW)</div>`)[0];
+                popup_095b7bf83dcfdfc164b8df1628e84b71.setContent(html_dd73b2e9435820c334cf562d97751109);
+            
+        
+
+        marker_8272bb088196a8fabf4e8f0b14a20ca6.bindPopup(popup_095b7bf83dcfdfc164b8df1628e84b71)
+        ;
+
+        
+    
+    
+            var marker_0cc1bd976285428d72c7f1d3cb89968b = L.marker(
+                [51.933, 13.746],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_932bb7eb02258ad948560c7e46be4256 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_14a336585836010c1fe0998e39cfb298 = $(`<div id="html_14a336585836010c1fe0998e39cfb298" style="width: 100.0%; height: 100.0%;">PVA Schiebsdorf 3 (29040.0 MW)</div>`)[0];
+                popup_932bb7eb02258ad948560c7e46be4256.setContent(html_14a336585836010c1fe0998e39cfb298);
+            
+        
+
+        marker_0cc1bd976285428d72c7f1d3cb89968b.bindPopup(popup_932bb7eb02258ad948560c7e46be4256)
+        ;
+
+        
+    
+    
+            var marker_f57f59e863fc98740b5167d4fbea26fd = L.marker(
+                [51.933, 13.746],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_731567f42df3c3fa766f88b9c154761d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_277b3cb303d5bdcb29e93b68d05ecf32 = $(`<div id="html_277b3cb303d5bdcb29e93b68d05ecf32" style="width: 100.0%; height: 100.0%;">PVA Schiebsdorf 4 (27390.0 MW)</div>`)[0];
+                popup_731567f42df3c3fa766f88b9c154761d.setContent(html_277b3cb303d5bdcb29e93b68d05ecf32);
+            
+        
+
+        marker_f57f59e863fc98740b5167d4fbea26fd.bindPopup(popup_731567f42df3c3fa766f88b9c154761d)
+        ;
+
+        
+    
+    
+            var marker_21fbc6180219ad3fc829d38208874641 = L.marker(
+                [50.365772, 11.719214],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_888acfb8daed52a3fc25e0db46eb6c47 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ee4c255aeeffbaa669a4e47eb4c52c59 = $(`<div id="html_ee4c255aeeffbaa669a4e47eb4c52c59" style="width: 100.0%; height: 100.0%;">Anlage Bauabschnitt 6 (20800.0 MW)</div>`)[0];
+                popup_888acfb8daed52a3fc25e0db46eb6c47.setContent(html_ee4c255aeeffbaa669a4e47eb4c52c59);
+            
+        
+
+        marker_21fbc6180219ad3fc829d38208874641.bindPopup(popup_888acfb8daed52a3fc25e0db46eb6c47)
+        ;
+
+        
+    
+    
+            var marker_59e87a3c9ad8158b7046e22012d91a90 = L.marker(
+                [52.7694, 13.3681],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_0275172bba86b77b7a71dd59a71b4a58 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_606af2f8771b31722394bb9230432d3e = $(`<div id="html_606af2f8771b31722394bb9230432d3e" style="width: 100.0%; height: 100.0%;">Solarpark Schmachtenhagen-Wensickendorf (25200.0 MW)</div>`)[0];
+                popup_0275172bba86b77b7a71dd59a71b4a58.setContent(html_606af2f8771b31722394bb9230432d3e);
+            
+        
+
+        marker_59e87a3c9ad8158b7046e22012d91a90.bindPopup(popup_0275172bba86b77b7a71dd59a71b4a58)
+        ;
+
+        
+    
+    
+            var marker_a3a3f6837976b027c5261d59e89cfcff = L.marker(
+                [52.53477, 12.18535],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_0961a016ef529844b427a61be52ff3d1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_09342688ce2960a31ac64dc636756a67 = $(`<div id="html_09342688ce2960a31ac64dc636756a67" style="width: 100.0%; height: 100.0%;">Schönermark Tr. 101 (34800.0 MW)</div>`)[0];
+                popup_0961a016ef529844b427a61be52ff3d1.setContent(html_09342688ce2960a31ac64dc636756a67);
+            
+        
+
+        marker_a3a3f6837976b027c5261d59e89cfcff.bindPopup(popup_0961a016ef529844b427a61be52ff3d1)
+        ;
+
+        
+    
+    
+            var marker_602ae59d32b4d727cfbff06a3235faa8 = L.marker(
+                [52.53477, 12.18535],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5266fef12397931ec8aa34b4fc001e6b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9d177507e2746858297732d25e56936c = $(`<div id="html_9d177507e2746858297732d25e56936c" style="width: 100.0%; height: 100.0%;">Schönermark Tr. 102 (24000.0 MW)</div>`)[0];
+                popup_5266fef12397931ec8aa34b4fc001e6b.setContent(html_9d177507e2746858297732d25e56936c);
+            
+        
+
+        marker_602ae59d32b4d727cfbff06a3235faa8.bindPopup(popup_5266fef12397931ec8aa34b4fc001e6b)
+        ;
+
+        
+    
+    
+            var marker_7182d56fae5d146f4271953e44ab6f19 = L.marker(
+                [50.911546, 13.273821],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_8cde0132c1b151374515ca3ce5a60b8f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7bb58e52d7de3aa254abc13a95fbdee6 = $(`<div id="html_7bb58e52d7de3aa254abc13a95fbdee6" style="width: 100.0%; height: 100.0%;">Kleinschirma 2 (23760.0 MW)</div>`)[0];
+                popup_8cde0132c1b151374515ca3ce5a60b8f.setContent(html_7bb58e52d7de3aa254abc13a95fbdee6);
+            
+        
+
+        marker_7182d56fae5d146f4271953e44ab6f19.bindPopup(popup_8cde0132c1b151374515ca3ce5a60b8f)
+        ;
+
+        
+    
+    
+            var marker_21afaba3cc8b64fbd012e8cf4917ea77 = L.marker(
+                [53.5047, 7.985667],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_925a0e2587ca9d13d705416441caedfe = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2a95e6160cf4ecf094e41f499855d287 = $(`<div id="html_2a95e6160cf4ecf094e41f499855d287" style="width: 100.0%; height: 100.0%;">Friesen Elektra PV Sande II (28400.0 MW)</div>`)[0];
+                popup_925a0e2587ca9d13d705416441caedfe.setContent(html_2a95e6160cf4ecf094e41f499855d287);
+            
+        
+
+        marker_21afaba3cc8b64fbd012e8cf4917ea77.bindPopup(popup_925a0e2587ca9d13d705416441caedfe)
+        ;
+
+        
+    
+    
+            var marker_425a628bcf2b1472c929b783f2024860 = L.marker(
+                [53.279962, 8.200086],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_28a478020832c53f731e97bc0eee1e4d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e013b7224236be4eaa7647a5038674e8 = $(`<div id="html_e013b7224236be4eaa7647a5038674e8" style="width: 100.0%; height: 100.0%;">PVA Kleibrok (31360.0 MW)</div>`)[0];
+                popup_28a478020832c53f731e97bc0eee1e4d.setContent(html_e013b7224236be4eaa7647a5038674e8);
+            
+        
+
+        marker_425a628bcf2b1472c929b783f2024860.bindPopup(popup_28a478020832c53f731e97bc0eee1e4d)
+        ;
+
+        
+    
+    
+            var marker_db58bd6383c44321061e9554b587394e = L.marker(
+                [53.551951, 11.341211],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2bb77a46300768496b8802101d1210a0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_cabf3940fc56b2497b210e151e09df5a = $(`<div id="html_cabf3940fc56b2497b210e151e09df5a" style="width: 100.0%; height: 100.0%;">PVA Kalsow (17600.0 MW)</div>`)[0];
+                popup_2bb77a46300768496b8802101d1210a0.setContent(html_cabf3940fc56b2497b210e151e09df5a);
+            
+        
+
+        marker_db58bd6383c44321061e9554b587394e.bindPopup(popup_2bb77a46300768496b8802101d1210a0)
+        ;
+
+        
+    
+    
+            var marker_a510e94fa9a9244419465686fb18ed6b = L.marker(
+                [51.955875, 13.384774],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_566cfc0bfe3cc01561b17e052a8c668e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_72e9af4e7a3383d2eaadae6b9292a13b = $(`<div id="html_72e9af4e7a3383d2eaadae6b9292a13b" style="width: 100.0%; height: 100.0%;">Solar Niederer Fläming (52250.0 MW)</div>`)[0];
+                popup_566cfc0bfe3cc01561b17e052a8c668e.setContent(html_72e9af4e7a3383d2eaadae6b9292a13b);
+            
+        
+
+        marker_a510e94fa9a9244419465686fb18ed6b.bindPopup(popup_566cfc0bfe3cc01561b17e052a8c668e)
+        ;
+
+        
+    
+    
+            var marker_de47f5e306310ac89857aeadfdeace75 = L.marker(
+                [52.16908, 13.2257],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3f555e651cda8d98672aaea291e35e51 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_cc674b44d0cac609da6b934869d433ae = $(`<div id="html_cc674b44d0cac609da6b934869d433ae" style="width: 100.0%; height: 100.0%;">PVA Wiesenhagen_EEG 2 (57765.889 MW)</div>`)[0];
+                popup_3f555e651cda8d98672aaea291e35e51.setContent(html_cc674b44d0cac609da6b934869d433ae);
+            
+        
+
+        marker_de47f5e306310ac89857aeadfdeace75.bindPopup(popup_3f555e651cda8d98672aaea291e35e51)
+        ;
+
+        
+    
+    
+            var marker_dd731ac9a8661ffe6d2f91a4caf5c9aa = L.marker(
+                [49.371275, 6.898564],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ef07518a2605afd5d51cc339c2fc8556 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d8eca5b9c6906a5614e008f48758711e = $(`<div id="html_d8eca5b9c6906a5614e008f48758711e" style="width: 100.0%; height: 100.0%;">SE_2024_3617_Reisbach (17250.0 MW)</div>`)[0];
+                popup_ef07518a2605afd5d51cc339c2fc8556.setContent(html_d8eca5b9c6906a5614e008f48758711e);
+            
+        
+
+        marker_dd731ac9a8661ffe6d2f91a4caf5c9aa.bindPopup(popup_ef07518a2605afd5d51cc339c2fc8556)
+        ;
+
+        
+    
+    
+            var marker_c3182f41e0f5ad02cfb310c6dc194218 = L.marker(
+                [54.5667, 9.3679],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_945208438c3350835072c52af94b117f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7d47874f38f96ae754304321138a9e44 = $(`<div id="html_7d47874f38f96ae754304321138a9e44" style="width: 100.0%; height: 100.0%;">Vattenfall Solar Silberstedt GmbH (18000.0 MW)</div>`)[0];
+                popup_945208438c3350835072c52af94b117f.setContent(html_7d47874f38f96ae754304321138a9e44);
+            
+        
+
+        marker_c3182f41e0f5ad02cfb310c6dc194218.bindPopup(popup_945208438c3350835072c52af94b117f)
+        ;
+
+        
+    
+    
+            var marker_8e9292747931119537a9895b0812d948 = L.marker(
+                [50.127109, 9.100471],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_941b10fd0e9fe842f69c18643f750332 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c0a7e9bc7602ae34c27890824b01f27e = $(`<div id="html_c0a7e9bc7602ae34c27890824b01f27e" style="width: 100.0%; height: 100.0%;">Solarpark Somborn (17600.0 MW)</div>`)[0];
+                popup_941b10fd0e9fe842f69c18643f750332.setContent(html_c0a7e9bc7602ae34c27890824b01f27e);
+            
+        
+
+        marker_8e9292747931119537a9895b0812d948.bindPopup(popup_941b10fd0e9fe842f69c18643f750332)
+        ;
+
+        
+    
+    
+            var marker_0fb5b1601d20e711a12cba83fec0dffa = L.marker(
+                [52.760639, 10.846792],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_aaed7607054cc2f1fb2366c80c4adc45 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_73e526e7632098a18a8ac3030d0a7e30 = $(`<div id="html_73e526e7632098a18a8ac3030d0a7e30" style="width: 100.0%; height: 100.0%;">Solarpark Schadewohl (50600.0 MW)</div>`)[0];
+                popup_aaed7607054cc2f1fb2366c80c4adc45.setContent(html_73e526e7632098a18a8ac3030d0a7e30);
+            
+        
+
+        marker_0fb5b1601d20e711a12cba83fec0dffa.bindPopup(popup_aaed7607054cc2f1fb2366c80c4adc45)
+        ;
+
+        
+    
+    
+            var marker_566e99835685385b85b360caae894b53 = L.marker(
+                [50.027343, 7.135622],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b208f2052e61a01df27db90492284880 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c83d3192b0621643fc9f57d7ee3fc742 = $(`<div id="html_c83d3192b0621643fc9f57d7ee3fc742" style="width: 100.0%; height: 100.0%;">Briedel (34015.0 MW)</div>`)[0];
+                popup_b208f2052e61a01df27db90492284880.setContent(html_c83d3192b0621643fc9f57d7ee3fc742);
+            
+        
+
+        marker_566e99835685385b85b360caae894b53.bindPopup(popup_b208f2052e61a01df27db90492284880)
+        ;
+
+        
+    
+    
+            var marker_e48eeab192d6ce5d819d80edb46e5aba = L.marker(
+                [52.408318, 14.296291],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_134e028bb566ee626fc9c2abab8e53e4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9441c483e657fb3e2b22377dfcffa98a = $(`<div id="html_9441c483e657fb3e2b22377dfcffa98a" style="width: 100.0%; height: 100.0%;">PVA Georgental 3 Falkenhagen Solar UW Sieversdorf (23100.0 MW)</div>`)[0];
+                popup_134e028bb566ee626fc9c2abab8e53e4.setContent(html_9441c483e657fb3e2b22377dfcffa98a);
+            
+        
+
+        marker_e48eeab192d6ce5d819d80edb46e5aba.bindPopup(popup_134e028bb566ee626fc9c2abab8e53e4)
+        ;
+
+        
+    
+    
+            var marker_87ad5c6ba4b1140ea54d35c73de95238 = L.marker(
+                [51.433302, 9.875147],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_21579b3ea0527100fed841ea2938ed1f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_94f3dcc762f348c472cef2505efa2e3d = $(`<div id="html_94f3dcc762f348c472cef2505efa2e3d" style="width: 100.0%; height: 100.0%;">PV-Freilandanlage Deiderode (29100.0 MW)</div>`)[0];
+                popup_21579b3ea0527100fed841ea2938ed1f.setContent(html_94f3dcc762f348c472cef2505efa2e3d);
+            
+        
+
+        marker_87ad5c6ba4b1140ea54d35c73de95238.bindPopup(popup_21579b3ea0527100fed841ea2938ed1f)
+        ;
+
+        
+    
+    
+            var marker_cf08f726dd1097a77af5cb48a4e3958f = L.marker(
+                [51.394692, 9.203126],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_f8af8d30a2934b92fd03a06ab16826a9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_127e55e569605b93c292d05413c1eef9 = $(`<div id="html_127e55e569605b93c292d05413c1eef9" style="width: 100.0%; height: 100.0%;">Bürgersolarpark Niederelsungen_System B2 B3 (39386.0 MW)</div>`)[0];
+                popup_f8af8d30a2934b92fd03a06ab16826a9.setContent(html_127e55e569605b93c292d05413c1eef9);
+            
+        
+
+        marker_cf08f726dd1097a77af5cb48a4e3958f.bindPopup(popup_f8af8d30a2934b92fd03a06ab16826a9)
+        ;
+
+        
+    
+    
+            var marker_45d9dced08c258b11020044ff27eb12a = L.marker(
+                [51.393681, 9.199296],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_cb527f20a9fbc18190ee0fd4375b28f3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_54d9aa78fac515b6590d25ad45d6257f = $(`<div id="html_54d9aa78fac515b6590d25ad45d6257f" style="width: 100.0%; height: 100.0%;">Bürgersolarpark Niederelsungen_System B1 (15840.0 MW)</div>`)[0];
+                popup_cb527f20a9fbc18190ee0fd4375b28f3.setContent(html_54d9aa78fac515b6590d25ad45d6257f);
+            
+        
+
+        marker_45d9dced08c258b11020044ff27eb12a.bindPopup(popup_cb527f20a9fbc18190ee0fd4375b28f3)
+        ;
+
+        
+    
+    
+            var marker_a69f280d563ecee14e8d34f50c63773b = L.marker(
+                [51.397022, 9.202672],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a882d2faec8fe0b66dff5bccbfc7de68 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0ca7212954e71a7f1a6cbb0b0c1b6f45 = $(`<div id="html_0ca7212954e71a7f1a6cbb0b0c1b6f45" style="width: 100.0%; height: 100.0%;">Bürgersolarpark Niederelsungen_System A1 A2_ (36610.0 MW)</div>`)[0];
+                popup_a882d2faec8fe0b66dff5bccbfc7de68.setContent(html_0ca7212954e71a7f1a6cbb0b0c1b6f45);
+            
+        
+
+        marker_a69f280d563ecee14e8d34f50c63773b.bindPopup(popup_a882d2faec8fe0b66dff5bccbfc7de68)
+        ;
+
+        
+    
+    
+            var marker_fdd9d03be746af6449a9207faa85effc = L.marker(
+                [52.409541, 14.343463],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ecea8fcd6e4ed04dbce298a53873e6bb = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_3d2d2f269d6873bc19b26c576b575edb = $(`<div id="html_3d2d2f269d6873bc19b26c576b575edb" style="width: 100.0%; height: 100.0%;">NE Petershagen Ost (30000.0 MW)</div>`)[0];
+                popup_ecea8fcd6e4ed04dbce298a53873e6bb.setContent(html_3d2d2f269d6873bc19b26c576b575edb);
+            
+        
+
+        marker_fdd9d03be746af6449a9207faa85effc.bindPopup(popup_ecea8fcd6e4ed04dbce298a53873e6bb)
+        ;
+
+        
+    
+    
+            var marker_ac5536a747712cc5a8d3244bdb846bc1 = L.marker(
+                [48.119594, 9.356225],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_285776719c7b85451f2408f5802901f8 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0b65f0c7566488c75fe22871f0ba4ee1 = $(`<div id="html_0b65f0c7566488c75fe22871f0ba4ee1" style="width: 100.0%; height: 100.0%;">PVA Langenenslingen (74800.0 MW)</div>`)[0];
+                popup_285776719c7b85451f2408f5802901f8.setContent(html_0b65f0c7566488c75fe22871f0ba4ee1);
+            
+        
+
+        marker_ac5536a747712cc5a8d3244bdb846bc1.bindPopup(popup_285776719c7b85451f2408f5802901f8)
+        ;
+
+        
+    
+    
+            var marker_87d5c0b12c122e3a444c8725abf98be2 = L.marker(
+                [51.152336, 12.432634],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_944c27f2b453419c23ba88dece487080 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dd305798d7a910fb86603d0fe718e3d7 = $(`<div id="html_dd305798d7a910fb86603d0fe718e3d7" style="width: 100.0%; height: 100.0%;">EPW – Areal 9 (21740.0 MW)</div>`)[0];
+                popup_944c27f2b453419c23ba88dece487080.setContent(html_dd305798d7a910fb86603d0fe718e3d7);
+            
+        
+
+        marker_87d5c0b12c122e3a444c8725abf98be2.bindPopup(popup_944c27f2b453419c23ba88dece487080)
+        ;
+
+        
+    
+    
+            var marker_df1f13a18406b293f7e2aedb27e31c57 = L.marker(
+                [49.160394, 8.945589],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_fb1f4168f7dd07205745d0cdc18e3c1e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_96834326d802d3abaf19b441816c084a = $(`<div id="html_96834326d802d3abaf19b441816c084a" style="width: 100.0%; height: 100.0%;">GM Gemmingen Anlagenteil 1 (Feld 1 Nord, 2, 3, 4) (37245.542 MW)</div>`)[0];
+                popup_fb1f4168f7dd07205745d0cdc18e3c1e.setContent(html_96834326d802d3abaf19b441816c084a);
+            
+        
+
+        marker_df1f13a18406b293f7e2aedb27e31c57.bindPopup(popup_fb1f4168f7dd07205745d0cdc18e3c1e)
+        ;
+
+        
+    
+    
+            var marker_1cd7dbd1f645c5e44bb04a61898c4887 = L.marker(
+                [50.877833, 13.656051],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_bd9880b1ef5d8a1450e537cf93736790 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_66e847065fdf4dc66eeca54970f1f656 = $(`<div id="html_66e847065fdf4dc66eeca54970f1f656" style="width: 100.0%; height: 100.0%;">SW-SP-DIP20.9 (17600.0 MW)</div>`)[0];
+                popup_bd9880b1ef5d8a1450e537cf93736790.setContent(html_66e847065fdf4dc66eeca54970f1f656);
+            
+        
+
+        marker_1cd7dbd1f645c5e44bb04a61898c4887.bindPopup(popup_bd9880b1ef5d8a1450e537cf93736790)
+        ;
+
+        
+    
+    
+            var marker_136fa436c24a3e95c361c51084767a37 = L.marker(
+                [50.773743, 13.025573],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_28cc17a42062ee638c4f7fa5466adcd9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_fb2ec033347399954761773a8ee80728 = $(`<div id="html_fb2ec033347399954761773a8ee80728" style="width: 100.0%; height: 100.0%;">PV Gornau 40MW (36630.0 MW)</div>`)[0];
+                popup_28cc17a42062ee638c4f7fa5466adcd9.setContent(html_fb2ec033347399954761773a8ee80728);
+            
+        
+
+        marker_136fa436c24a3e95c361c51084767a37.bindPopup(popup_28cc17a42062ee638c4f7fa5466adcd9)
+        ;
+
+        
+    
+    
+            var marker_88b12cb4c5242d21f325c17fd22bda7d = L.marker(
+                [48.556532, 11.117796],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_91021f4f427cd87f70ac3738eac79822 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d7953db99d68f84f196359792c69178d = $(`<div id="html_d7953db99d68f84f196359792c69178d" style="width: 100.0%; height: 100.0%;">Solarpark Pöttmes VIII - P23-063 (32465.1 MW)</div>`)[0];
+                popup_91021f4f427cd87f70ac3738eac79822.setContent(html_d7953db99d68f84f196359792c69178d);
+            
+        
+
+        marker_88b12cb4c5242d21f325c17fd22bda7d.bindPopup(popup_91021f4f427cd87f70ac3738eac79822)
+        ;
+
+        
+    
+    
+            var marker_ff68a42f6b26afb6add16cf69f4d6f24 = L.marker(
+                [49.915252, 10.697694],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_091166a2218e5f0dc18311a678616c1e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c7d00e295f7ae7018cddcbff0b616d30 = $(`<div id="html_c7d00e295f7ae7018cddcbff0b616d30" style="width: 100.0%; height: 100.0%;">Bürgersolarpark Priesendorf (25920.0 MW)</div>`)[0];
+                popup_091166a2218e5f0dc18311a678616c1e.setContent(html_c7d00e295f7ae7018cddcbff0b616d30);
+            
+        
+
+        marker_ff68a42f6b26afb6add16cf69f4d6f24.bindPopup(popup_091166a2218e5f0dc18311a678616c1e)
+        ;
+
+        
+    
+    
+            var marker_fa3b7a7dbebf07a0814bb7a089108ea1 = L.marker(
+                [50.0592, 11.928399],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_fe503cc09f32e8d3779a247fa854f05d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a0a87a98777a71c184ec4dc8d2af0943 = $(`<div id="html_a0a87a98777a71c184ec4dc8d2af0943" style="width: 100.0%; height: 100.0%;">Solarpark Vierst (24000.0 MW)</div>`)[0];
+                popup_fe503cc09f32e8d3779a247fa854f05d.setContent(html_a0a87a98777a71c184ec4dc8d2af0943);
+            
+        
+
+        marker_fa3b7a7dbebf07a0814bb7a089108ea1.bindPopup(popup_fe503cc09f32e8d3779a247fa854f05d)
+        ;
+
+        
+    
+    
+            var marker_9f28e85132fc7e03d3437c1bd6751068 = L.marker(
+                [50.40611, 11.42475],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c62327397b68394f562b1bb1edf5d1c3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_251d5b778ac0eb3eca69d1455c77ce95 = $(`<div id="html_251d5b778ac0eb3eca69d1455c77ce95" style="width: 100.0%; height: 100.0%;">PV-Anlage Rappoltengrün (28480.0 MW)</div>`)[0];
+                popup_c62327397b68394f562b1bb1edf5d1c3.setContent(html_251d5b778ac0eb3eca69d1455c77ce95);
+            
+        
+
+        marker_9f28e85132fc7e03d3437c1bd6751068.bindPopup(popup_c62327397b68394f562b1bb1edf5d1c3)
+        ;
+
+        
+    
+    
+            var marker_8caa9c80a5bd354db682ac8ad7c422f7 = L.marker(
+                [50.855268, 13.234534],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_7e2e486bd2fdd99b47a0384dbff1588c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8d7b501a9fe434f4ee7eaf15897f4279 = $(`<div id="html_8d7b501a9fe434f4ee7eaf15897f4279" style="width: 100.0%; height: 100.0%;">PV-Anlage Brand-Erbisdorf (48000.0 MW)</div>`)[0];
+                popup_7e2e486bd2fdd99b47a0384dbff1588c.setContent(html_8d7b501a9fe434f4ee7eaf15897f4279);
+            
+        
+
+        marker_8caa9c80a5bd354db682ac8ad7c422f7.bindPopup(popup_7e2e486bd2fdd99b47a0384dbff1588c)
+        ;
+
+        
+    
+    
+            var marker_ff098b3932d3b56d58d01b3eb54835b9 = L.marker(
+                [50.124, 11.47905],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_1dfa42a5e72e97bfbada9216fb078efc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_494ac92b1b5d33b2c3a220d3417067ff = $(`<div id="html_494ac92b1b5d33b2c3a220d3417067ff" style="width: 100.0%; height: 100.0%;">PV-Anlage Eggenreuth 25,5 MW (19500.0 MW)</div>`)[0];
+                popup_1dfa42a5e72e97bfbada9216fb078efc.setContent(html_494ac92b1b5d33b2c3a220d3417067ff);
+            
+        
+
+        marker_ff098b3932d3b56d58d01b3eb54835b9.bindPopup(popup_1dfa42a5e72e97bfbada9216fb078efc)
+        ;
+
+        
+    
+    
+            var marker_438b16d8073aeacbc83201809b1ab8ba = L.marker(
+                [51.286895, 11.847332],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_def2a1b44c70d784b59357817fc90f05 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c10f4b7b08f2e1c53fdcead3d39fb5bd = $(`<div id="html_c10f4b7b08f2e1c53fdcead3d39fb5bd" style="width: 100.0%; height: 100.0%;">PV Mücheln 60MW (54080.0 MW)</div>`)[0];
+                popup_def2a1b44c70d784b59357817fc90f05.setContent(html_c10f4b7b08f2e1c53fdcead3d39fb5bd);
+            
+        
+
+        marker_438b16d8073aeacbc83201809b1ab8ba.bindPopup(popup_def2a1b44c70d784b59357817fc90f05)
+        ;
+
+        
+    
+    
+            var marker_dfa519598b99d62d67e8e1a7df3a13bc = L.marker(
+                [49.682002, 9.98959],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3a2dd048f27788b7537a938b90a8085d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9c8e6d0413e493d0d28bd46bc6c79d59 = $(`<div id="html_9c8e6d0413e493d0d28bd46bc6c79d59" style="width: 100.0%; height: 100.0%;">PV Darstadt (60000.0 MW)</div>`)[0];
+                popup_3a2dd048f27788b7537a938b90a8085d.setContent(html_9c8e6d0413e493d0d28bd46bc6c79d59);
+            
+        
+
+        marker_dfa519598b99d62d67e8e1a7df3a13bc.bindPopup(popup_3a2dd048f27788b7537a938b90a8085d)
+        ;
+
+        
+    
+    
+            var marker_5894d1640530ae3869710a7050d07dd7 = L.marker(
+                [53.290491, 9.579594],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_54f8c71f7a98e7add3804b0cc01bf99d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_41b98af5a44160d0cd0f4548eea0cc19 = $(`<div id="html_41b98af5a44160d0cd0f4548eea0cc19" style="width: 100.0%; height: 100.0%;">SP Tiste Gebiet 4 EEG (23332.11 MW)</div>`)[0];
+                popup_54f8c71f7a98e7add3804b0cc01bf99d.setContent(html_41b98af5a44160d0cd0f4548eea0cc19);
+            
+        
+
+        marker_5894d1640530ae3869710a7050d07dd7.bindPopup(popup_54f8c71f7a98e7add3804b0cc01bf99d)
+        ;
+
+        
+    
+    
+            var marker_82f0128d5e8838ee9476837955196390 = L.marker(
+                [54.313682, 10.012329],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_eb63c8f30b310ed30672c066a37b3978 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_acdd50f3d36b8bfca4e08edbdc656fed = $(`<div id="html_acdd50f3d36b8bfca4e08edbdc656fed" style="width: 100.0%; height: 100.0%;">Melsdorf 1 (12780.0 MW)</div>`)[0];
+                popup_eb63c8f30b310ed30672c066a37b3978.setContent(html_acdd50f3d36b8bfca4e08edbdc656fed);
+            
+        
+
+        marker_82f0128d5e8838ee9476837955196390.bindPopup(popup_eb63c8f30b310ed30672c066a37b3978)
+        ;
+
+        
+    
+    
+            var marker_af7d9d9059218df5f9983c8aabd987d5 = L.marker(
+                [49.320814, 9.162042],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_22c8243545e5c7d24262cf3143e94323 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ff5b3b2354dbb5e414e755a4c40b132b = $(`<div id="html_ff5b3b2354dbb5e414e755a4c40b132b" style="width: 100.0%; height: 100.0%;">PVA Gundelsheim (55650.0 MW)</div>`)[0];
+                popup_22c8243545e5c7d24262cf3143e94323.setContent(html_ff5b3b2354dbb5e414e755a4c40b132b);
+            
+        
+
+        marker_af7d9d9059218df5f9983c8aabd987d5.bindPopup(popup_22c8243545e5c7d24262cf3143e94323)
+        ;
+
+        
+    
+    
+            var marker_15c5a5a616cda1e34b7b6a69ae5de5a1 = L.marker(
+                [47.990993, 10.252656],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4e9749357152bdc4c48f36035cbd2f75 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2146f9f52fe3d7c89edea32296f13ba0 = $(`<div id="html_2146f9f52fe3d7c89edea32296f13ba0" style="width: 100.0%; height: 100.0%;">SaA_Feld1_20,2MWp (18900.0 MW)</div>`)[0];
+                popup_4e9749357152bdc4c48f36035cbd2f75.setContent(html_2146f9f52fe3d7c89edea32296f13ba0);
+            
+        
+
+        marker_15c5a5a616cda1e34b7b6a69ae5de5a1.bindPopup(popup_4e9749357152bdc4c48f36035cbd2f75)
+        ;
+
+        
+    
+    
+            var marker_3bc046f56133382e0d08e0eb3f7a015d = L.marker(
+                [53.420284, 8.093408],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_bb7355d293ee9cca464e6271fcd32d35 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c32ef24a7d260a54ea8f406821f3cfbc = $(`<div id="html_c32ef24a7d260a54ea8f406821f3cfbc" style="width: 100.0%; height: 100.0%;">165-Varel (19800.0 MW)</div>`)[0];
+                popup_bb7355d293ee9cca464e6271fcd32d35.setContent(html_c32ef24a7d260a54ea8f406821f3cfbc);
+            
+        
+
+        marker_3bc046f56133382e0d08e0eb3f7a015d.bindPopup(popup_bb7355d293ee9cca464e6271fcd32d35)
+        ;
+
+        
+    
+    
+            var marker_9f8a996f4571d1e0ba5cba710a82fedd = L.marker(
+                [51.623325, 11.590896],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c2ff964e5d96cfbdae5666a253a02118 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7a3bc07a4b61a16878f9a96ebd7f11d5 = $(`<div id="html_7a3bc07a4b61a16878f9a96ebd7f11d5" style="width: 100.0%; height: 100.0%;">wpd Solarpark Gerbstedt (50400.0 MW)</div>`)[0];
+                popup_c2ff964e5d96cfbdae5666a253a02118.setContent(html_7a3bc07a4b61a16878f9a96ebd7f11d5);
+            
+        
+
+        marker_9f8a996f4571d1e0ba5cba710a82fedd.bindPopup(popup_c2ff964e5d96cfbdae5666a253a02118)
+        ;
+
+        
+    
+    
+            var marker_59632c123d1d203f183e79b72c7ff3ad = L.marker(
+                [49.074183, 11.548034],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c8fc82c976378734f8b5283433af568f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b1e011a3d5fd66c89998b55fa07cd20f = $(`<div id="html_b1e011a3d5fd66c89998b55fa07cd20f" style="width: 100.0%; height: 100.0%;">PV Oberbürg 2 (26400.0 MW)</div>`)[0];
+                popup_c8fc82c976378734f8b5283433af568f.setContent(html_b1e011a3d5fd66c89998b55fa07cd20f);
+            
+        
+
+        marker_59632c123d1d203f183e79b72c7ff3ad.bindPopup(popup_c8fc82c976378734f8b5283433af568f)
+        ;
+
+        
+    
+    
+            var marker_792cef3a258e62b992e0a555fc914ee1 = L.marker(
+                [52.89975, 12.642917],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_25f7c5614d496c49c54b28c4eeaf825b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_fa26d6f7798daaed92dfff55b1034d39 = $(`<div id="html_fa26d6f7798daaed92dfff55b1034d39" style="width: 100.0%; height: 100.0%;">PVA Kerzlin PPA (47100.0 MW)</div>`)[0];
+                popup_25f7c5614d496c49c54b28c4eeaf825b.setContent(html_fa26d6f7798daaed92dfff55b1034d39);
+            
+        
+
+        marker_792cef3a258e62b992e0a555fc914ee1.bindPopup(popup_25f7c5614d496c49c54b28c4eeaf825b)
+        ;
+
+        
+    
+    
+            var marker_6b2c7d076d3ef6e98b8e77f413a3b266 = L.marker(
+                [52.109955, 13.05807],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ae2dd0a2b51a971549a95b9b3b3e793e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_534e79a55e526cdce0545f7fcc6e0cff = $(`<div id="html_534e79a55e526cdce0545f7fcc6e0cff" style="width: 100.0%; height: 100.0%;">PVA Frankenförde an der L80 (37290.0 MW)</div>`)[0];
+                popup_ae2dd0a2b51a971549a95b9b3b3e793e.setContent(html_534e79a55e526cdce0545f7fcc6e0cff);
+            
+        
+
+        marker_6b2c7d076d3ef6e98b8e77f413a3b266.bindPopup(popup_ae2dd0a2b51a971549a95b9b3b3e793e)
+        ;
+
+        
+    
+    
+            var marker_dec68b14fdf1bfd9983480ea305f4989 = L.marker(
+                [52.532323, 12.841783],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_23cba0c7b07fee96f6bd518b6497c568 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b0ec0a343c6ea7822884be8365d31db9 = $(`<div id="html_b0ec0a343c6ea7822884be8365d31db9" style="width: 100.0%; height: 100.0%;">PVA-Ketzin (65472.0 MW)</div>`)[0];
+                popup_23cba0c7b07fee96f6bd518b6497c568.setContent(html_b0ec0a343c6ea7822884be8365d31db9);
+            
+        
+
+        marker_dec68b14fdf1bfd9983480ea305f4989.bindPopup(popup_23cba0c7b07fee96f6bd518b6497c568)
+        ;
+
+        
+    
+    
+            var marker_d83607287abaa4fa6d077afd67ecee4b = L.marker(
+                [49.9153, 10.2606],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a6a54539af827ac0844fa8d9503a1b91 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_94a88a5eacb91bf82dcf355f15a60d2a = $(`<div id="html_94a88a5eacb91bf82dcf355f15a60d2a" style="width: 100.0%; height: 100.0%;">Solarkraftwerk Herleshof 1 (29920.0 MW)</div>`)[0];
+                popup_a6a54539af827ac0844fa8d9503a1b91.setContent(html_94a88a5eacb91bf82dcf355f15a60d2a);
+            
+        
+
+        marker_d83607287abaa4fa6d077afd67ecee4b.bindPopup(popup_a6a54539af827ac0844fa8d9503a1b91)
+        ;
+
+        
+    
+    
+            var marker_3a378f80492f7434c941fd1fa837f39a = L.marker(
+                [51.60748, 11.49133],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_eb7146fe4475315d940e9c27b897ed97 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_26402a174c54b31ac3b8e9d9cf0e0039 = $(`<div id="html_26402a174c54b31ac3b8e9d9cf0e0039" style="width: 100.0%; height: 100.0%;">PVA Großörner (26400.0 MW)</div>`)[0];
+                popup_eb7146fe4475315d940e9c27b897ed97.setContent(html_26402a174c54b31ac3b8e9d9cf0e0039);
+            
+        
+
+        marker_3a378f80492f7434c941fd1fa837f39a.bindPopup(popup_eb7146fe4475315d940e9c27b897ed97)
+        ;
+
+        
+    
+    
+            var marker_afc51ae074230edbdf51d9875a9dc0c3 = L.marker(
+                [49.9153, 10.2606],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_5154f5836e289d322830162fb9b8edca = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_4276c26c2d014fa89226102f04ad5fc2 = $(`<div id="html_4276c26c2d014fa89226102f04ad5fc2" style="width: 100.0%; height: 100.0%;">Solarkraftwerk Herleshof 2 (31280.0 MW)</div>`)[0];
+                popup_5154f5836e289d322830162fb9b8edca.setContent(html_4276c26c2d014fa89226102f04ad5fc2);
+            
+        
+
+        marker_afc51ae074230edbdf51d9875a9dc0c3.bindPopup(popup_5154f5836e289d322830162fb9b8edca)
+        ;
+
+        
+    
+    
+            var marker_b590d51902c7e73a59ef203f565a6bf7 = L.marker(
+                [52.417911, 11.39263],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_73eacc976212fe8e923a448ca6873b61 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2e9cc9641a39c3380113441760aa1a71 = $(`<div id="html_2e9cc9641a39c3380113441760aa1a71" style="width: 100.0%; height: 100.0%;">PVA Klüden (80100.0 MW)</div>`)[0];
+                popup_73eacc976212fe8e923a448ca6873b61.setContent(html_2e9cc9641a39c3380113441760aa1a71);
+            
+        
+
+        marker_b590d51902c7e73a59ef203f565a6bf7.bindPopup(popup_73eacc976212fe8e923a448ca6873b61)
+        ;
+
+        
+    
+    
+            var marker_ea23c1cdc2dafe02a564059de7536cc5 = L.marker(
+                [49.282534, 6.753365],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_22cae41b3c038fc852e18dbe8d827527 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9f1b1e8c7593bf9b2f34d7d468d42b0f = $(`<div id="html_9f1b1e8c7593bf9b2f34d7d468d42b0f" style="width: 100.0%; height: 100.0%;">Solaranlage Linslerhof II (32405.0 MW)</div>`)[0];
+                popup_22cae41b3c038fc852e18dbe8d827527.setContent(html_9f1b1e8c7593bf9b2f34d7d468d42b0f);
+            
+        
+
+        marker_ea23c1cdc2dafe02a564059de7536cc5.bindPopup(popup_22cae41b3c038fc852e18dbe8d827527)
+        ;
+
+        
+    
+    
+            var marker_ba96a04f584af0d52f2b835c645d9766 = L.marker(
+                [52.760625, 11.976342],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_94529c58e8ef5c5568796adbd2b3efe9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e7279e20c3a8ec5735cdd1e2ae970a07 = $(`<div id="html_e7279e20c3a8ec5735cdd1e2ae970a07" style="width: 100.0%; height: 100.0%;">APV Schwarzholz Strang 3 (PPA+EEG) 23,73 MW (21000.0 MW)</div>`)[0];
+                popup_94529c58e8ef5c5568796adbd2b3efe9.setContent(html_e7279e20c3a8ec5735cdd1e2ae970a07);
+            
+        
+
+        marker_ba96a04f584af0d52f2b835c645d9766.bindPopup(popup_94529c58e8ef5c5568796adbd2b3efe9)
+        ;
+
+        
+    
+    
+            var marker_5aa17b426d18c52703d1e9e0ad1e8c85 = L.marker(
+                [52.701461, 11.9984],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_e5fdf9a520aad8f12cef3d043a60b344 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_bbee7ef3081e88c65cf2127a897e97d4 = $(`<div id="html_bbee7ef3081e88c65cf2127a897e97d4" style="width: 100.0%; height: 100.0%;">PVA Dalchau (27000.0 MW)</div>`)[0];
+                popup_e5fdf9a520aad8f12cef3d043a60b344.setContent(html_bbee7ef3081e88c65cf2127a897e97d4);
+            
+        
+
+        marker_5aa17b426d18c52703d1e9e0ad1e8c85.bindPopup(popup_e5fdf9a520aad8f12cef3d043a60b344)
+        ;
+
+        
+    
+    
+            var marker_a5ec175450fd00aec0c57f7b88961cd0 = L.marker(
+                [51.518021, 12.882422],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_60d6080077d2944fb2de3825affd2503 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_dd0cf72e38f1fb289d6b2b38945b3e5c = $(`<div id="html_dd0cf72e38f1fb289d6b2b38945b3e5c" style="width: 100.0%; height: 100.0%;">SP Audenhain - Klitzschen West I (18900.0 MW)</div>`)[0];
+                popup_60d6080077d2944fb2de3825affd2503.setContent(html_dd0cf72e38f1fb289d6b2b38945b3e5c);
+            
+        
+
+        marker_a5ec175450fd00aec0c57f7b88961cd0.bindPopup(popup_60d6080077d2944fb2de3825affd2503)
+        ;
+
+        
+    
+    
+            var marker_6457633e8c37ad2544da744a98c7c65d = L.marker(
+                [49.843188, 6.761622],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b243901473d67ec93227fed5ece72992 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a431e088b6bb38f0036dfa5c65c10c58 = $(`<div id="html_a431e088b6bb38f0036dfa5c65c10c58" style="width: 100.0%; height: 100.0%;">SE_2025_4133_Schweich (19060.0 MW)</div>`)[0];
+                popup_b243901473d67ec93227fed5ece72992.setContent(html_a431e088b6bb38f0036dfa5c65c10c58);
+            
+        
+
+        marker_6457633e8c37ad2544da744a98c7c65d.bindPopup(popup_b243901473d67ec93227fed5ece72992)
+        ;
+
+        
+    
+    
+            var marker_8f71813102286b394cacde637741aaf2 = L.marker(
+                [49.696511, 9.913449],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_2ac10312b0344846cf654057e628df05 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_4770619ee311f045255b1be1403d0f7e = $(`<div id="html_4770619ee311f045255b1be1403d0f7e" style="width: 100.0%; height: 100.0%;">Reichenberg 1.2 (20640.0 MW)</div>`)[0];
+                popup_2ac10312b0344846cf654057e628df05.setContent(html_4770619ee311f045255b1be1403d0f7e);
+            
+        
+
+        marker_8f71813102286b394cacde637741aaf2.bindPopup(popup_2ac10312b0344846cf654057e628df05)
+        ;
+
+        
+    
+    
+            var marker_9c4b45376f2d6ec617bfc16eb2cc0dbe = L.marker(
+                [52.530028, 14.287583],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c47331b5fcea758459fe949016ad7baa = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_207256f5ddb0e7d3af043e51c0fe53ad = $(`<div id="html_207256f5ddb0e7d3af043e51c0fe53ad" style="width: 100.0%; height: 100.0%;">SP Görlsdorf I (62977.0 MW)</div>`)[0];
+                popup_c47331b5fcea758459fe949016ad7baa.setContent(html_207256f5ddb0e7d3af043e51c0fe53ad);
+            
+        
+
+        marker_9c4b45376f2d6ec617bfc16eb2cc0dbe.bindPopup(popup_c47331b5fcea758459fe949016ad7baa)
+        ;
+
+        
+    
+    
+            var marker_dd61daa685e13dfbb92ccbd94c927f8a = L.marker(
+                [53.818754, 13.354037],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4787fb6c4d14417978a6a8420f099c64 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0035e7a7aaa248b057936fad9ff22df8 = $(`<div id="html_0035e7a7aaa248b057936fad9ff22df8" style="width: 100.0%; height: 100.0%;">PV Bartow Ost 1 (70400.0 MW)</div>`)[0];
+                popup_4787fb6c4d14417978a6a8420f099c64.setContent(html_0035e7a7aaa248b057936fad9ff22df8);
+            
+        
+
+        marker_dd61daa685e13dfbb92ccbd94c927f8a.bindPopup(popup_4787fb6c4d14417978a6a8420f099c64)
+        ;
+
+        
+    
+    
+            var marker_25fb247990f45a473918966dc9ba6658 = L.marker(
+                [53.820408, 13.365299],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ac9acc80a773622bdc96f00391530f2f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c989cca1cc2467983385229773611257 = $(`<div id="html_c989cca1cc2467983385229773611257" style="width: 100.0%; height: 100.0%;">PV Bartow Ost 2 (70400.0 MW)</div>`)[0];
+                popup_ac9acc80a773622bdc96f00391530f2f.setContent(html_c989cca1cc2467983385229773611257);
+            
+        
+
+        marker_25fb247990f45a473918966dc9ba6658.bindPopup(popup_ac9acc80a773622bdc96f00391530f2f)
+        ;
+
+        
+    
+    
+            var marker_0020fbbbf47d09e1736592dc15f3047a = L.marker(
+                [53.816412, 13.324692],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_03519068d1d0f2be7f15c7aabc29b8cd = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e2368f714e80643cd2d97ba3d4938fff = $(`<div id="html_e2368f714e80643cd2d97ba3d4938fff" style="width: 100.0%; height: 100.0%;">PV Bartow West (64360.14 MW)</div>`)[0];
+                popup_03519068d1d0f2be7f15c7aabc29b8cd.setContent(html_e2368f714e80643cd2d97ba3d4938fff);
+            
+        
+
+        marker_0020fbbbf47d09e1736592dc15f3047a.bindPopup(popup_03519068d1d0f2be7f15c7aabc29b8cd)
+        ;
+
+        
+    
+    
+            var marker_92837114c1bab24734b7db60346b7b71 = L.marker(
+                [48.727679, 12.939201],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_51f178744b8e93326c68ac0ed16c7db9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9fb20a5b5e8ac8a87178ec303937b67a = $(`<div id="html_9fb20a5b5e8ac8a87178ec303937b67a" style="width: 100.0%; height: 100.0%;">Sender (19800.0 MW)</div>`)[0];
+                popup_51f178744b8e93326c68ac0ed16c7db9.setContent(html_9fb20a5b5e8ac8a87178ec303937b67a);
+            
+        
+
+        marker_92837114c1bab24734b7db60346b7b71.bindPopup(popup_51f178744b8e93326c68ac0ed16c7db9)
+        ;
+
+        
+    
+    
+            var marker_7a6175c4ceb2e5a0942a5c2e138cc2ed = L.marker(
+                [48.729048, 12.961988],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_645ac8703aef2a2fd544ddf2bd9b535d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b6a2420deb479193d86f188455208222 = $(`<div id="html_b6a2420deb479193d86f188455208222" style="width: 100.0%; height: 100.0%;">Ammerling (19800.0 MW)</div>`)[0];
+                popup_645ac8703aef2a2fd544ddf2bd9b535d.setContent(html_b6a2420deb479193d86f188455208222);
+            
+        
+
+        marker_7a6175c4ceb2e5a0942a5c2e138cc2ed.bindPopup(popup_645ac8703aef2a2fd544ddf2bd9b535d)
+        ;
+
+        
+    
+    
+            var marker_eb17c824420fb76dc2670487f9f0df75 = L.marker(
+                [54.817772, 8.853024],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_aa5bfe812b231a70d9b0c3085a769158 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c30304dfde046f0e38db93ce4044ac01 = $(`<div id="html_c30304dfde046f0e38db93ce4044ac01" style="width: 100.0%; height: 100.0%;">Bürgersolarpark Bosbüll III / Ost (27950.0 MW)</div>`)[0];
+                popup_aa5bfe812b231a70d9b0c3085a769158.setContent(html_c30304dfde046f0e38db93ce4044ac01);
+            
+        
+
+        marker_eb17c824420fb76dc2670487f9f0df75.bindPopup(popup_aa5bfe812b231a70d9b0c3085a769158)
+        ;
+
+        
+    
+    
+            var marker_b3476ed344e93cfa02a37341a212b516 = L.marker(
+                [52.118972, 13.056017],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_293c1aabccebb5a6b10c22bfe8a7164b = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f1d2d0b51a7bab32fe4c2ffe693c1c91 = $(`<div id="html_f1d2d0b51a7bab32fe4c2ffe693c1c91" style="width: 100.0%; height: 100.0%;">PVA Frankenförde Nord 1 (72912.0 MW)</div>`)[0];
+                popup_293c1aabccebb5a6b10c22bfe8a7164b.setContent(html_f1d2d0b51a7bab32fe4c2ffe693c1c91);
+            
+        
+
+        marker_b3476ed344e93cfa02a37341a212b516.bindPopup(popup_293c1aabccebb5a6b10c22bfe8a7164b)
+        ;
+
+        
+    
+    
+            var marker_5f3f8b3d9968034267c1bca3760660ee = L.marker(
+                [53.6203, 13.3699],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ad8bf3c04613bd3aec9416423d01bc1f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1e119d43b3895a144d6a6434338596cd = $(`<div id="html_1e119d43b3895a144d6a6434338596cd" style="width: 100.0%; height: 100.0%;">Vattenfall Solar Neubrandenburg (21760.0 MW)</div>`)[0];
+                popup_ad8bf3c04613bd3aec9416423d01bc1f.setContent(html_1e119d43b3895a144d6a6434338596cd);
+            
+        
+
+        marker_5f3f8b3d9968034267c1bca3760660ee.bindPopup(popup_ad8bf3c04613bd3aec9416423d01bc1f)
+        ;
+
+        
+    
+    
+            var marker_424f39d51118f2b6e0ecc981b437472f = L.marker(
+                [53.826132, 13.355863],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_fa0c698f61bf169714fba750653cc471 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7c6ed5b1062835e0d7b4983b2b7c1331 = $(`<div id="html_7c6ed5b1062835e0d7b4983b2b7c1331" style="width: 100.0%; height: 100.0%;">PV Bartow Ost 3 (54139.8 MW)</div>`)[0];
+                popup_fa0c698f61bf169714fba750653cc471.setContent(html_7c6ed5b1062835e0d7b4983b2b7c1331);
+            
+        
+
+        marker_424f39d51118f2b6e0ecc981b437472f.bindPopup(popup_fa0c698f61bf169714fba750653cc471)
+        ;
+
+        
+    
+    
+            var marker_780617b308f60cd32efc79b0ba153994 = L.marker(
+                [48.732235, 10.506755],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_ab8dbddc9e82f9cf23852765582096b3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_38d34aeb144c75ecc58fe55246d12c12 = $(`<div id="html_38d34aeb144c75ecc58fe55246d12c12" style="width: 100.0%; height: 100.0%;">PV Amerdingen (67320.0 MW)</div>`)[0];
+                popup_ab8dbddc9e82f9cf23852765582096b3.setContent(html_38d34aeb144c75ecc58fe55246d12c12);
+            
+        
+
+        marker_780617b308f60cd32efc79b0ba153994.bindPopup(popup_ab8dbddc9e82f9cf23852765582096b3)
+        ;
+
+        
+    
+    
+            var marker_c27bd30d262b448db5d113bef6151673 = L.marker(
+                [52.60511, 12.9033],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3f05cb89c92e560a8b4ec035802dbec9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7fcd7fe8e540d85da07c74bd794289b9 = $(`<div id="html_7fcd7fe8e540d85da07c74bd794289b9" style="width: 100.0%; height: 100.0%;">Vattenfall Solar Nauen GmbH (35000.0 MW)</div>`)[0];
+                popup_3f05cb89c92e560a8b4ec035802dbec9.setContent(html_7fcd7fe8e540d85da07c74bd794289b9);
+            
+        
+
+        marker_c27bd30d262b448db5d113bef6151673.bindPopup(popup_3f05cb89c92e560a8b4ec035802dbec9)
+        ;
+
+        
+    
+    
+            var marker_bd0f3cb23701448adbe8dc391dccf32b = L.marker(
+                [51.594474, 13.816205],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_c37d06b766ed0f135535db23a905812f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_82c0b1197d4a2e79ff22befba11973ad = $(`<div id="html_82c0b1197d4a2e79ff22befba11973ad" style="width: 100.0%; height: 100.0%;">PVA Sallgast / LAURAG SO2 GmbH & Co. KG (33000.0 MW)</div>`)[0];
+                popup_c37d06b766ed0f135535db23a905812f.setContent(html_82c0b1197d4a2e79ff22befba11973ad);
+            
+        
+
+        marker_bd0f3cb23701448adbe8dc391dccf32b.bindPopup(popup_c37d06b766ed0f135535db23a905812f)
+        ;
+
+        
+    
+    
+            var marker_a1ed9d6fac97b00d0ca1fa3a01b5a55b = L.marker(
+                [51.069923, 6.490049],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_6abf9d40ab5d42ba83477b17a8271296 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_688f010b9233bbe26f001aa41b0c3eaf = $(`<div id="html_688f010b9233bbe26f001aa41b0c3eaf" style="width: 100.0%; height: 100.0%;">PV A44n Jüchen Mitte Ost (18057.6 MW)</div>`)[0];
+                popup_6abf9d40ab5d42ba83477b17a8271296.setContent(html_688f010b9233bbe26f001aa41b0c3eaf);
+            
+        
+
+        marker_a1ed9d6fac97b00d0ca1fa3a01b5a55b.bindPopup(popup_6abf9d40ab5d42ba83477b17a8271296)
+        ;
+
+        
+    
+    
+            var marker_83b5a65e3e2359fc9cbc35833dae4dfb = L.marker(
+                [48.288708, 11.746077],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_edae714a1f99bfb38f88a594d7e33757 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6a7469d1e465b2c729374744862c4ad0 = $(`<div id="html_6a7469d1e465b2c729374744862c4ad0" style="width: 100.0%; height: 100.0%;">PV-Projekt Zengermoos Nord (15600.0 MW)</div>`)[0];
+                popup_edae714a1f99bfb38f88a594d7e33757.setContent(html_6a7469d1e465b2c729374744862c4ad0);
+            
+        
+
+        marker_83b5a65e3e2359fc9cbc35833dae4dfb.bindPopup(popup_edae714a1f99bfb38f88a594d7e33757)
+        ;
+
+        
+    
+    
+            var marker_d8140a9ca75892d2dfa443a74440dc33 = L.marker(
+                [52.18322, 11.02218],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_3df6cc7a8d1cf3328b839d77430c5f2a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c01bb8c68f3aa207a13b23348c745846 = $(`<div id="html_c01bb8c68f3aa207a13b23348c745846" style="width: 100.0%; height: 100.0%;">PVA Harbke 0126 (27840.0 MW)</div>`)[0];
+                popup_3df6cc7a8d1cf3328b839d77430c5f2a.setContent(html_c01bb8c68f3aa207a13b23348c745846);
+            
+        
+
+        marker_d8140a9ca75892d2dfa443a74440dc33.bindPopup(popup_3df6cc7a8d1cf3328b839d77430c5f2a)
+        ;
+
+        
+    
+    
+            var marker_9645ca9e3c34b8e2502d9eeb01456919 = L.marker(
+                [50.883944, 6.808181],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_a67b98b2574dc359e22dc7b3859127f2 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_51649c4407e18e345969483f24c992c4 = $(`<div id="html_51649c4407e18e345969483f24c992c4" style="width: 100.0%; height: 100.0%;">PVA - Solarpark Hürth Gleuel (23625.0 MW)</div>`)[0];
+                popup_a67b98b2574dc359e22dc7b3859127f2.setContent(html_51649c4407e18e345969483f24c992c4);
+            
+        
+
+        marker_9645ca9e3c34b8e2502d9eeb01456919.bindPopup(popup_a67b98b2574dc359e22dc7b3859127f2)
+        ;
+
+        
+    
+    
+            var marker_2adb6e53f6ef387403f3b5b40f7122c2 = L.marker(
+                [53.53947, 12.64942],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_7146b75b71701308e1ce885e57e05593 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_125654a93874fa37b57aa8f7c965acad = $(`<div id="html_125654a93874fa37b57aa8f7c965acad" style="width: 100.0%; height: 100.0%;">PV Waren 1 EEG (23436.0 MW)</div>`)[0];
+                popup_7146b75b71701308e1ce885e57e05593.setContent(html_125654a93874fa37b57aa8f7c965acad);
+            
+        
+
+        marker_2adb6e53f6ef387403f3b5b40f7122c2.bindPopup(popup_7146b75b71701308e1ce885e57e05593)
+        ;
+
+        
+    
+    
+            var marker_d1872d7532ea9532876186c31cab4876 = L.marker(
+                [48.5596, 11.170138],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_7f8a5fde0e74a4261856b2389584caf6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c392954a5c20b36f852c87c36ee3862c = $(`<div id="html_c392954a5c20b36f852c87c36ee3862c" style="width: 100.0%; height: 100.0%;">Solarpark Schrobenhausen-Sandizell I - P20-105 - Teil 34.000,00 kWp - SOL23-3/268 (29872.0 MW)</div>`)[0];
+                popup_7f8a5fde0e74a4261856b2389584caf6.setContent(html_c392954a5c20b36f852c87c36ee3862c);
+            
+        
+
+        marker_d1872d7532ea9532876186c31cab4876.bindPopup(popup_7f8a5fde0e74a4261856b2389584caf6)
+        ;
+
+        
+    
+    
+            var marker_129e725c3e931d6dc95ee18ae355be0e = L.marker(
+                [53.0718, 11.88336],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_29a8caf8a0f4f93f73feeaccdcf2e262 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b483246cdbab6d25d02c2694039805d0 = $(`<div id="html_b483246cdbab6d25d02c2694039805d0" style="width: 100.0%; height: 100.0%;">PV Memmendorf - B (23760.0 MW)</div>`)[0];
+                popup_29a8caf8a0f4f93f73feeaccdcf2e262.setContent(html_b483246cdbab6d25d02c2694039805d0);
+            
+        
+
+        marker_129e725c3e931d6dc95ee18ae355be0e.bindPopup(popup_29a8caf8a0f4f93f73feeaccdcf2e262)
+        ;
+
+        
+    
+    
+            var marker_3f8778a5139e0e12660a4d54ac485352 = L.marker(
+                [49.67853, 9.55638],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_58b0eb3a451313b9508b6add700b58c2 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_65743b52fb73546bfc0816073dc9efcf = $(`<div id="html_65743b52fb73546bfc0816073dc9efcf" style="width: 100.0%; height: 100.0%;">Birkenhain 1 (27200.0 MW)</div>`)[0];
+                popup_58b0eb3a451313b9508b6add700b58c2.setContent(html_65743b52fb73546bfc0816073dc9efcf);
+            
+        
+
+        marker_3f8778a5139e0e12660a4d54ac485352.bindPopup(popup_58b0eb3a451313b9508b6add700b58c2)
+        ;
+
+        
+    
+    
+            var marker_4ef5afb9c0c6386cba608949cc1b2668 = L.marker(
+                [51.0442, 12.3237],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_257844cb6278a8d92accc7c9e467b560 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0d7ffa369a62640e738fbd18b6dc3005 = $(`<div id="html_0d7ffa369a62640e738fbd18b6dc3005" style="width: 100.0%; height: 100.0%;">PV Meuselwitz I (52480.0 MW)</div>`)[0];
+                popup_257844cb6278a8d92accc7c9e467b560.setContent(html_0d7ffa369a62640e738fbd18b6dc3005);
+            
+        
+
+        marker_4ef5afb9c0c6386cba608949cc1b2668.bindPopup(popup_257844cb6278a8d92accc7c9e467b560)
+        ;
+
+        
+    
+    
+            var marker_a089d0826ef17400c98e45ca8ea417ac = L.marker(
+                [53.532293, 8.544888],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_447d58818fcadcbc1c3f9fb112040f7c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a94e620a16d2193df07f35936e96fb1f = $(`<div id="html_a94e620a16d2193df07f35936e96fb1f" style="width: 100.0%; height: 100.0%;">PVA Nordenham Blexen (18810.0 MW)</div>`)[0];
+                popup_447d58818fcadcbc1c3f9fb112040f7c.setContent(html_a94e620a16d2193df07f35936e96fb1f);
+            
+        
+
+        marker_a089d0826ef17400c98e45ca8ea417ac.bindPopup(popup_447d58818fcadcbc1c3f9fb112040f7c)
+        ;
+
+        
+    
+    
+            var marker_a6bbc0413b61ca28a0b5661d4b302750 = L.marker(
+                [54.733232, 8.913361],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b0edbb91bbb302e54430b7a225f40ead = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_402a40d8f2fc5a35fb9708b5beccbec4 = $(`<div id="html_402a40d8f2fc5a35fb9708b5beccbec4" style="width: 100.0%; height: 100.0%;">Stedesand 1 (27735.0 MW)</div>`)[0];
+                popup_b0edbb91bbb302e54430b7a225f40ead.setContent(html_402a40d8f2fc5a35fb9708b5beccbec4);
+            
+        
+
+        marker_a6bbc0413b61ca28a0b5661d4b302750.bindPopup(popup_b0edbb91bbb302e54430b7a225f40ead)
+        ;
+
+        
+    
+    
+            var marker_57b0deaff316bea572f2d9e52dd1817c = L.marker(
+                [53.235383, 12.293513],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_b7d6417bf537f45fd160182aa03bfbce = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9b151917cc8a76525a8e4d374f5d86e7 = $(`<div id="html_9b151917cc8a76525a8e4d374f5d86e7" style="width: 100.0%; height: 100.0%;">PV Halenbeck 12 (26400.0 MW)</div>`)[0];
+                popup_b7d6417bf537f45fd160182aa03bfbce.setContent(html_9b151917cc8a76525a8e4d374f5d86e7);
+            
+        
+
+        marker_57b0deaff316bea572f2d9e52dd1817c.bindPopup(popup_b7d6417bf537f45fd160182aa03bfbce)
+        ;
+
+        
+    
+    
+            var marker_186d3935ecf627081151e563fcc68f1c = L.marker(
+                [53.231848, 12.289451],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_4470c758dd7bde9e4e3d0ead1f586a02 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_636db3bc76c87b61c68e06e44d17358c = $(`<div id="html_636db3bc76c87b61c68e06e44d17358c" style="width: 100.0%; height: 100.0%;">PV Halenbeck 14 (26400.0 MW)</div>`)[0];
+                popup_4470c758dd7bde9e4e3d0ead1f586a02.setContent(html_636db3bc76c87b61c68e06e44d17358c);
+            
+        
+
+        marker_186d3935ecf627081151e563fcc68f1c.bindPopup(popup_4470c758dd7bde9e4e3d0ead1f586a02)
+        ;
+
+        
+    
+    
+            var marker_20fa65e2c509ec7a0cdc8eb549480d03 = L.marker(
+                [53.230799, 12.294806],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_d095615b8c34f7bba0af0a7cc055909f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2531223ea7f82525814f05170e06cc0e = $(`<div id="html_2531223ea7f82525814f05170e06cc0e" style="width: 100.0%; height: 100.0%;">PV Halenbeck 15 (26400.0 MW)</div>`)[0];
+                popup_d095615b8c34f7bba0af0a7cc055909f.setContent(html_2531223ea7f82525814f05170e06cc0e);
+            
+        
+
+        marker_20fa65e2c509ec7a0cdc8eb549480d03.bindPopup(popup_d095615b8c34f7bba0af0a7cc055909f)
+        ;
+
+        
+    
+    
+            var marker_27dbdbc282fd21a11098a2624bbc1c9c = L.marker(
+                [53.226343, 12.292855],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_67a28310868ebdf00bf15f3b195f68b2 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_3871a658a617e44b2ab27fc8ae1f5538 = $(`<div id="html_3871a658a617e44b2ab27fc8ae1f5538" style="width: 100.0%; height: 100.0%;">PV Halenbeck 21 (26400.0 MW)</div>`)[0];
+                popup_67a28310868ebdf00bf15f3b195f68b2.setContent(html_3871a658a617e44b2ab27fc8ae1f5538);
+            
+        
+
+        marker_27dbdbc282fd21a11098a2624bbc1c9c.bindPopup(popup_67a28310868ebdf00bf15f3b195f68b2)
+        ;
+
+        
+    
+    
+            var marker_a17136b5903b694287e3dd2ddd6ca4f8 = L.marker(
+                [53.224761, 12.309467],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_aa054b19314ed3bbda67596da12ae0df = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_3a6b7f85607733eb89a002a3bbc0a8b4 = $(`<div id="html_3a6b7f85607733eb89a002a3bbc0a8b4" style="width: 100.0%; height: 100.0%;">PV Halenbeck 22 (26400.0 MW)</div>`)[0];
+                popup_aa054b19314ed3bbda67596da12ae0df.setContent(html_3a6b7f85607733eb89a002a3bbc0a8b4);
+            
+        
+
+        marker_a17136b5903b694287e3dd2ddd6ca4f8.bindPopup(popup_aa054b19314ed3bbda67596da12ae0df)
+        ;
+
+        
+    
+    
+            var marker_59458efe235a5216aabfdd4ca4299f6d = L.marker(
+                [53.235655, 12.311559],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_787f733abee0ca2de954bd6f1bb2f8d5 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_af0822fd082597d3de2fb34ffc4731e1 = $(`<div id="html_af0822fd082597d3de2fb34ffc4731e1" style="width: 100.0%; height: 100.0%;">PV Halenbeck 24 (26400.0 MW)</div>`)[0];
+                popup_787f733abee0ca2de954bd6f1bb2f8d5.setContent(html_af0822fd082597d3de2fb34ffc4731e1);
+            
+        
+
+        marker_59458efe235a5216aabfdd4ca4299f6d.bindPopup(popup_787f733abee0ca2de954bd6f1bb2f8d5)
+        ;
+
+        
+    
+    
+            var marker_cb9678cc2f55e9bd4251a0cb42728bdf = L.marker(
+                [53.2355, 12.306326],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_372ad2dc06d2c4c1e0b36dbf4ff6a193 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_51a91dc21e13075949690a53c8022d18 = $(`<div id="html_51a91dc21e13075949690a53c8022d18" style="width: 100.0%; height: 100.0%;">PV Halenbeck 25 (26400.0 MW)</div>`)[0];
+                popup_372ad2dc06d2c4c1e0b36dbf4ff6a193.setContent(html_51a91dc21e13075949690a53c8022d18);
+            
+        
+
+        marker_cb9678cc2f55e9bd4251a0cb42728bdf.bindPopup(popup_372ad2dc06d2c4c1e0b36dbf4ff6a193)
+        ;
+
+        
+    
+    
+            var marker_21cd4788819ba3ce66a89f84e8635438 = L.marker(
+                [52.887284, 13.159636],
+                {
+}
+            ).addTo(map_92bef1f40b27170fda1c56157105acce);
+        
+    
+        var popup_52b9d62b37aaf37ee9dd86c0ffa3376f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d153f2a97a9b70d43ee2f46025349287 = $(`<div id="html_d153f2a97a9b70d43ee2f46025349287" style="width: 100.0%; height: 100.0%;">PVA Löwenberger Land II (29700.0 MW)</div>`)[0];
+                popup_52b9d62b37aaf37ee9dd86c0ffa3376f.setContent(html_d153f2a97a9b70d43ee2f46025349287);
+            
+        
+
+        marker_21cd4788819ba3ce66a89f84e8635438.bindPopup(popup_52b9d62b37aaf37ee9dd86c0ffa3376f)
+        ;
+
+        
+    
+</script>
+</html>
