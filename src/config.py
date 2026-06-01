@@ -3,7 +3,7 @@ config.py — project-specific configuration for the Germany electricity demand 
 
 All domain constants live here so that:
 - util/ classes remain fully generic (no hardcoded country/city defaults)
-- etl_demand.py and fetch_prepare_data_demand.py import from one place instead of each defining their own
+- etl_demand.py and fetch_demand_data.py import from one place instead of each defining their own
 """
 
 import pandas as pd
@@ -99,48 +99,74 @@ CITY_POPULATION = {
 BASE_TEMPERATURE_HEATING = 18   # °C — heating degree days threshold
 BASE_TEMPERATURE_COOLING = 25   # °C — cooling degree days threshold
 
-# TODO double check - old source till 2023
-# Capacity-weighted average location of top 10 PV plants in Germany (for solar radiation feature) 
-PV_PLANTS = [
-    #{"name": "Energiepark Witznitz", "capacity_mw": 605, "latitude": 51.1638, "longitude": 12.4186}, # seit 2024, aber nicht auf Marktdatenregister, daher rausgenommen
-    {"name": "Solarpark Weesow-Willmersdorf", "capacity_mw": 187, "latitude": 52.5000, "longitude": 14.0000},
-    {"name": "Solarpark Senftenberg", "capacity_mw": 187, "latitude": 51.5333, "longitude": 14.0167},
-    {"name": "Solarpark Meuro", "capacity_mw": 166, "latitude": 51.5000, "longitude": 14.0000},
-    {"name": "Solarpark Lieberose", "capacity_mw": 165, "latitude": 51.5833, "longitude": 14.2000},
-    {"name": "Solarpark Jänschwalde", "capacity_mw": 145, "latitude": 51.6500, "longitude": 14.3000},
-    {"name": "Solarpark Schwarzheide", "capacity_mw": 120, "latitude": 51.5000, "longitude": 14.1000},
-    {"name": "Solarpark Schipkau", "capacity_mw": 110, "latitude": 51.6000, "longitude": 14.1500},
-    {"name": "Solarpark Finsterwalde", "capacity_mw": 100, "latitude": 51.7000, "longitude": 14.2500},
-    {"name": "Solarpark Drebkau", "capacity_mw": 90, "latitude": 51.5500, "longitude": 14.0500},
-    {"name": "Solarpark Großräschen", "capacity_mw": 80, "latitude": 51.4500, "longitude": 14.0000},
-    {"name": "Solarpark Ruhland", "capacity_mw": 75, "latitude": 51.6500, "longitude": 14.2000},
+# ---------------------------------------------------------------------------
+# Price weather pipeline (PV/Wind separated to avoid leakage)
+# ---------------------------------------------------------------------------
+PV_WEATHER_VARIABLES = [
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "cloud_cover",
 ]
 
-# Capacity-weighted average location of top 10 onshore wind farms in Germany (for wind speed feature)
-WIND_FARMS = [
-    {"name": "Windpark Kölleda", "capacity_mw": 200, "latitude": 51.2000, "longitude": 11.5000},
-    {"name": "Windpark Holtriem", "capacity_mw": 150, "latitude": 53.5000, "longitude": 7.5000},
-    {"name": "Windpark Hohenwarsleben", "capacity_mw": 120, "latitude": 52.0000, "longitude": 11.0000},
-    {"name": "Windpark Borkum Riffgrund 1", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Borkum Riffgrund 2", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Gode Wind 1", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Gode Wind 2", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Nordsee One", "capacity_mw": 110, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Amrumbank West", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Trianel Borkum", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
+WIND_WEATHER_VARIABLES = [
+    "wind_speed_100m",
+    "wind_direction_100m",
 ]
 
-# Capacity-weighted average location of top 10 offshore wind farms in Germany (for offshore wind speed feature)
-OFFSHORE_WIND_FARMS = [ 
-    {"name": "Windpark Borkum Riffgrund 1", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Borkum Riffgrund 2", "capacity_mw": 112, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Gode Wind 1", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Gode Wind 2", "capacity_mw": 111, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Nordsee One", "capacity_mw": 110, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Amrumbank West", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Trianel Borkum", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark Meerwind Süd/Ost", "capacity_mw": 80, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark EnBW Baltic 2", "capacity_mw": 48, "latitude": 54.0000, "longitude": 6.5000},
-    {"name": "Windpark EnBW Baltic 1", "capacity_mw": 48, "latitude": 54.0000, "longitude": 6.5000},
+# Canonical series ids for technology-separated weather ingestion.
+# These ids are used in series_catalog and timeseries_values.
+PV_WEATHER_SERIES_IDS = {
+    var: f"pv_weather_{var}" for var in PV_WEATHER_VARIABLES
+}
+
+WIND_WEATHER_SERIES_IDS = {
+    var: f"wind_weather_{var}" for var in WIND_WEATHER_VARIABLES
+}
+
+# Cluster centroid coordinates derived from notebook 02 exports.
+# Keep cluster_id stable because yearly capacity CSVs depend on it.
+PV_CLUSTER_CENTROIDS = [
+    {"cluster_id": 0, "latitude": 48.254208117021278, "longitude": 9.95483580319149},
+    {"cluster_id": 1, "latitude": 53.2118939516129, "longitude": 12.086464116935483},
+    {"cluster_id": 2, "latitude": 50.086581113207551, "longitude": 7.0442732877358489},
+    {"cluster_id": 3, "latitude": 51.5458006056338, "longitude": 13.807042591549296},
+    {"cluster_id": 4, "latitude": 48.983946330316741, "longitude": 11.90809092760181},
+    {"cluster_id": 5, "latitude": 49.92590152147239, "longitude": 10.256971736196318},
+    {"cluster_id": 6, "latitude": 54.199199412698412, "longitude": 9.64202534920635},
+    {"cluster_id": 7, "latitude": 52.316793511627907, "longitude": 8.448149488372092},
+    {"cluster_id": 8, "latitude": 53.1419551959799, "longitude": 13.704316376884423},
+    {"cluster_id": 9, "latitude": 51.541309815384615, "longitude": 11.716682680769232},
 ]
+
+WIND_CLUSTER_CENTROIDS = [
+    {"cluster_id": 0, "latitude": 51.843001675603219, "longitude": 8.4977388927613937},
+    {"cluster_id": 1, "latitude": 54.720160583333332, "longitude": 13.918991070175441},
+    {"cluster_id": 2, "latitude": 53.93755020402299, "longitude": 7.2917516408045975},
+    {"cluster_id": 3, "latitude": 52.208402816849819, "longitude": 10.491895989010988},
+    {"cluster_id": 4, "latitude": 54.01242887841191, "longitude": 9.7625609503722082},
+    {"cluster_id": 5, "latitude": 52.437984534883718, "longitude": 13.9643738},
+    {"cluster_id": 6, "latitude": 50.770402399159664, "longitude": 6.9432348655462182},
+    {"cluster_id": 7, "latitude": 54.216298573584908, "longitude": 6.2127478999999992},
+    {"cluster_id": 8, "latitude": 48.820484169014087, "longitude": 9.7376546760563372},
+    {"cluster_id": 9, "latitude": 52.474594870833336, "longitude": 12.150012475},
+]
+
+PV_CLUSTER_LOCATIONS = {
+    f"pv_cluster_{row['cluster_id']}": {
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
+    }
+    for row in PV_CLUSTER_CENTROIDS
+}
+
+WIND_CLUSTER_LOCATIONS = {
+    f"wind_cluster_{row['cluster_id']}": {
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
+    }
+    for row in WIND_CLUSTER_CENTROIDS
+}
+
+
 

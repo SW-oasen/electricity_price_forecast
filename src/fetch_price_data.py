@@ -1,5 +1,5 @@
 """
-fetch_prepare_data_price.py
+fetch_price_data.py
 
 Datenvorbereitung für die Preis-Pipeline:
 - Zeitspalten-Vereinheitlichung

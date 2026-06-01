@@ -41,7 +41,7 @@ ROOT_DIR = SRC_DIR.parent
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from fetch_prepare_data_demand import (
+from fetch_demand_data import (
     fetch_smard_netzlast,
     prepare_weather_data,
     fetch_weather_data_for_cities,
@@ -653,7 +653,7 @@ def prepare_for_prediction_tomorrow_etl(
         by the ETL-trained models.
     """
     import numpy as np
-    from fetch_prepare_data_demand import (
+    from fetch_demand_data import (
         prepare_weather_for_prediction,
         create_tomorrow_time,
     )

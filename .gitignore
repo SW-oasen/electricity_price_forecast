@@ -22,6 +22,9 @@ db/*
 # Ignore smard guide
 documents/smard_guide.pdf
 
+# ignore chat logs
+log/*
+
 # Ignore data files
 *.parquet
 *.csv

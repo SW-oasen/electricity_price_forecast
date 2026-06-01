@@ -85,19 +85,98 @@ class OpenMeteoClient:
         The 'time' column is taken from the first city; numeric columns are
         weighted-summed across cities.
         """
+        return self._merge_weighted(
+            location_dict=city_dict,
+            weights=self._weights,
+            variables=self.weather_variables,
+        )
+
+    @staticmethod
+    def _normalize_weights(weights: dict[str, float]) -> dict[str, float]:
+        """Normalize arbitrary positive weights to sum to 1.0."""
+        total = float(sum(weights.values()))
+        if total <= 0:
+            raise ValueError("weights must sum to a positive value")
+        return {key: float(value) / total for key, value in weights.items()}
+
+    def _merge_weighted(
+        self,
+        location_dict: dict[str, pd.DataFrame],
+        weights: dict[str, float],
+        variables: list[str],
+    ) -> pd.DataFrame:
+        """
+        Weighted merge for arbitrary locations.
+
+        Parameters
+        ----------
+        location_dict : dict[str, pd.DataFrame]
+            Mapping location name -> hourly DataFrame.
+        weights : dict[str, float]
+            Normalized weights keyed by location name.
+        variables : list[str]
+            Weather variables to weighted-sum.
+        """
         out = pd.DataFrame()
-        for city, df_city in city_dict.items():
-            w = self._weights[city]
-            df_w = df_city.copy()
-            for var in self.weather_variables:
-                df_w[var] = df_city[var] * w
+        for location, df_loc in location_dict.items():
+            w = weights[location]
+            df_w = df_loc.copy()
+            for var in variables:
+                df_w[var] = df_loc[var] * w
             if out.empty:
                 out = df_w
             else:
-                out[self.weather_variables] = (
-                    out[self.weather_variables].values
-                    + df_w[self.weather_variables].values
-                )
+                out[variables] = out[variables].values + df_w[variables].values
+        return out
+
+    def _fetch_archive_per_location(
+        self,
+        locations: dict,
+        start_date: str,
+        end_date: str,
+        variables: list[str],
+    ) -> dict[str, pd.DataFrame]:
+        """Fetch archive weather for each location and return per-location DataFrames."""
+        api_start = (pd.to_datetime(start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+        clip_start = pd.Timestamp(start_date, tz='Europe/Berlin')
+        clip_end_exclusive = pd.Timestamp(end_date, tz='Europe/Berlin') + pd.Timedelta(days=1)
+        vars_str = ','.join(variables)
+
+        out: dict[str, pd.DataFrame] = {}
+        for name, coords in locations.items():
+            url = (
+                f"{_ARCHIVE_URL}"
+                f"?latitude={coords['latitude']}"
+                f"&longitude={coords['longitude']}"
+                f"&start_date={api_start}"
+                f"&end_date={end_date}"
+                f"&hourly={vars_str}"
+                f"&timezone=UTC"
+            )
+            for attempt in range(3):
+                try:
+                    r = requests.get(url, timeout=self.timeout)
+                    r.raise_for_status()
+                    data = r.json()
+                    break
+                except requests.exceptions.RequestException:
+                    if attempt == 2:
+                        raise
+                    time.sleep(5)
+
+            df_loc = pd.DataFrame(data['hourly'])
+            df_loc['time'] = (
+                pd.to_datetime(df_loc['time'], utc=True)
+                .dt.tz_convert('Europe/Berlin')
+                .dt.as_unit('s')
+            )
+            df_loc = df_loc[
+                (df_loc['time'] >= clip_start)
+                & (df_loc['time'] < clip_end_exclusive)
+            ].reset_index(drop=True)
+            out[name] = df_loc
+            time.sleep(self.city_sleep)
+
         return out
 
     # ------------------------------------------------------------------
@@ -121,44 +200,47 @@ class OpenMeteoClient:
         -------
         DataFrame with columns: ['time'] + weather_variables
         """
-        # Fetch 1 extra day in UTC so Berlin 00:00+02:00 is always included.
-        api_start = (pd.to_datetime(start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
-        clip_start = pd.Timestamp(start_date, tz='Europe/Berlin')
-        vars_str = ','.join(self.weather_variables)
-
-        city_dict: dict[str, pd.DataFrame] = {}
-        for city, coords in self.cities.items():
-            url = (
-                f"{_ARCHIVE_URL}"
-                f"?latitude={coords['latitude']}"
-                f"&longitude={coords['longitude']}"
-                f"&start_date={api_start}"
-                f"&end_date={end_date}"
-                f"&hourly={vars_str}"
-                f"&timezone=UTC"
-            )
-            for attempt in range(3):
-                try:
-                    r = requests.get(url, timeout=self.timeout)
-                    r.raise_for_status()
-                    data = r.json()
-                    break
-                except requests.exceptions.RequestException:
-                    if attempt == 2:
-                        raise
-                    time.sleep(5)
-
-            df_city = pd.DataFrame(data['hourly'])
-            df_city['time'] = (
-                pd.to_datetime(df_city['time'], utc=True)
-                .dt.tz_convert('Europe/Berlin')
-                .dt.as_unit('s')
-            )
-            df_city = df_city[df_city['time'] >= clip_start].reset_index(drop=True)
-            city_dict[city] = df_city
-            time.sleep(self.city_sleep)
+        city_dict = self._fetch_archive_per_location(
+            locations=self.cities,
+            start_date=start_date,
+            end_date=end_date,
+            variables=self.weather_variables,
+        )
 
         df = self._merge_cities(city_dict)
+        return df.sort_values('time').reset_index(drop=True)
+
+    def fetch_archive_weighted_locations(
+        self,
+        locations: dict,
+        location_weights: dict[str, float],
+        start_date: str,
+        end_date: str,
+        weather_variables: list[str] | None = None,
+    ) -> pd.DataFrame:
+        """
+        Fetch archive weather for arbitrary locations and return weighted aggregate.
+
+        This supports technology-specific aggregation (e.g. PV cluster weights,
+        Wind cluster weights) while reusing the same Open-Meteo fetch flow.
+        """
+        variables = list(weather_variables) if weather_variables is not None else list(self.weather_variables)
+        if set(locations) != set(location_weights):
+            raise ValueError("locations and location_weights must have the same keys")
+
+        norm_weights = self._normalize_weights(location_weights)
+        location_dict = self._fetch_archive_per_location(
+            locations=locations,
+            start_date=start_date,
+            end_date=end_date,
+            variables=variables,
+        )
+
+        df = self._merge_weighted(
+            location_dict=location_dict,
+            weights=norm_weights,
+            variables=variables,
+        )
         return df.sort_values('time').reset_index(drop=True)
 
     def fetch_forecast(self, forecast_days: int = 2) -> pd.DataFrame:
@@ -225,7 +307,7 @@ class OpenMeteoClient:
         Combine archive (lookback context) and forecast data for a prediction date.
 
         The archive lookback provides the lag/rolling context rows that the
-        feature engineering step (create_weather_features in fetch_prepare_data_demand.py)
+        feature engineering step (create_weather_features in fetch_demand_data.py)
         needs.  Without it, lag/rolling values for the prediction day would be NaN.
 
         Parameters

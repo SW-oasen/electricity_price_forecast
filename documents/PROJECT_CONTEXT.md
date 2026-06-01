@@ -1,88 +1,67 @@
-# Vorhersage des Strompreises in Deutschland
+# Projektkontext: Strompreisprognose Deutschland
 
-Die Erweiterung des Projekts Stromverbrauch-Vorhersage.
+## Projektziel
+Vorhersage des stuendlichen Day-Ahead-Strompreises (DE/LU) auf Basis historischer Markt-, Erzeugungs-, Nachfrage- und Wetterdaten.
 
-## Dokumentation
-- Technische Umsetzung (Startphase): [umsetzung_preisdaten_smard.md](umsetzung_preisdaten_smard.md)
-- API-Referenz: [smard_api.md](smard_api.md)
+## Aktueller Stand (2026-06-01)
+- Die Preis-ETL ist produktiv nutzbar und laeuft ueber src/etl_price.py.
+- Wetterdaten werden technologiegetrennt (PV/Wind) verarbeitet, gewichtet und als eigene Serien gespeichert.
+- Notebook 03 nutzt modulare Helferfunktionen aus util/weather_weighted.py statt lokaler Kernlogik.
 
-## Daten
-
-### Der Zielvariabeln:
-- Marktpreis: Deutschland/Luxemburg 
-
-### Referenz:
-SMARD Prognose 
-- Gesamt Stromverbrauch: Netzlast
-- Gesamt Stromerzeugung
-    - Wind Onshore
-    - Wind Offshore
-    - Photovoltaik
-    - Sonstige Konventionelle
-
-### Datenquellen
+## Datenquellen
 - SMARD
-- OPEN-METEO
-- Wikipedia
+    - Preis DE/LU
+    - Erzeugung: Wind Onshore, Wind Offshore, PV, Sonstige Konventionelle
+- Open-Meteo Archive
+    - PV: shortwave_radiation, direct_radiation, diffuse_radiation, cloud_cover
+    - Wind: wind_speed_100m, wind_direction_100m
+- Struktur- und Standortdaten
+    - verarbeitete Cluster-/Kapazitaetsdateien unter data/processed
 
-### Die mögliche Prädikatoren:
-- SMARD - Historische Daten
-    - Strompreis - Filter 4169 day-ahead market clearing price (auction result)
-    - Stromerzeugung: 
-        - Wind Onshore
-        - Wind Offshore
-        - Photovoltaik
-        - Sonstige Konventionelle
-    - Stromverbrauch: 
-        - Gesamt
-        - evtl Residuallast
-        - evtl Pumpspeicher
-- OPEN-METEO - Historische Daten und Vorhersagen
-    - Windgeschwindigkeit
-    - Sonneneinstralung
-    - Niederschlag
-- evtl. extern Braukohle- und Gas-preise
-- evtl. Import und Export
+## Datenhaltung
+- Primäre ETL-Datenbank: db/energy_demand.db
+- Kernschema:
+    - series_catalog
+    - timeseries_values
+    - ingestion_runs
+    - data_quality_log
 
-### Datenbereitstellung
-- Aus der Datenbank energy_demand.db
-- SMARD - seit 2019
-- OPENT-Meteo - seit 2019 und Vorhersage
-- Wikipedia: Windpark Onshore, Offshore, PV Anlagen
-    - liste_der_deutschen_offshore_windparks
-    - liste_der_deutschen_onshore_windparks
-    - liste_Von_solarwerken_in_deutschland
+## ETL-Logik (relevant)
+- update_database(...) steuert den Ablauf.
+- SMARD- und Open-Meteo-Ingestion sind entkoppelt.
+    - Ein "SMARD up to date" blockiert Open-Meteo nicht.
+- Open-Meteo Delta-Verhalten:
+    - Zielstand ist standardmaessig gestern.
+    - Delta wird tagbasiert bestimmt, um unnoetigen Re-Fetch desselben Kalendertags zu vermeiden.
+- Open-Meteo Zeitgrenzen:
+    - Clipping in Europe/Berlin auf [start_date 00:00, end_date+1d 00:00).
 
-## Vorgehen
+## Feature-Engineering-Richtung
+- Windrichtung wird als zirkulare Groesse behandelt.
+- Neuer Helper in util/weather_weighted.py:
+    - aggregate_weighted_wind_vector_features(...)
+    - Aggregation ueber u/v-Komponenten statt arithmetischem Winkelmittel
+    - Rueckrechnung von Vektor-Windgeschwindigkeit/-richtung
+    - Optionale Potenzmerkmale der Windgeschwindigkeit (pow2, pow3)
 
-### Parallelle und gestapelte Vorhersage
-- Winderzeugung: Onshore, Offshore
-- Solarerzeugung
-- Residuallast
--> Strompreis
+## Validierte Punkte
+- Import-Haertung fuer ETL (package-safe Imports mit Fallback)
+- Zeitstempel-Angleichung SMARD/Open-Meteo fuer Tagesfenster
+- Entkopplung der Ingestion-Zweige
+- Open-Meteo-Tagesdelta statt Re-Fetch desselben Tages
+- Notebook-Fehler behoben (Abfrage auf timeseries_values statt nicht vorhandener Tabellen)
 
-### Wetterdaten nach Region gewichten
-- Die größte Windpark: Koordination und Kapazität - Offshore und Onshore
-- Die größte PV-Anlagen: Koordination und Kapazität
+## Offene naechste Schritte
+- DST-Randfaelle (23/25h-Tage) gezielt testen und dokumentieren.
+- Open-Meteo-Delta auf unvollstaendige letzte Tage pruefen (ueber reine Stunden-Heuristik hinaus).
+- Windvektor-Features in den Modell-Feature-Workflow integrieren.
 
-## EDA
-
-### Datenbereitstellung - Web Scraping > SQLite DB
-
-
-
-## Baseline Modelle
-
-
-
-## Evaluierung und Modellselektion
-
-
-
-# Pipeline
-
-
-
-# Applikation GUI
+## Verweise
+- Technische Umsetzung: umsetzung_preisdaten_smard.md
+- API-Referenz: smard_api.md
+- Kontextverlauf und Entscheidungen:
+    - ../log/DECISIONS.md
+    - ../log/NEXT_STEPS.md
+    - ../log/SESSION_LOG.md
 
 

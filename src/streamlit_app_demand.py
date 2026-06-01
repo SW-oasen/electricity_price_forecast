@@ -26,8 +26,8 @@ import matplotlib.dates as mdates
 from matplotlib.axes import Axes
 import streamlit as st
 
-from fetch_prepare_data_demand import fetch_smard_netzlast
-from train_model_predict import load_model_from_pickle
+from fetch_demand_data import fetch_smard_netzlast
+from train_predict_model import load_model_from_pickle
 from etl_demand import (
     update_database,
     get_connection,

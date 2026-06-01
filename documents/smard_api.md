@@ -300,7 +300,7 @@ The SMARD API provides a rich set of time series that can be combined with weath
 ### Fetching Multiple Series in Parallel
 
 ```python
-from fetch_prepare_data import fetch_smard_netzlast  # reuse the same pattern
+from fetch_demand_data import fetch_smard_netzlast  # reuse the same pattern
 
 GENERATION_IDS = {
     'wind_onshore':  4067,
