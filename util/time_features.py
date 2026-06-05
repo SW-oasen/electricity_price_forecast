@@ -59,6 +59,8 @@ def _cached_state_holidays(country: str, state_code: str, year: int):
 _FEATURE_DEPS: dict[str, list[str]] = {
     'year':            [],
     'hour':            [],
+    'hour_sin':        ['hour'],
+    'hour_cos':        ['hour'],
     'weekday':         [],
     'month':           [],
     'is_weekend':      [],
@@ -179,6 +181,7 @@ class TimeFeatureCreator:
         year : Maximum year in the dataset — used to pre-build the national
                holiday calendar (must cover all years in df).
         """
+        import numpy as np
         out = df.copy()
         col = self.time_column
 
@@ -195,6 +198,12 @@ class TimeFeatureCreator:
 
         if 'hour' in feat:
             out['hour'] = out[col].dt.hour.astype(int)
+
+        if 'hour_sin' in feat:
+            out['hour_sin'] = np.sin(2 * np.pi * out[col].dt.hour / 24)
+        
+        if 'hour_cos' in feat:
+            out['hour_cos'] = np.cos(2 * np.pi * out[col].dt.hour / 24)
 
         if 'weekday' in feat:
             out['weekday'] = out[col].dt.dayofweek.astype(int)

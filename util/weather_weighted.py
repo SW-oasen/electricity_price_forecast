@@ -65,9 +65,19 @@ def fetch_weighted_weather_for_technology(
         if chunk_end < chunk_start:
             continue
 
+        # Filter locations and weights to match each other exactly
+        # (prevents ValueError in OpenMeteoClient if some clusters have 0 capacity in early years
+        # or if config doesn't match CSV exactly)
+        common_keys = set(locations.keys()) & set(year_weights.keys())
+        relevant_locations = {k: locations[k] for k in common_keys}
+        relevant_weights = {k: year_weights[k] for k in common_keys}
+
+        if not relevant_locations:
+            continue
+
         df_chunk = client.fetch_archive_weighted_locations(
-            locations=locations,
-            location_weights=year_weights,
+            locations=relevant_locations,
+            location_weights=relevant_weights,
             start_date=chunk_start.strftime("%Y-%m-%d"),
             end_date=chunk_end.strftime("%Y-%m-%d"),
             weather_variables=weather_variables,

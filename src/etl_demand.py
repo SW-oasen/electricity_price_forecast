@@ -136,6 +136,19 @@ FROM energy_demand e
 JOIN weather w ON e.time = w.time
 """
 
+# Column subsets for modeling and features
+DEMAND_MODEL_FEATURES = [
+    'year', 'hour', 'weekday', 'month',
+    'is_weekend', 'is_holiday', 'holiday_ratio',
+    'is_workday', 'is_bridge_day', 'holiday_weight', 'is_pandemic_time',
+    'energy_demand_lag_24h', 'energy_demand_lag_168h',
+    'energy_demand_rolling_mean_24h', 'energy_demand_rolling_mean_168h',
+    'apparent_temperature', 'rain', 'snowfall', 'wind_speed_10m', 'shortwave_radiation',
+    'apparent_temperature_lag_24h', 'apparent_temperature_rolling_mean_24h',
+    'shortwave_radiation_0m_lag_24h', 'shortwave_radiation_0m_rolling_mean_24h',
+    'heating_degree', 'cooling_degree'
+]
+
 _ENERGY_DB_COLS = [
     'time', 'energy_demand_mwh', 'smard_forecast_mwh', 'data_source',
     'year', 'hour', 'weekday', 'month',
@@ -712,7 +725,12 @@ def prepare_for_prediction_tomorrow_etl(
     ].copy()
 
     # 4. Merge on timestamp
-    return pd.merge(df_energy, df_weather, on='time', how='inner')
+    df_merged = pd.merge(df_energy, df_weather, on='time', how='inner')
+
+    # 5. Filter and order columns for the demand model
+    # Matches features expected by models in notebook 10 (total 26 features + time)
+    final_cols = ['time'] + DEMAND_MODEL_FEATURES
+    return df_merged[final_cols]
 
 
 # ---------------------------------------------------------------------------

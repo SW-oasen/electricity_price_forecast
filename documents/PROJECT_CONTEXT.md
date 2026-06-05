@@ -3,10 +3,11 @@
 ## Projektziel
 Vorhersage des stuendlichen Day-Ahead-Strompreises (DE/LU) auf Basis historischer Markt-, Erzeugungs-, Nachfrage- und Wetterdaten.
 
-## Aktueller Stand (2026-06-01)
+## Aktueller Stand (2026-06-02)
 - Die Preis-ETL ist produktiv nutzbar und laeuft ueber src/etl_price.py.
 - Wetterdaten werden technologiegetrennt (PV/Wind) verarbeitet, gewichtet und als eigene Serien gespeichert.
 - Notebook 03 nutzt modulare Helferfunktionen aus util/weather_weighted.py statt lokaler Kernlogik.
+- Preisprognose-Implementierung in Notebook 05 ist gestartet und lauffaehig.
 
 ## Datenquellen
 - SMARD
@@ -44,6 +45,28 @@ Vorhersage des stuendlichen Day-Ahead-Strompreises (DE/LU) auf Basis historische
     - Rueckrechnung von Vektor-Windgeschwindigkeit/-richtung
     - Optionale Potenzmerkmale der Windgeschwindigkeit (pow2, pow3)
 
+## Preisprognose (Notebook 05) - aktueller Zwischenstand
+- Datenbasis:
+    - `timeseries_values` (Preis, Erzeugung, Wetter)
+    - `energy_demand` (Nachfrage + SMARD Forecast)
+- Baseline-Merkmale:
+    - Nachfrage-Proxy, PV-/Wind-Proxy (day-ahead via `shift(24)`), Residuallast
+    - Preis-/Nachfrage-Lags (24h/168h)
+    - Kalendermerkmale
+- Enriched-Merkmale:
+    - erweiterte Lag-Struktur (24h/48h/168h) fuer zentrale Signale
+    - zusaetzliche Regime- und Kalendermerkmale
+- Optionaler Wetterblock (Ablation):
+    - direkte Wetterkanal-Merkmale
+    - Wetter-Lags (24h/168h)
+    - Windrichtung zyklisch (sin/cos)
+    - Interaktion mit Residuallast
+- Ergebnisbild (ein Split, 2025-10-01):
+    - Baseline niedriger
+    - Enriched besser
+    - Enriched + Wetterblock aktuell klar besser
+  -> naechster Pflichtschritt: Rolling-Origin Validierung fuer Robustheit.
+
 ## Validierte Punkte
 - Import-Haertung fuer ETL (package-safe Imports mit Fallback)
 - Zeitstempel-Angleichung SMARD/Open-Meteo fuer Tagesfenster
@@ -52,9 +75,11 @@ Vorhersage des stuendlichen Day-Ahead-Strompreises (DE/LU) auf Basis historische
 - Notebook-Fehler behoben (Abfrage auf timeseries_values statt nicht vorhandener Tabellen)
 
 ## Offene naechste Schritte
+- Rolling-Origin Backtest fuer Preisprognose aufsetzen und dokumentieren.
+- Historische Preisprognosen als persistente Serien in DB schreiben.
+- Tagesprognose fuer morgen (prodnaher Ablauf mit vorhergesagter Nachfrage/PV/Wind) implementieren.
 - DST-Randfaelle (23/25h-Tage) gezielt testen und dokumentieren.
 - Open-Meteo-Delta auf unvollstaendige letzte Tage pruefen (ueber reine Stunden-Heuristik hinaus).
-- Windvektor-Features in den Modell-Feature-Workflow integrieren.
 
 ## Verweise
 - Technische Umsetzung: umsetzung_preisdaten_smard.md

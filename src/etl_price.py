@@ -8,7 +8,7 @@ No fetching, no transformations yet.
 from pathlib import Path
 import sqlite3
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Sequence
 
 import pandas as pd
 
@@ -26,6 +26,9 @@ try:
         SMARD_FILTER_WIND_OFFSHORE,
         SMARD_FILTER_PV,
         SMARD_FILTER_OTHER_CONVENTIONAL,
+        SMARD_FILTER_WIND_ONSHORE_FC,
+        SMARD_FILTER_WIND_OFFSHORE_FC,
+        SMARD_FILTER_PV_FC,
         TABLE_SERIES_CATALOG,
         TABLE_TIMESERIES_VALUES,
         TABLE_INGESTION_RUNS,
@@ -51,6 +54,9 @@ except ImportError:
         SMARD_FILTER_WIND_OFFSHORE,
         SMARD_FILTER_PV,
         SMARD_FILTER_OTHER_CONVENTIONAL,
+        SMARD_FILTER_WIND_ONSHORE_FC,
+        SMARD_FILTER_WIND_OFFSHORE_FC,
+        SMARD_FILTER_PV_FC,
         TABLE_SERIES_CATALOG,
         TABLE_TIMESERIES_VALUES,
         TABLE_INGESTION_RUNS,
@@ -125,6 +131,36 @@ SERIES_CATALOG_SEED = [
         "unit": "MWh",
         "active": 1,
         "description": "SMARD realized generation other conventional",
+    },
+    {
+        "series_id": "forecast_wind_onshore_mwh",
+        "source": "smard",
+        "filter_id": SMARD_FILTER_WIND_ONSHORE_FC,
+        "region": SMARD_REGION,
+        "resolution": SMARD_RESOLUTION,
+        "unit": "MWh",
+        "active": 1,
+        "description": "SMARD forecasted generation wind onshore",
+    },
+    {
+        "series_id": "forecast_wind_offshore_mwh",
+        "source": "smard",
+        "filter_id": SMARD_FILTER_WIND_OFFSHORE_FC,
+        "region": SMARD_REGION,
+        "resolution": SMARD_RESOLUTION,
+        "unit": "MWh",
+        "active": 1,
+        "description": "SMARD forecasted generation wind offshore",
+    },
+    {
+        "series_id": "forecast_pv_mwh",
+        "source": "smard",
+        "filter_id": SMARD_FILTER_PV_FC,
+        "region": SMARD_REGION,
+        "resolution": SMARD_RESOLUTION,
+        "unit": "MWh",
+        "active": 1,
+        "description": "SMARD forecasted generation photovoltaics",
     },
 ]
 
@@ -704,6 +740,64 @@ def check_price_data_status(conn: sqlite3.Connection, source: str | None = None)
         status[sid] = {"max_time": max_time, "rows": rows}
     return status
 
+
+def create_lag_rolling_features(
+    in_df: pd.DataFrame,
+    columns: Sequence[str],
+    lags: Sequence[int] = (24, 168),
+    rolling_windows: Sequence[int] = (24, 168),
+    rolling_shift: int = 1,
+    dropna: bool = False,
+) -> pd.DataFrame:
+    """
+    Create lag and rolling-mean features for multiple numeric columns.
+
+    Feature naming:
+    - ``{column}_lag_{N}h``
+    - ``{column}_rolling_mean_{N}h``
+
+    Rolling features are computed on ``shift(rolling_shift)`` to avoid leakage
+    from the current timestamp (default behavior uses only past observations).
+    """
+    if not columns:
+        raise ValueError("columns must contain at least one column name")
+    if rolling_shift < 0:
+        raise ValueError("rolling_shift must be >= 0")
+
+    missing_cols = [c for c in columns if c not in in_df.columns]
+    if missing_cols:
+        raise ValueError(f"missing columns in input DataFrame: {missing_cols}")
+
+    bad_lags = [x for x in lags if int(x) <= 0]
+    bad_windows = [x for x in rolling_windows if int(x) <= 0]
+    if bad_lags:
+        raise ValueError(f"all lags must be positive integers, got: {bad_lags}")
+    if bad_windows:
+        raise ValueError(f"all rolling_windows must be positive integers, got: {bad_windows}")
+
+    out_df = in_df.copy()
+    created_cols: list[str] = []
+
+    for col in columns:
+        series = pd.to_numeric(out_df[col], errors="coerce")
+
+        for lag in lags:
+            lag = int(lag)
+            lag_col = f"{col}_lag_{lag}h"
+            out_df[lag_col] = series.shift(lag)
+            created_cols.append(lag_col)
+
+        for window in rolling_windows:
+            window = int(window)
+            roll_col = f"{col}_rolling_mean_{window}h"
+            out_df[roll_col] = series.shift(rolling_shift).rolling(window=window).mean()
+            created_cols.append(roll_col)
+
+    if dropna and created_cols:
+        out_df = out_df.dropna(subset=created_cols)
+
+    return out_df
+
 def update_database(db_path: Path = DEFAULT_DB_PATH, start_date: Optional[str] = None, end_date: Optional[str] = None) -> None:
     """
     Orchestrator for price ETL: ensures tables, seeds catalog, fetches and stores all active series.
@@ -717,39 +811,71 @@ def update_database(db_path: Path = DEFAULT_DB_PATH, start_date: Optional[str] =
         for sid, s in smard_status.items():
             print(f"  {sid:28s}: {s['rows']:>6} rows | max: {s['max_time']}")
 
-        # SMARD up-to-date check is independent from weather ingestion.
+        # SMARD up-to-date check.
+        # For price and generation, we often want the day-ahead values if available today.
         today = datetime.utcnow().date()
+        tomorrow = today + timedelta(days=1)
+        
+        # Series that should have data for tomorrow (forecasts)
+        forecast_series = [
+            "forecast_wind_onshore_mwh", 
+            "forecast_wind_offshore_mwh", 
+            "forecast_pv_mwh",
+            "price_de_lu_eur_mwh" # Day-ahead price is also a "forecast" for tomorrow usually published around 13:00
+        ]
+
         smard_all_up_to_date = True
-        for s in smard_status.values():
+        for sid, s in smard_status.items():
             if not s["max_time"]:
                 smard_all_up_to_date = False
                 break
             max_time = datetime.strptime(s["max_time"], "%Y-%m-%dT%H:%M:%SZ").date()
-            if max_time < today:
-                smard_all_up_to_date = False
-                break
+            
+            # If it's a forecast series, it's up to date if it has data for tomorrow
+            if sid in forecast_series:
+                 if max_time < tomorrow:
+                     smard_all_up_to_date = False
+                     break
+            else:
+                # Actual values are up to date if they have data for today
+                if max_time < today:
+                    smard_all_up_to_date = False
+                    break
 
         if smard_all_up_to_date:
             print("\nSMARD series up to date — skip SMARD fetch.")
         else:
-            # Default: fetch full range if empty, else fetch only missing tail.
+            # Series to fetch
+            active_smard_series = [sid for sid, s in smard_status.items()]
+            
+            # Batch process them. 
+            # We don't want to backfill forecasts for years if they are missing.
+            # Forecasts are mostly useful for the "head" (today/tomorrow).
+            
             smard_start = start_date
             smard_end = end_date
+            
             if smard_start is None:
-                # If any series is empty, fetch from 2019-01-01
-                if any(s["rows"] == 0 for s in smard_status.values()):
-                    smard_start = "2019-01-01"
-                else:
-                    # Fetch from latest max_time + 1h (assume hourly)
-                    latest = max([s["max_time"] for s in smard_status.values() if s["max_time"]], default=None)
-                    if latest:
-                        from dateutil import parser
-                        dt = parser.isoparse(latest)
-                        smard_start = (dt + timedelta(hours=1)).strftime("%Y-%m-%d")
+                # Calculate required start for each series type
+                series_starts = {}
+                for sid in active_smard_series:
+                    s = smard_status[sid]
+                    if s["rows"] == 0:
+                        if sid in forecast_series:
+                            # For forecasts, 30 days lookback is enough for any recent feature gaps
+                            series_starts[sid] = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
+                        else:
+                            # For actuals/prices, fetch from the beginning
+                            series_starts[sid] = "2019-01-01"
                     else:
-                        smard_start = "2019-01-01"
+                        series_starts[sid] = (datetime.strptime(s["max_time"], "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=1)).strftime("%Y-%m-%d")
+                
+                # To keep using the batch fetcher, we take the minimum start date
+                # but we filter out far-future starts
+                smard_start = min(series_starts.values())
+            
             if smard_end is None:
-                smard_end = today.strftime("%Y-%m-%d")
+                smard_end = tomorrow.strftime("%Y-%m-%d")
 
             if smard_start <= smard_end:
                 print(f"\nFetching and storing SMARD price/generation series: {smard_start} → {smard_end}")

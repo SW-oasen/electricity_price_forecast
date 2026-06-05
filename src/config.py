@@ -37,6 +37,11 @@ SMARD_FILTER_WIND_OFFSHORE = 1225
 SMARD_FILTER_PV = 4068
 SMARD_FILTER_OTHER_CONVENTIONAL = 1227
 
+# Forecast generation predictors from SMARD
+SMARD_FILTER_WIND_ONSHORE_FC = 123
+SMARD_FILTER_WIND_OFFSHORE_FC = 3791
+SMARD_FILTER_PV_FC = 125
+
 # Initial fetch plan (series_id -> SMARD filter)
 SMARD_PRICE_START_FILTERS = {
     "price_de_lu_eur_mwh": SMARD_FILTER_PRICE_DE_LU,
@@ -44,6 +49,9 @@ SMARD_PRICE_START_FILTERS = {
     "gen_wind_offshore_mwh": SMARD_FILTER_WIND_OFFSHORE,
     "gen_pv_mwh": SMARD_FILTER_PV,
     "gen_other_conventional_mwh": SMARD_FILTER_OTHER_CONVENTIONAL,
+    "forecast_wind_onshore_mwh": SMARD_FILTER_WIND_ONSHORE_FC,
+    "forecast_wind_offshore_mwh": SMARD_FILTER_WIND_OFFSHORE_FC,
+    "forecast_pv_mwh": SMARD_FILTER_PV_FC,
 }
 
 # New normalized tables for price pipeline
@@ -124,6 +132,14 @@ WIND_WEATHER_SERIES_IDS = {
     var: f"wind_weather_{var}" for var in WIND_WEATHER_VARIABLES
 }
 
+WIND_LAND_WEATHER_SERIES_IDS = {
+    var: f"wind_land_weather_{var}" for var in WIND_WEATHER_VARIABLES
+}
+
+WIND_SEA_WEATHER_SERIES_IDS = {
+    var: f"wind_sea_weather_{var}" for var in WIND_WEATHER_VARIABLES
+}
+
 # Cluster centroid coordinates derived from notebook 02 exports.
 # Keep cluster_id stable because yearly capacity CSVs depend on it.
 PV_CLUSTER_CENTROIDS = [
@@ -152,6 +168,24 @@ WIND_CLUSTER_CENTROIDS = [
     {"cluster_id": 9, "latitude": 52.474594870833336, "longitude": 12.150012475},
 ]
 
+WIND_CLUSTER_CENTROIDS_SEA = [
+    {"cluster_id": 0, "latitude": 54.192663, "longitude": 6.572168},
+    {"cluster_id": 1, "latitude": 54.813840, "longitude": 13.979021},
+]
+
+WIND_CLUSTER_CENTROIDS_LAND = [
+    {"cluster_id": 0, "latitude": 54.144150, "longitude": 9.865936},
+    {"cluster_id": 1, "latitude": 52.253366, "longitude": 7.417368},
+    {"cluster_id": 2, "latitude": 52.544914, "longitude": 13.916800},
+    {"cluster_id": 3, "latitude": 48.735615, "longitude": 10.063631},
+    {"cluster_id": 4, "latitude": 53.076917, "longitude": 8.966918},
+    {"cluster_id": 5, "latitude": 52.245920, "longitude": 10.581706},
+    {"cluster_id": 6, "latitude": 49.664907, "longitude": 7.580589},
+    {"cluster_id": 7, "latitude": 51.037630, "longitude": 6.355913},
+    {"cluster_id": 8, "latitude": 52.488807, "longitude": 12.155722},
+    {"cluster_id": 9, "latitude": 51.414065, "longitude": 8.853566},
+]
+
 PV_CLUSTER_LOCATIONS = {
     f"pv_cluster_{row['cluster_id']}": {
         "latitude": row["latitude"],
@@ -168,5 +202,23 @@ WIND_CLUSTER_LOCATIONS = {
     for row in WIND_CLUSTER_CENTROIDS
 }
 
+WIND_CLUSTER_LOCATIONS_LAND = {
+    f"wind_land_cluster_{row['cluster_id']}": {
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
+    }
+    for row in WIND_CLUSTER_CENTROIDS_LAND
+}
+
+WIND_CLUSTER_LOCATIONS_SEA = {
+    f"wind_sea_cluster_{row['cluster_id']}": {
+        "latitude": row["latitude"],
+        "longitude": row["longitude"],
+    }
+    for row in WIND_CLUSTER_CENTROIDS_SEA
+}
+
+
+DATABASE_URL = "sqlite:///../db/energy_demand.db"
 
 
