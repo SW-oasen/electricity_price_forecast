@@ -29,9 +29,7 @@ Als Folgeprojekt zu Stromverbrauch Prognose ist das Ziel dieses Projektes die st
 	- 04_train_pv_gen_model
 	- 05_train_win_gen_model
 	- 06_predict_price
-
-	- 10_demand_etl_pipeline
-	- 11_demand_interactive_prediction
+	- 07_interactive_predicton
 - presentation/: Präsentationsmaterial
 - reports/: Karten und Ergebnis-Reports
 - src/: ETL-Orchestrierung, Training, Vorhersage, App

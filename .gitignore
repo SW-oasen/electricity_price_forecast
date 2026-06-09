@@ -30,3 +30,6 @@ log/*
 *.csv
 *.db
 *.sqlite
+
+# ignore tests
+tests/*
