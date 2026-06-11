@@ -219,6 +219,14 @@ WIND_CLUSTER_LOCATIONS_SEA = {
 }
 
 
-DATABASE_URL = "sqlite:///../db/energy_demand.db"
+#DATABASE_URL = "sqlite:///../db/energy_demand.db"
+
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).parent.parent
+DB_DIR = PROJECT_ROOT / "db"
+DATABASE_PATH = DB_DIR / "energy_demand.db"
+PV_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "pv_cluster_yearly_capacity_since_2019.csv"
+WIND_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "wind_cluster_yearly_capacity_since_2019.csv"
 
 

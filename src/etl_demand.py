@@ -536,7 +536,7 @@ def update_weather_table(conn: sqlite3.Connection) -> int:
 # Phase 3 — Orchestrator (main entry point)
 # ---------------------------------------------------------------------------
 
-def update_database(db_path: Path = DEFAULT_DB_PATH) -> None:
+def update_demand_database(db_path: Path = DEFAULT_DB_PATH) -> None:
     """
     Main entry point for the ETL pipeline.
 
@@ -638,7 +638,7 @@ def _build_query(base: str, start_date: str, end_date: str) -> tuple:
     return base + " ORDER BY time", params
 
 
-def prepare_for_prediction_tomorrow_etl(
+def prepare_for_demand_prediction_tomorrow(
     prediction_date: str,
     db_path: Path = DEFAULT_DB_PATH,
 ) -> pd.DataFrame:

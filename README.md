@@ -107,9 +107,11 @@ Als Folgeprojekt zu Stromverbrauch Prognose ist das Ziel dieses Projektes die st
 2. ETL ausfuehren
 	 - Python: src/etl_price.py (oder update_database im Notebook)
 3. Notebook pruefen
-	 - notebook/03_fetch_aggregate_weather.ipynb
-4. Optional App starten
-	 - streamlit run src/streamlit_app_demand.py
+	 - notebook/07_predict_price.ipynb
+4. GUI App starten
+	 - streamlit run src/streamlit_app_price.py
+	 oder
+	 - python -m streamlit run src/streamlit_app_price.p
 
 ## Hinweise
 - Die zentrale Arbeitsdokumentation zu Entscheidungen und groesseren Aenderungen liegt im Ordner log/.

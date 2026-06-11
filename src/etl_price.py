@@ -73,12 +73,13 @@ from util.smard_client import SmardClient
 from util.openmeteo_client import OpenMeteoClient
 from util.weather_weighted import build_yearly_weights
 
+from config import DATABASE_PATH, PV_CLUSTER_YEARLY_CAPACITY_PATH, WIND_CLUSTER_YEARLY_CAPACITY_PATH
 
-ROOT_DIR = Path(__file__).parent.parent
-DB_DIR = ROOT_DIR / "db"
-DEFAULT_DB_PATH = DB_DIR / "energy_demand.db"
-PV_CLUSTER_YEARLY_CAPACITY_PATH = ROOT_DIR / "data" / "processed" / "pv_cluster_yearly_capacity_since_2019.csv"
-WIND_CLUSTER_YEARLY_CAPACITY_PATH = ROOT_DIR / "data" / "processed" / "wind_cluster_yearly_capacity_since_2019.csv"
+#PROJECT_ROOT = Path(__file__).parent.parent
+#DB_DIR = PROJECT_ROOT / "db"
+#DEFAULT_DB_PATH = DB_DIR / "energy_demand.db"
+#PV_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "pv_cluster_yearly_capacity_since_2019.csv"
+#WIND_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "wind_cluster_yearly_capacity_since_2019.csv"
 
 
 SERIES_CATALOG_SEED = [
@@ -267,7 +268,7 @@ CREATE TABLE IF NOT EXISTS {TABLE_DATA_QUALITY_LOG} (
 """
 
 
-def create_price_tables(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
+def create_price_tables(db_path: Path = DATABASE_PATH) -> sqlite3.Connection:
     """Create all price-pipeline tables and return an open DB connection."""
     db_path = Path(db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -798,7 +799,7 @@ def create_lag_rolling_features(
 
     return out_df
 
-def update_database(db_path: Path = DEFAULT_DB_PATH, start_date: Optional[str] = None, end_date: Optional[str] = None) -> None:
+def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[str] = None, end_date: Optional[str] = None) -> None:
     """
     Orchestrator for price ETL: ensures tables, seeds catalog, fetches and stores all active series.
     """

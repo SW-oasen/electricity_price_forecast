@@ -16,6 +16,9 @@ util/__pycache__/
 *.pyc
 *.pyo
 
+# ignore gitignore file itself
+.gitignore
+
 # ignore database files
 db/*
 
