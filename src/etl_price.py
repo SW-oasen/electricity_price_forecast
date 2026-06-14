@@ -806,7 +806,7 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
     conn = create_price_tables(db_path)
     try:
         changed = seed_series_catalog(conn)
-        print(f"Series catalog seeded/updated rows: {changed}")
+        #print(f"Series catalog seeded/updated rows: {changed}")
         smard_status = check_price_data_status(conn, source="smard")
         print("\nCurrent SMARD data status:")
         for sid, s in smard_status.items():

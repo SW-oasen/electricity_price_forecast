@@ -397,6 +397,22 @@ def prepare_weather_for_prediction(prediction_date, lookback_days=2, forecast_da
     out_df = create_weather_features(out_df)
     return out_df
 
+def prepare_weather_for_prediction_auto(prediction_date, lookback_days=2, forecast_days=3):
+    pred_date = pd.to_datetime(prediction_date).date()
+    today = pd.Timestamp.now(tz="Europe/Berlin").date()
+
+    if pred_date < today:
+        start_date = (pd.to_datetime(prediction_date) - pd.Timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+        end_date = prediction_date
+        df = prepare_weather_data(start_date, end_date)
+    else:
+        df = prepare_weather_for_prediction(
+            prediction_date,
+            lookback_days=lookback_days,
+            forecast_days=forecast_days
+        )
+
+    return df
 
 # ---------- comnbine energy and weather dataset for modeling ----------
 

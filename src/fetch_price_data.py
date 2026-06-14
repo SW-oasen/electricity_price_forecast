@@ -490,10 +490,11 @@ def prepare_historical_pv_features(df):
                         'pv_weather_direct_radiation',
                         'pv_weather_shortwave_radiation']
 
-    df_pv = df[cols_pv_features].copy().reset_index()
+    df_pv = df[["time"] + cols_pv_features].copy()
+    df_pv["time"] = pd.to_datetime(df_pv["time"], utc=True).dt.tz_convert("Europe/Berlin")
 
     # Create lag and rolling features for the weather variables, defaults to lags of 24 and 168 hours and rolling windows of 24 and 168 hours
-    df_pv = create_lag_rolling_features(df_pv, cols_pv_features)
+    df_pv = create_lag_rolling_features(df_pv, cols_pv_features, dropna=False)
 
     # Create time features
     tfc = TimeFeatureCreator(
@@ -506,21 +507,22 @@ def prepare_historical_pv_features(df):
     )
 
     df_pv = tfc.create(df_pv, year=int(df_pv["time"].dt.year.max()))
-    df_pv = df_pv.dropna().reset_index(drop=True)
+    #df_pv = df_pv.dropna().reset_index(drop=True)
+    df_pv = df_pv.reset_index(drop=True)
 
     return df_pv
 
 # prepare features for Wind generation model from dataframe loaded from time series table in database, which will be used as input for the price model
 def prepare_historical_wind_features(df):
-    cols_wind_features = ['time', 
-                        'gen_wind_offshore_mwh', 
-                        'gen_wind_onshore_mwh', 
+    cols_wind_features = ['gen_wind_offshore_mwh', 
+                        'gen_wind_onshore_mwh',
                         #'wind_weather_wind_direction_100m', 
                         'wind_weather_wind_speed_100m']
 
-    df_wind = df[cols_wind_features].copy().reset_index()
+    df_wind = df[["time"] + cols_wind_features].copy()
+    df_wind["time"] = pd.to_datetime(df_wind["time"], utc=True).dt.tz_convert("Europe/Berlin")
 
-    # Physical thresholds for wind generation
+    # Physical thresholds for wind generations
     # Cut-in: ~3m/s, Rated: ~13m/s, Cut-out: ~25m/s
     v = df_wind['wind_weather_wind_speed_100m']
     df_wind['wind_speed_clipped'] = v.clip(lower=3.0, upper=25.0)
@@ -529,9 +531,26 @@ def prepare_historical_wind_features(df):
     v_rated = v.clip(upper=13.0)
     df_wind['wind_speed_pow2'] = v_rated ** 2
     df_wind['wind_speed_pow3'] = v_rated ** 3
-
+  
     df_wind['gen_wind_total_mwh'] = df_wind['gen_wind_offshore_mwh'] + df_wind['gen_wind_onshore_mwh']
     df_wind = df_wind.drop(['gen_wind_offshore_mwh', 'gen_wind_onshore_mwh'], axis=1)
+
+    # Create lag and rolling features for the weather variables, defaults to lags of 24 and 168 hours and rolling windows of 24 and 168 hours
+    df_wind = create_lag_rolling_features(df_wind, ['gen_wind_total_mwh', 'wind_weather_wind_speed_100m'], dropna=False)
+
+    # Create time features
+    tfc = TimeFeatureCreator(
+        country="DE",
+        state_codes=DE_STATE_CODES,
+        pandemic_start=PANDEMIC_START,
+        pandemic_end=PANDEMIC_END,
+        time_column="time",
+        include_features=["year", "hour", "month"],  # add more if needed
+    )
+
+    df_wind = tfc.create(df_wind, year=int(df_wind["time"].dt.year.max()))
+    #df_wind = df_wind.dropna().reset_index(drop=True)
+    df_wind = df_wind.reset_index(drop=True)
     
     return df_wind
 
@@ -550,19 +569,43 @@ def _predict_generation_tomorrow(
     
     # 1. Load history from DB (need enough for lags)
     df_hist = load_time_series_data_from_db().reset_index()
+    if 'time' not in df_hist.columns:
+        print('time column missing in df_hist')
+        return
     df_hist['time'] = pd.to_datetime(df_hist['time'], utc=True).dt.tz_convert("Europe/Berlin")
     
     # 2. Get weather forecast for the range
     # Ensure weather covers first hour of start_date
     df_weather = prepare_weather_for_prediction(start_date, forecast_days=3)
+    if 'time' not in df_weather.columns:
+        print('time column missing in df_weather')
+        return
+
     
     # 3. Features
     # PV and Wind models use weather series + generation lags
     # Combine history and weather
     df_combined = pd.concat([df_hist, df_weather], ignore_index=True)
     df_combined = df_combined.sort_values('time').drop_duplicates('time').reset_index(drop=True)
+    if 'time' not in df_combined.columns:
+        print('time column missing in df_combined - hist + weather')
+        return
+
     
-    # 4. Feature Engineering (Lags/Rolling)
+    # 4. prepare historical data for prediction - pv and wind
+    if "pv" in target_series:
+        df_combined = prepare_historical_pv_features(df_combined)
+        if 'time' not in df_combined.columns:
+            print('time column missing in df_combined - pv')
+            return
+
+    elif "wind" in target_series:
+        df_combined = prepare_historical_wind_features(df_combined)
+        if 'time' not in df_combined.columns:
+            print('time column missing in df_combined - wind')
+            return
+
+    '''
     if "pv" in target_series:
         cols_base = ['gen_pv_mwh', 
                      'pv_weather_cloud_cover', 
@@ -579,6 +622,7 @@ def _predict_generation_tomorrow(
                      'wind_speed_pow2',
                      'wind_speed_pow3']
         df_combined = prepare_historical_wind_features(df_combined)
+        print(f'prepared historical wind features, df shape: {df_combined.shape}, df columns: {df_combined.columns.tolist()}')
 
     for c in cols_base:
         if c not in df_combined.columns:
@@ -598,11 +642,12 @@ def _predict_generation_tomorrow(
         include_features=["year", "month", "hour"]
     )
     df_feat = tfc.create(df_feat, year=pd.Timestamp.now().year)
-    
+    '''
+
     # 5. Filter for target range
     ts_start = pd.Timestamp(start_date, tz="Europe/Berlin").normalize()
     ts_end = pd.Timestamp(end_date, tz="Europe/Berlin").normalize() + pd.Timedelta(days=1)
-    df_range = df_feat[(df_feat['time'] >= ts_start) & (df_feat['time'] < ts_end)].copy()
+    df_range = df_combined[(df_combined['time'] >= ts_start) & (df_combined['time'] < ts_end)].copy()
     
     if df_range.empty:
         return pd.DataFrame()
@@ -814,6 +859,7 @@ def prepare_data_for_price_prediction_operational(
     
     df_dem_hist_all = load_energy_demand_table()
     df_dem_hist_all["time"] = pd.to_datetime(df_dem_hist_all["time"], utc=True).dt.tz_convert("Europe/Berlin")
+    print(f"\nLoaded energy demand data shape: {df_dem_hist_all.shape}\n  time range: {df_dem_hist_all['time'].min()} -> {df_dem_hist_all['time'].max()}")
     
     df_dem_hist_all = df_dem_hist_all.rename(
         columns={"smard_forecast_mwh": "demand_forecast_mwh"}
@@ -887,12 +933,14 @@ def prepare_data_for_price_prediction_operational(
     for day in forecast_days:
         day_str = day.strftime("%Y-%m-%d")
         df_dem_feat = prepare_for_demand_prediction_tomorrow(day_str)
+        print(f'\nPrepared demand features for day {day_str} shape: {df_dem_feat.shape}\n  time range: {df_dem_feat["time"].min()} -> {df_dem_feat["time"].max()}')
 
         X_dem = df_dem_feat.drop(columns=["time"], errors="ignore")
         if hasattr(demand_model, "feature_name_"):
             X_dem = X_dem.reindex(columns=list(demand_model.feature_name_))
 
         pred = demand_model.predict(X_dem)
+        print(f"\nPredicted demand for day {day_str} shape: {pred.shape}\n  time range: {df_dem_feat['time'].min()} -> {df_dem_feat['time'].max()}")
 
         demand_frames.append(
             pd.DataFrame(
@@ -918,6 +966,7 @@ def prepare_data_for_price_prediction_operational(
         start_date=start_str,
         end_date=end_str,
     )
+    print(f"\nPredicted PV generation for range {start_str} -> {end_str} shape: {df_pv_pred.shape}\n  time range: {df_pv_pred['time'].min()} -> {df_pv_pred['time'].max()}")
 
     df_wind_pred = _predict_generation_tomorrow(
         target_series="gen_wind_total_mwh",
@@ -925,6 +974,7 @@ def prepare_data_for_price_prediction_operational(
         start_date=start_str,
         end_date=end_str,
     )
+    print(f"\nPredicted Wind generation for range {start_str} -> {end_str} shape: {df_wind_pred.shape}\n  time range: {df_wind_pred['time'].min()} -> {df_wind_pred['time'].max()}")
 
     future_times = pd.date_range(
         forecast_start,
@@ -1003,6 +1053,8 @@ def prepare_data_for_price_prediction_operational(
             (df_price_raw["time"] < day_end)
         )
         df_price_raw.loc[mask, "price_de_lu_eur_mwh"] = pred_price
+
+    print(f"\nPrice features before final target-day feature build shape: {df_price_raw.shape}\n  time range: {df_price_raw['time'].min()} -> {df_price_raw['time'].max()}")
 
     # ------------------------------------------------------------
     # 8. Build final target-day features

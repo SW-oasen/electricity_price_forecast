@@ -262,9 +262,7 @@ with tab_future:
             ].copy()
 
         df_tom_pred = predict_df(model, df_tomorrow_feat, "Morgen ML")
-        df_today_pred = (
-            predict_df(model, df_today_feat, "Heute ML") if not df_today_feat.empty else pd.DataFrame(columns=["time", "Heute ML"])
-        )
+        #df_today_pred = predict_df(model, df_today_feat, "Heute ML") if not df_today_feat.empty else pd.DataFrame(columns=["time", "Heute ML"])
 
         df_context = load_actual_context(today - timedelta(days=7), tomorrow)
         keep_cols = [
@@ -273,7 +271,12 @@ with tab_future:
         ]
         df_context = df_context[[c for c in keep_cols if c in df_context.columns]]
 
-        df_plot = pd.concat([df_today_pred, df_tom_pred], ignore_index=True)
+        df_context["time"] = pd.to_datetime(df_context["time"], utc=True).dt.tz_convert("Europe/Berlin")
+
+        #df_plot = pd.concat([df_today_pred, df_tom_pred], ignore_index=True)
+        df_plot = df_tom_pred.copy()
+        df_plot["time"] = pd.to_datetime(df_plot["time"], utc=True).dt.tz_convert("Europe/Berlin")
+
         df_plot = df_plot.merge(df_context, on="time", how="left")
         df_plot = add_mean_last_7_days(df_plot, today)
 
@@ -290,7 +293,7 @@ with tab_future:
         table = df_plot.copy()
         table["Zeit (Berlin)"] = to_berlin_naive(table["time"]).dt.strftime("%Y-%m-%d %H:%M")
         display_cols = [
-            "Zeit (Berlin)", "Heute ML", "Morgen ML", "7-Tage-Mittel",
+            "Zeit (Berlin)", "Morgen ML", "7-Tage-Mittel",
             "gen_pv_input_mwh", "gen_wind_input_mwh", "demand_input_mwh",
         ]
         st.dataframe(table[[c for c in display_cols if c in table.columns]], use_container_width=True)

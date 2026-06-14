@@ -56,6 +56,7 @@ from fetch_demand_data import (
 # Constants
 # ---------------------------------------------------------------------------
 from config import (
+    DATABASE_PATH,
     SMARD_FILTER_NETZLAST  as FILTER_NETZLAST_ACTUAL,
     SMARD_FILTER_FORECAST  as FILTER_NETZLAST_FORECAST,
     KAGGLE_END_DATE,
@@ -65,8 +66,8 @@ from config import (
 KAGGLE_RAW_PATH  = ROOT_DIR / "data" / "raw" / "MHLV_2019_2025_combined.csv"
 
 
-DB_DIR          = ROOT_DIR / "db"
-DEFAULT_DB_PATH = DB_DIR / "energy_demand.db"
+#DB_DIR          = ROOT_DIR / "db"
+#DEFAULT_DB_PATH = DB_DIR / "energy_demand.db"
 
 # Context rows needed to compute lag/rolling features at the seam during incremental updates
 ENERGY_CONTEXT_ROWS  = 168   # lag_168h is the deepest lookback
@@ -170,7 +171,7 @@ _WEATHER_DB_COLS = [
 # Phase 1 — DB Setup
 # ---------------------------------------------------------------------------
 
-def create_database(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
+def create_database(db_path: Path = DATABASE_PATH) -> sqlite3.Connection:
     """
     Create the SQLite database file, tables, and combined view.
     Safe to call multiple times (uses IF NOT EXISTS). Returns open connection.
@@ -536,7 +537,7 @@ def update_weather_table(conn: sqlite3.Connection) -> int:
 # Phase 3 — Orchestrator (main entry point)
 # ---------------------------------------------------------------------------
 
-def update_demand_database(db_path: Path = DEFAULT_DB_PATH) -> None:
+def update_demand_database(db_path: Path = DATABASE_PATH) -> None:
     """
     Main entry point for the ETL pipeline.
 
@@ -585,7 +586,7 @@ def update_demand_database(db_path: Path = DEFAULT_DB_PATH) -> None:
 # Read helpers (for use by other modules / notebooks)
 # ---------------------------------------------------------------------------
 
-def get_connection(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
+def get_connection(db_path: Path = DATABASE_PATH) -> sqlite3.Connection:
     """Return an open connection to the database."""
     return sqlite3.connect(db_path)
 
@@ -640,7 +641,7 @@ def _build_query(base: str, start_date: str, end_date: str) -> tuple:
 
 def prepare_for_demand_prediction_tomorrow(
     prediction_date: str,
-    db_path: Path = DEFAULT_DB_PATH,
+    db_path: Path = DATABASE_PATH,
 ) -> pd.DataFrame:
     """
     Build the feature matrix for tomorrow's hourly prediction using the ETL pipeline.
@@ -657,7 +658,7 @@ def prepare_for_demand_prediction_tomorrow(
     prediction_date : str
         ISO date string for the day to predict, e.g. ``'2026-05-23'``.
     db_path : Path
-        Path to the SQLite database (default: ``DEFAULT_DB_PATH``).
+        Path to the SQLite database (default: ``DATABASE_PATH``).
 
     Returns
     -------
@@ -668,6 +669,7 @@ def prepare_for_demand_prediction_tomorrow(
     import numpy as np
     from fetch_demand_data import (
         prepare_weather_for_prediction,
+        prepare_weather_for_prediction_auto,
         create_tomorrow_time,
     )
 
@@ -719,7 +721,7 @@ def prepare_for_demand_prediction_tomorrow(
     ].copy()
 
     # 3. Fetch tomorrow's weather forecast live from Open-Meteo API
-    df_weather = prepare_weather_for_prediction(prediction_date)
+    df_weather = prepare_weather_for_prediction_auto(prediction_date)
     df_weather = df_weather[
         (df_weather['time'] >= pred_start) & (df_weather['time'] < pred_end)
     ].copy()
@@ -737,4 +739,4 @@ def prepare_for_demand_prediction_tomorrow(
 # CLI entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    update_database()
+    update_demand_database()
