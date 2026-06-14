@@ -55,7 +55,7 @@ from util.smard_client import SmardClient
 from util.openmeteo_client import OpenMeteoClient
 from util.weather_weighted import build_yearly_weights
 
-# For demand prediction
+# For data preparation and prediction
 try:
     from src.etl_demand import prepare_for_demand_prediction_tomorrow
     from src.train_predict_model import load_model_from_pickle
@@ -68,9 +68,6 @@ except ImportError:
     from fetch_demand_data import prepare_weather_for_prediction
     from etl_price import update_price_database
     from etl_price import create_lag_rolling_features
-
-#PROJECT_ROOT = Path(__file__).resolve().parents[1]
-#DEFAULT_DB_PATH = PROJECT_ROOT / "db" / "energy_demand.db"
 
 
 def normalize_time_column(in_df: pd.DataFrame, col: str = "time_utc", to_utc: bool = True, freq: str = "min") -> pd.DataFrame:
@@ -180,13 +177,10 @@ def build_price_feature_base(
     # Actual generation channels
     if "gen_wind_onshore_mwh" in df_base.columns and "gen_wind_offshore_mwh" in df_base.columns:
         # only calculate if not already present or if components are available
-        mask_wind_comp = df_base["gen_wind_onshore_mwh"].notna() | df_base["gen_wind_offshore_mwh"].notna()
-        if "gen_wind_total_mwh" not in df_base.columns:
-            df_base["gen_wind_total_mwh"] = np.nan
-        df_base.loc[mask_wind_comp, "gen_wind_total_mwh"] = (
-            df_base.loc[mask_wind_comp, "gen_wind_onshore_mwh"].fillna(0) + 
-            df_base.loc[mask_wind_comp, "gen_wind_offshore_mwh"].fillna(0)
-        )
+        df_base["gen_wind_total_mwh"] = (
+            pd.to_numeric(df_base["gen_wind_onshore_mwh"], errors="coerce").fillna(0.0)
+            + pd.to_numeric(df_base["gen_wind_offshore_mwh"], errors="coerce").fillna(0.0)
+        ).astype(np.float64)
     
     if "gen_pv_mwh" in df_base.columns:
         df_base["gen_pv_total_mwh"] = df_base["gen_pv_mwh"]
@@ -247,7 +241,7 @@ def build_price_feature_base(
         #"gen_wind_total_mwh",
         "gen_pv_input_mwh",
         #"gen_pv_total_mwh",
-        "gen_other_conventional_mwh",
+        #"gen_other_conventional_mwh",
         "residual_load_input_mwh",
     ]
     # Ensure all lag columns exist (even if as NaNs) to maintain consistent feature set
@@ -262,10 +256,10 @@ def build_price_feature_base(
     df_base["wind_pv_ratio_input"] = df_base["gen_wind_input_mwh"] / (df_base["gen_pv_input_mwh"].abs() + 1.0)
     
     # Ensure residual_vs_conv_gap exists even if underlying data is missing
-    if "gen_other_conventional_mwh_lag_24h" in df_base.columns:
-        df_base["residual_vs_conv_gap"] = df_base["residual_load_input_mwh"] - df_base["gen_other_conventional_mwh_lag_24h"]
-    else:
-        df_base["residual_vs_conv_gap"] = np.nan
+    #if "gen_other_conventional_mwh_lag_24h" in df_base.columns:
+    #    df_base["residual_vs_conv_gap"] = df_base["residual_load_input_mwh"] - df_base["gen_other_conventional_mwh_lag_24h"]
+    #else:
+    #    df_base["residual_vs_conv_gap"] = np.nan
         
     df_base["price_weekly_delta"] = df_base["price_de_lu_eur_mwh_lag_24h"] - df_base["price_de_lu_eur_mwh_lag_168h"]
 
@@ -324,7 +318,7 @@ def prepare_price_model_dataset():
         'gen_pv_mwh',
         #'gen_pv_total_mwh', 
         'gen_pv_da_proxy_mwh', 
-        'gen_other_conventional_mwh', 
+        #'gen_other_conventional_mwh', 
         "residual_load_input_mwh",
         'residual_x_wind_speed', 
     ]
@@ -337,12 +331,13 @@ def prepare_price_model_dataset():
         #'gen_pv_total_mwh_lag_168h', 'gen_pv_total_mwh_lag_24h', 
         "gen_wind_input_mwh_lag_24h", "gen_wind_input_mwh_lag_168h",
         #'gen_wind_total_mwh_lag_24h', 'gen_wind_total_mwh_lag_168h',
-        "gen_other_conventional_mwh_lag_24h", "gen_other_conventional_mwh_lag_168h",
+        #"gen_other_conventional_mwh_lag_24h", "gen_other_conventional_mwh_lag_168h",
         "residual_load_input_mwh_lag_24h", "residual_load_input_mwh_lag_168h",
         #'gen_wind_offshore_mwh', 'gen_wind_onshore_mwh',  
         ]
 
-    engineered_features = ["wind_pv_ratio_input", "residual_vs_conv_gap", "price_weekly_delta", 
+    engineered_features = ["wind_pv_ratio_input", #"residual_vs_conv_gap", 
+                           "price_weekly_delta", 
                            "renewable_share", "pv_share", "wind_share", "residual_load_ratio", "holiday_renewable_share"
                            ]
 
@@ -549,7 +544,6 @@ def prepare_historical_wind_features(df):
     )
 
     df_wind = tfc.create(df_wind, year=int(df_wind["time"].dt.year.max()))
-    #df_wind = df_wind.dropna().reset_index(drop=True)
     df_wind = df_wind.reset_index(drop=True)
     
     return df_wind
@@ -565,13 +559,12 @@ def _predict_generation_tomorrow(
     if not model_path.exists():
         return pd.DataFrame()
         
+    print(f'model path: {model_path}')
+
     model = load_model_from_pickle(model_path)
     
     # 1. Load history from DB (need enough for lags)
     df_hist = load_time_series_data_from_db().reset_index()
-    if 'time' not in df_hist.columns:
-        print('time column missing in df_hist')
-        return
     df_hist['time'] = pd.to_datetime(df_hist['time'], utc=True).dt.tz_convert("Europe/Berlin")
     
     # 2. Get weather forecast for the range
@@ -605,45 +598,6 @@ def _predict_generation_tomorrow(
             print('time column missing in df_combined - wind')
             return
 
-    '''
-    if "pv" in target_series:
-        cols_base = ['gen_pv_mwh', 
-                     'pv_weather_cloud_cover', 
-                     'pv_weather_diffuse_radiation', 
-                     'pv_weather_direct_radiation', 
-                     'pv_weather_shortwave_radiation']
-    else:
-        # Handle wind_total
-        if 'gen_wind_onshore_mwh' in df_combined.columns and 'gen_wind_offshore_mwh' in df_combined.columns:
-            df_combined['gen_wind_total_mwh'] = df_combined['gen_wind_onshore_mwh'].fillna(0) + df_combined['gen_wind_offshore_mwh'].fillna(0)
-        cols_base = ['gen_wind_total_mwh', 
-                     'wind_weather_wind_speed_100m', 
-                     'wind_speed_clipped', 
-                     'wind_speed_pow2',
-                     'wind_speed_pow3']
-        df_combined = prepare_historical_wind_features(df_combined)
-        print(f'prepared historical wind features, df shape: {df_combined.shape}, df columns: {df_combined.columns.tolist()}')
-
-    for c in cols_base:
-        if c not in df_combined.columns:
-            df_combined[c] = np.nan
-        
-    df_feat = create_lag_rolling_features(df_combined, cols_base, lags=(24, 168), rolling_windows=(24, 168))
-    
-    # Ensure time column is in correct format and timezone
-    df_feat["time"] = pd.to_datetime(df_feat["time"], utc=True).dt.tz_convert("Europe/Berlin")
-
-    tfc = TimeFeatureCreator(
-        country="DE",
-        state_codes=DE_STATE_CODES,
-        pandemic_start=PANDEMIC_START,
-        pandemic_end=PANDEMIC_END,
-        time_column="time",
-        include_features=["year", "month", "hour"]
-    )
-    df_feat = tfc.create(df_feat, year=pd.Timestamp.now().year)
-    '''
-
     # 5. Filter for target range
     ts_start = pd.Timestamp(start_date, tz="Europe/Berlin").normalize()
     ts_end = pd.Timestamp(end_date, tz="Europe/Berlin").normalize() + pd.Timedelta(days=1)
@@ -654,20 +608,29 @@ def _predict_generation_tomorrow(
         
     X = df_range.drop(columns=['time', 'gen_pv_mwh', 'gen_wind_total_mwh'], errors='ignore')
     
-    if hasattr(model, 'feature_name_'):
-        model_features = model.feature_name_
-        available_features = [f for f in model_features if f in X.columns]
-        X = X[available_features]
-    
+    '''
+    model_features = []
+    if 'lgmb' in model_name.lower():
+        model_features = model.booster_.feature_name()
+    elif 'xgb' in model_name.lower():
+        model_features = model.get_booster().feature_names
+    available_features = [f for f in model_features if f in X.columns]
+    X = X[available_features]
+    '''
+
     print(f"\nDataset prepared for predicting {target_series} \n time range {ts_start} -> {ts_end} \n shape: {X.shape} \n features used: {X.columns.tolist()}")
+
     preds = model.predict(X)
+
+    #if 'wind' in target_series:
+    #    print(f'Wind generation predictions - min: {preds.min()}, max: {preds.max()}, mean: {preds.mean()}')
     
     return pd.DataFrame({
         'time': df_range['time'],
         target_series: preds
     })
 
-
+'''
 def prepare_data_for_price_prediction_tomorrow(history_days=15):
     """
     Prepare the dataset for tomorrow's price prediction context.
@@ -818,7 +781,7 @@ def ensure_berlin_time(s: pd.Series) -> pd.Series:
         ts = ts.dt.tz_convert("Europe/Berlin")
 
     return ts.dt.as_unit("s")
-
+'''
 
 def prepare_data_for_price_prediction_operational(
     target_date: str | None = None,
@@ -970,7 +933,7 @@ def prepare_data_for_price_prediction_operational(
 
     df_wind_pred = _predict_generation_tomorrow(
         target_series="gen_wind_total_mwh",
-        model_name="wind_lgbm_model",
+        model_name="wind_xgb_model",
         start_date=start_str,
         end_date=end_str,
     )
