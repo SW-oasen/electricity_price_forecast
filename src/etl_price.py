@@ -803,14 +803,15 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
     """
     Orchestrator for price ETL: ensures tables, seeds catalog, fetches and stores all active series.
     """
+    print("\n" + "-"*10 + " Updating price database " + "-"*10)
     conn = create_price_tables(db_path)
     try:
         changed = seed_series_catalog(conn)
         #print(f"Series catalog seeded/updated rows: {changed}")
         smard_status = check_price_data_status(conn, source="smard")
-        print("\nCurrent SMARD data status:")
-        for sid, s in smard_status.items():
-            print(f"  {sid:28s}: {s['rows']:>6} rows | max: {s['max_time']}")
+        #print("\nCurrent SMARD data status:")
+        #for sid, s in smard_status.items():
+        #    print(f"  {sid:28s}: {s['rows']:>6} rows | max: {s['max_time']}")
 
         # SMARD up-to-date check.
         # For price and generation, we often want the day-ahead values if available today.
@@ -879,16 +880,16 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
                 smard_end = tomorrow.strftime("%Y-%m-%d")
 
             if smard_start <= smard_end:
-                print(f"\nFetching and storing SMARD price/generation series: {smard_start} → {smard_end}")
                 result = fetch_and_store_smard_batch(conn, smard_start, smard_end)
-                print(f"Batch ingestion result: {result}")
+                #print(f"Batch ingestion result: {result}")
+                print(f"\nDone with fetching and storing SMARD price/generation series: {smard_start} → {smard_end}")
             else:
                 print("\nSMARD start_date is after end_date — skip SMARD fetch.")
 
         weather_status = check_price_data_status(conn, source="openmeteo")
-        print("\nCurrent Open-Meteo data status:")
-        for sid, s in weather_status.items():
-            print(f"  {sid:28s}: {s['rows']:>6} rows | max: {s['max_time']}")
+        #print("\nCurrent Open-Meteo data status:")
+        #for sid, s in weather_status.items():
+        #    print(f"  {sid:28s}: {s['rows']:>6} rows | max: {s['max_time']}")
 
         weather_target_end = (today - timedelta(days=1)).strftime("%Y-%m-%d")
         weather_start = start_date
@@ -915,15 +916,15 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
                     weather_start = "2019-01-01"
 
         if weather_start <= weather_end:
-            print(f"\nFetching and storing Open-Meteo weighted weather series: {weather_start} → {weather_end}")
             weather_result = fetch_and_store_openmeteo_batch(conn, weather_start, weather_end)
-            print(f"Weather ingestion result: {weather_result}")
+            #print(f"Weather ingestion result: {weather_result}")
+            print(f"\nDone with fetching and storing Open-Meteo weighted weather series: {weather_start} → {weather_end}")
         else:
             print("\nOpen-Meteo weather is up to date (target: yesterday).")
 
         final = check_price_data_status(conn)
-        print("\nDone.")
-        for sid, s in final.items():
-            print(f"  {sid:25s}: {s['rows']:>6} rows | max: {s['max_time']}")
+        print("\n" + "-"*10 + " Updating price database done " + "-"*10)
+        #for sid, s in final.items():
+        #    print(f"  {sid:25s}: {s['rows']:>6} rows | max: {s['max_time']}")
     finally:
         conn.close()

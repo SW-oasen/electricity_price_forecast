@@ -546,20 +546,21 @@ def update_demand_database(db_path: Path = DATABASE_PATH) -> None:
     - Fills any gap since the last run on subsequent calls.
     - Safe to run repeatedly (idempotent).
     """
+    print('-'*10 + ' Updating demand database ' + '-'*10)
     conn = create_database(db_path)
     try:
         status = check_data_status(conn)
-        print("\nCurrent data status:")
-        for tbl, s in status.items():
-            print(f"  {tbl:15s}: {s['rows']:>6} rows | max: {s['max_time']} | up-to-date: {s['is_current']}")
+        #print("\nCurrent data status:")
+        #for tbl, s in status.items():
+        #    print(f"  {tbl:15s}: {s['rows']:>6} rows | max: {s['max_time']} | up-to-date: {s['is_current']}")
 
         # --- Energy ---
         if status['energy']['rows'] == 0:
             print("\n[Energy] First run — seeding table...")
             seed_energy_table(conn)
         elif not status['energy']['is_current']:
-            print("\n[Energy] Filling gap...")
             update_energy_table(conn)
+            print("\n[Energy] Filled gap...")
         else:
             print("\n[Energy] Up to date — nothing to do.")
 
@@ -568,15 +569,15 @@ def update_demand_database(db_path: Path = DATABASE_PATH) -> None:
             print("\n[Weather] First run — seeding table...")
             seed_weather_table(conn)
         elif not status['weather']['is_current']:
-            print("\n[Weather] Filling gap...")
             update_weather_table(conn)
+            print("\n[Weather] Filled gap...")
         else:
             print("\n[Weather] Up to date — nothing to do.")
 
         final = check_data_status(conn)
-        print(f"\nDone.")
-        print(f"  energy_demand : {final['energy']['rows']} rows | max: {final['energy']['max_time']}")
-        print(f"  weather       : {final['weather']['rows']} rows | max: {final['weather']['max_time']}")
+        #print(f"  energy_demand : {final['energy']['rows']} rows | max: {final['energy']['max_time']}")
+        #print(f"  weather       : {final['weather']['rows']} rows | max: {final['weather']['max_time']}")
+        print("\n" + "-"*10 + " Updating demand database done " + "-"*10)
 
     finally:
         conn.close()

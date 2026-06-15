@@ -160,8 +160,10 @@ def build_price_feature_base(
     """
     df_base = df_price_raw.merge(df_demand_raw, on="time", how="inner")
 
-    time_features = ["hour", "hour_sin", "hour_cos", "weekday", "month",
-                     "is_weekend", "is_holiday", "is_bridge_day", "is_pandemic_time", "holiday_ratio", "holiday_weight"
+    time_features = ["hour", "weekday", "month",
+                     #"hour_sin", "hour_cos",
+                     "is_weekend", "is_holiday", 
+                     #"is_pandemic_time", "is_bridge_day", "holiday_ratio", "holiday_weight",
                      ]  
     tfc = TimeFeatureCreator(
         country="DE",
@@ -186,11 +188,12 @@ def build_price_feature_base(
         df_base["gen_pv_total_mwh"] = df_base["gen_pv_mwh"]
 
     # Forecast generation channels (SMARD official forecasts)
-    df_base["gen_wind_total_forecast_mwh"] = np.nan
     if "forecast_wind_onshore_mwh" in df_base.columns and "forecast_wind_offshore_mwh" in df_base.columns:
+        df_base["gen_wind_total_forecast_mwh"] = np.nan
         df_base["gen_wind_total_forecast_mwh"] = df_base["forecast_wind_onshore_mwh"] + df_base["forecast_wind_offshore_mwh"]
     
-    df_base["gen_pv_total_forecast_mwh"] = df_base.get("forecast_pv_mwh", np.nan)
+    if "forecast_pv_mwh" in df_base.columns:
+        df_base["gen_pv_total_forecast_mwh"] = df_base["forecast_pv_mwh"]
 
     # Day-ahead fallback helpers
     df_base["demand_forecast_mwh"] = pd.to_numeric(df_base.get("demand_forecast_mwh", np.nan), errors="coerce")
@@ -220,17 +223,17 @@ def build_price_feature_base(
     df_base.loc[mask_wind_missing, "gen_wind_input_mwh"] = df_base.loc[mask_wind_missing, "gen_wind_da_proxy_mwh"]
     df_base.loc[mask_pv_missing, "gen_pv_input_mwh"] = df_base.loc[mask_pv_missing, "gen_pv_da_proxy_mwh"]
 
-    df_base["residual_load_input_mwh"] = df_base["demand_input_mwh"] - df_base["gen_wind_input_mwh"] - df_base["gen_pv_input_mwh"]
+    #df_base["residual_load_input_mwh"] = df_base["demand_input_mwh"] - df_base["gen_wind_input_mwh"] - df_base["gen_pv_input_mwh"]
 
-    df_base["renewable_share"] = (df_base["gen_pv_input_mwh"] + df_base["gen_wind_input_mwh"]) / df_base["demand_input_mwh"]
+    #df_base["renewable_share"] = (df_base["gen_pv_input_mwh"] + df_base["gen_wind_input_mwh"]) / df_base["demand_input_mwh"]
 
-    df_base["pv_share"] = df_base["gen_pv_input_mwh"] / df_base["demand_input_mwh"]
+    #df_base["pv_share"] = df_base["gen_pv_input_mwh"] / df_base["demand_input_mwh"]
 
-    df_base["wind_share"] = df_base["gen_wind_input_mwh"] / df_base["demand_input_mwh"]
+    #df_base["wind_share"] = df_base["gen_wind_input_mwh"] / df_base["demand_input_mwh"]
 
-    df_base["residual_load_ratio"] = df_base["residual_load_input_mwh"] / df_base["demand_input_mwh"]
+    #df_base["residual_load_ratio"] = df_base["residual_load_input_mwh"] / df_base["demand_input_mwh"]
 
-    df_base["holiday_renewable_share"] = df_base["is_holiday"] * df_base["renewable_share"]
+    #df_base["holiday_renewable_share"] = df_base["is_holiday"] * df_base["renewable_share"]
 
     # Lags (Richer structure from 'plus' model)
     lag_cols = [
@@ -242,7 +245,7 @@ def build_price_feature_base(
         "gen_pv_input_mwh",
         #"gen_pv_total_mwh",
         #"gen_other_conventional_mwh",
-        "residual_load_input_mwh",
+        #"residual_load_input_mwh",
     ]
     # Ensure all lag columns exist (even if as NaNs) to maintain consistent feature set
     for col in lag_cols:
@@ -253,7 +256,7 @@ def build_price_feature_base(
             df_base[l168] = df_base[col].shift(168)
 
     # Extra regime/interaction features
-    df_base["wind_pv_ratio_input"] = df_base["gen_wind_input_mwh"] / (df_base["gen_pv_input_mwh"].abs() + 1.0)
+    #df_base["wind_pv_ratio_input"] = df_base["gen_wind_input_mwh"] / (df_base["gen_pv_input_mwh"].abs() + 1.0)
     
     # Ensure residual_vs_conv_gap exists even if underlying data is missing
     #if "gen_other_conventional_mwh_lag_24h" in df_base.columns:
@@ -261,7 +264,7 @@ def build_price_feature_base(
     #else:
     #    df_base["residual_vs_conv_gap"] = np.nan
         
-    df_base["price_weekly_delta"] = df_base["price_de_lu_eur_mwh_lag_24h"] - df_base["price_de_lu_eur_mwh_lag_168h"]
+    #df_base["price_weekly_delta"] = df_base["price_de_lu_eur_mwh_lag_24h"] - df_base["price_de_lu_eur_mwh_lag_168h"]
 
     # Weather features (cyclical wind direction + lags)
     weather_lag_cols = [
@@ -289,9 +292,7 @@ def build_price_feature_base(
             df_base["wind_speed_pow2"] = v_rated ** 2
             df_base["wind_speed_pow3"] = v_rated ** 3
 
-            df_base["residual_x_wind_speed"] = (
-                df_base["residual_load_input_mwh"] * df_base["wind_weather_wind_speed_100m"]
-            )
+            #df_base["residual_x_wind_speed"] = df_base["residual_load_input_mwh"] * df_base["wind_weather_wind_speed_100m"]
 
     return df_base
 
@@ -305,8 +306,10 @@ def prepare_price_model_dataset():
         df_price_model: training-ready dataframe (time, target, model features)
         feature_cols: ordered list of model feature columns
     """
-    time_features = ["hour", "hour_sin", "hour_cos", "weekday", "month",
-                    "is_weekend", "is_holiday", "is_bridge_day", "is_pandemic_time", "holiday_ratio", "holiday_weight"
+    time_features = ["hour", "weekday", "month",
+                     #"hour_sin", "hour_cos",
+                    "is_weekend", "is_holiday",  
+                    #"is_bridge_day","is_pandemic_time", "holiday_ratio", "holiday_weight"
                     ]
 
     prediction_cols = [
@@ -319,8 +322,8 @@ def prepare_price_model_dataset():
         #'gen_pv_total_mwh', 
         'gen_pv_da_proxy_mwh', 
         #'gen_other_conventional_mwh', 
-        "residual_load_input_mwh",
-        'residual_x_wind_speed', 
+        #"residual_load_input_mwh",
+        #'residual_x_wind_speed', 
     ]
 
     prediction_lag_features = [ 
@@ -332,14 +335,14 @@ def prepare_price_model_dataset():
         "gen_wind_input_mwh_lag_24h", "gen_wind_input_mwh_lag_168h",
         #'gen_wind_total_mwh_lag_24h', 'gen_wind_total_mwh_lag_168h',
         #"gen_other_conventional_mwh_lag_24h", "gen_other_conventional_mwh_lag_168h",
-        "residual_load_input_mwh_lag_24h", "residual_load_input_mwh_lag_168h",
+        #"residual_load_input_mwh_lag_24h", "residual_load_input_mwh_lag_168h",
         #'gen_wind_offshore_mwh', 'gen_wind_onshore_mwh',  
         ]
 
-    engineered_features = ["wind_pv_ratio_input", #"residual_vs_conv_gap", 
-                           "price_weekly_delta", 
-                           "renewable_share", "pv_share", "wind_share", "residual_load_ratio", "holiday_renewable_share"
-                           ]
+    #engineered_features = ["wind_pv_ratio_input", #"residual_vs_conv_gap", 
+    #                       "price_weekly_delta", 
+    #                       "renewable_share", "pv_share", "wind_share", "residual_load_ratio", "holiday_renewable_share"
+    #                       ]
 
     weather_features = [
         "wind_weather_wind_speed_100m", 
@@ -377,7 +380,7 @@ def prepare_price_model_dataset():
     all_prediction_features = (
         prediction_cols 
         + prediction_lag_features 
-        + engineered_features 
+        #+ engineered_features 
         + time_features
         + weather_features 
         + weather_lag_features
@@ -630,158 +633,6 @@ def _predict_generation_tomorrow(
         target_series: preds
     })
 
-'''
-def prepare_data_for_price_prediction_tomorrow(history_days=15):
-    """
-    Prepare the dataset for tomorrow's price prediction context.
-    Uses database for historical data and a custom LGBM model for demand forecast.
-    """
-    # 1. Ensure database is updated (historical data)
-    update_price_database()
-    
-    today = pd.Timestamp.now(tz="Europe/Berlin")
-    tomorrow = today + pd.Timedelta(days=1)
-    yesterday = today - pd.Timedelta(days=1)
-
-    prediction_date = tomorrow.strftime("%Y-%m-%d")
-    today_date = today.strftime("%Y-%m-%d")
-    pred_ts = tomorrow.normalize() # 00:00:00 of tomorrow
-    today_ts = today.normalize() # 00:00:00 of today
-    
-    # 2. Load historical data from database
-    # load_time_series_data_from_db returns pivoted [price, generations, weighted weather]
-    df_ts_hist = load_time_series_data_from_db().reset_index()
-    df_ts_hist['time'] = pd.to_datetime(df_ts_hist['time'], utc=True).dt.tz_convert("Europe/Berlin")
-    print(f"\nLoaded historical time series data shape: {df_ts_hist.shape}\n  time range: {df_ts_hist['time'].min()} -> {df_ts_hist['time'].max()}")
-
-    # Load demand actuals
-    df_dem_hist = load_energy_demand_table()
-    df_dem_hist = df_dem_hist.dropna(subset=["energy_demand_mwh"]) # ensure we have actual demand values for the historical part (model training relies on this)
-    df_dem_hist['time'] = pd.to_datetime(df_dem_hist['time'], utc=True).dt.tz_convert("Europe/Berlin")
-    print(f"\nLoaded historical demand data shape: {df_dem_hist.shape}\n  time range: {df_dem_hist['time'].min()} -> {df_dem_hist['time'].max()}")
-
-    # 3. Weather Forecast (needed for both demand and price models)
-    # Get weather covering today and tomorrow
-    df_weather_fc = prepare_weather_for_prediction(prediction_date, forecast_days=3)
-    print(f"\nPrepared weather forecast data shape: {df_weather_fc.shape}\n  time range: {df_weather_fc['time'].min()} -> {df_weather_fc['time'].max()}")
-    
-    # 4. Custom Demand Forecast (Today + Tomorrow to fill the gap)
-    # Prepare features for demand model using ETL-based logic
-    df_dem_feat_today = prepare_for_demand_prediction_tomorrow(today_date)
-    print(f"\nPrepared demand features for today shape: {df_dem_feat_today.shape}\n  time range: {df_dem_feat_today['time'].min()} -> {df_dem_feat_today['time'].max()}")
-    
-    df_dem_feat_tomorrow = prepare_for_demand_prediction_tomorrow(prediction_date)
-    print(f"\nPrepared demand features for tomorrow shape: {df_dem_feat_tomorrow.shape}\n  time range: {df_dem_feat_tomorrow['time'].min()} -> {df_dem_feat_tomorrow['time'].max()}")
-    
-    df_demand_features = pd.concat([df_dem_feat_today, df_dem_feat_tomorrow], ignore_index=True).drop_duplicates('time').sort_values('time')
-    print(f"\nCombined demand features shape: {df_demand_features.shape}\n  time range: {df_demand_features['time'].min()} -> {df_demand_features['time'].max()}")
-    
-    # Load and run the demand model
-    model_path = PROJECT_ROOT / "models" / "energy_demand_lgbm_model.pkl"
-    if not model_path.exists():
-        # fallback to another known name if the user's name is slightly different in the filesystem
-        model_path = PROJECT_ROOT / "models" / "best_lgbm_model_bayesian_etl.pkl"
-        
-    demand_model = load_model_from_pickle(model_path)
-    print(f"\nLoaded demand model from {model_path}, features: {demand_model.feature_name_ if hasattr(demand_model, 'feature_name_') else 'unknown'}")
-
-    # Predict demand
-    X_demand = df_demand_features.drop(columns=['time'], errors='ignore')
-
-    # Enforce feature order if needed
-    if hasattr(demand_model, 'feature_name_'):
-        model_features_demand = demand_model.feature_name_
-        available_features_demand = [f for f in model_features_demand if f in X_demand.columns]
-        X_demand = X_demand[available_features_demand]
-    
-    demand_pred = demand_model.predict(X_demand)
-    print(f"\nPredicted demand shape: {demand_pred.shape}\n  time range: {df_demand_features['time'].min()} -> {df_demand_features['time'].max()}")
-
-    df_demand_pred = pd.DataFrame({
-        'time': df_demand_features['time'],
-        'energy_demand_mwh': np.nan, # actual is unknown for the future
-        'demand_forecast_mwh': demand_pred # we inject our custom forecast here
-    })
-    
-    # NEW: Custom PV and Wind forecasts (Today + Tomorrow)
-    df_pv_pred = _predict_generation_tomorrow('gen_pv_mwh', 'pv_lgbm_model', today_date, prediction_date)
-    print(f"\nPredicted PV generation shape: {df_pv_pred.shape}\n  time range: {df_pv_pred['time'].min()} -> {df_pv_pred['time'].max()}")
-    
-    df_wind_pred = _predict_generation_tomorrow('gen_wind_total_mwh', 'wind_lgbm_model', today_date, prediction_date)
-    print(f"\nPredicted Wind generation shape: {df_wind_pred.shape}\n  time range: {df_wind_pred['time'].min()} -> {df_wind_pred['time'].max()}")
-
-    # 5. Combine everything for the price model base
-    # Historical part
-    df_price_raw_hist = df_ts_hist.copy()
-    df_demand_raw_hist = df_dem_hist[['time', 'energy_demand_mwh', 'smard_forecast_mwh']].copy()
-    # rename for internal consistency in the pipeline
-    df_demand_raw_hist = df_demand_raw_hist.rename(columns={'smard_forecast_mwh': 'demand_forecast_mwh'})
-    
-    # Future part (today/tomorrow)
-    # We define future rows starting from the beginning of today to the end of tomorrow
-    future_times = pd.date_range(today_ts, periods=48, freq="h", tz="Europe/Berlin")
-    df_future_rows = pd.DataFrame({'time': future_times})
-
-    # Inject custom generation forecasts into future rows if available
-    if not df_pv_pred.empty:
-        df_future_rows = df_future_rows.merge(df_pv_pred, on='time', how='left')
-    if not df_wind_pred.empty:
-        df_future_rows = df_future_rows.merge(df_wind_pred, on='time', how='left')
-    
-    # Combine weather (history from DB + forecast from OpenMeteo)
-    # Note: df_weather_fc from prepare_weather_for_prediction already includes treatment
-    # but build_price_feature_base expects raw weather columns to apply its own lags.
-    # So we take the weather forecast rows and join them.
-    df_weather_fc_rows = df_weather_fc[df_weather_fc['time'] >= today_ts].copy()
-    
-    # Prepare the combined dataframes for build_price_feature_base
-    df_price_raw = pd.concat([df_price_raw_hist, df_future_rows], ignore_index=True)
-    df_price_raw = df_price_raw.merge(df_weather_fc_rows, on='time', how='left', suffixes=('', '_fc'))
-    
-    # Update weather columns with forecast where missing
-    for col in df_weather_fc.columns:
-        if col == 'time':
-            continue
-        
-        col_fc = col + '_fc'
-        if col_fc in df_price_raw.columns:
-            if col not in df_price_raw.columns:
-                # If column didn't exist in history, create it from forecast
-                df_price_raw[col] = df_price_raw[col_fc]
-            else:
-                # If it existed, fill only NaNs (the future/gap)
-                df_price_raw[col] = df_price_raw[col].fillna(df_price_raw[col_fc])
-            
-            df_price_raw = df_price_raw.drop(columns=[col_fc])
-
-    df_demand_raw = pd.concat([df_demand_raw_hist, df_demand_pred], ignore_index=True)
-    
-    # Ensure sorted by time
-    df_price_raw = df_price_raw.sort_values('time').drop_duplicates('time').reset_index(drop=True)
-    df_demand_raw = df_demand_raw.sort_values('time').drop_duplicates('time').reset_index(drop=True)
-    
-    # 6. Apply Price Feature Engineering (including adding Time Features)
-    # This will fill gaps using demand_forecast_mwh and gen_wind_total_mwh/gen_pv_mwh (our forecasts)
-    df_base = build_price_feature_base(df_price_raw, df_demand_raw)
-        
-    # 8. Filter for target prediction date
-    pred_end = pred_ts + pd.Timedelta(days=1)
-    out_df = df_base[(df_base['time'] >= pred_ts) & (df_base['time'] < pred_end)].copy()
-    
-    return out_df.reset_index(drop=True)
-
-
-def ensure_berlin_time(s: pd.Series) -> pd.Series:
-    ts = pd.to_datetime(s)
-
-    if ts.dt.tz is None:
-        # naive timestamps from API/database are treated as UTC
-        ts = pd.to_datetime(s, utc=True).dt.tz_convert("Europe/Berlin")
-    else:
-        ts = ts.dt.tz_convert("Europe/Berlin")
-
-    return ts.dt.as_unit("s")
-'''
 
 def prepare_data_for_price_prediction_operational(
     target_date: str | None = None,
@@ -822,7 +673,7 @@ def prepare_data_for_price_prediction_operational(
     
     df_dem_hist_all = load_energy_demand_table()
     df_dem_hist_all["time"] = pd.to_datetime(df_dem_hist_all["time"], utc=True).dt.tz_convert("Europe/Berlin")
-    print(f"\nLoaded energy demand data shape: {df_dem_hist_all.shape}\n  time range: {df_dem_hist_all['time'].min()} -> {df_dem_hist_all['time'].max()}")
+    #print(f"\nLoaded energy demand data shape: {df_dem_hist_all.shape}\n  time range: {df_dem_hist_all['time'].min()} -> {df_dem_hist_all['time'].max()}")
     
     df_dem_hist_all = df_dem_hist_all.rename(
         columns={"smard_forecast_mwh": "demand_forecast_mwh"}
@@ -896,14 +747,14 @@ def prepare_data_for_price_prediction_operational(
     for day in forecast_days:
         day_str = day.strftime("%Y-%m-%d")
         df_dem_feat = prepare_for_demand_prediction_tomorrow(day_str)
-        print(f'\nPrepared demand features for day {day_str} shape: {df_dem_feat.shape}\n  time range: {df_dem_feat["time"].min()} -> {df_dem_feat["time"].max()}')
+        #print(f'\nPrepared demand features for day {day_str} shape: {df_dem_feat.shape}\n  time range: {df_dem_feat["time"].min()} -> {df_dem_feat["time"].max()}')
 
         X_dem = df_dem_feat.drop(columns=["time"], errors="ignore")
         if hasattr(demand_model, "feature_name_"):
             X_dem = X_dem.reindex(columns=list(demand_model.feature_name_))
 
         pred = demand_model.predict(X_dem)
-        print(f"\nPredicted demand for day {day_str} shape: {pred.shape}\n  time range: {df_dem_feat['time'].min()} -> {df_dem_feat['time'].max()}")
+        #print(f"\nPredicted demand for day {day_str} shape: {pred.shape}\n  time range: {df_dem_feat['time'].min()} -> {df_dem_feat['time'].max()}")
 
         demand_frames.append(
             pd.DataFrame(
@@ -929,7 +780,7 @@ def prepare_data_for_price_prediction_operational(
         start_date=start_str,
         end_date=end_str,
     )
-    print(f"\nPredicted PV generation for range {start_str} -> {end_str} shape: {df_pv_pred.shape}\n  time range: {df_pv_pred['time'].min()} -> {df_pv_pred['time'].max()}")
+    #print(f"\nPredicted PV generation for range {start_str} -> {end_str} shape: {df_pv_pred.shape}\n  time range: {df_pv_pred['time'].min()} -> {df_pv_pred['time'].max()}")
 
     df_wind_pred = _predict_generation_tomorrow(
         target_series="gen_wind_total_mwh",
@@ -937,7 +788,7 @@ def prepare_data_for_price_prediction_operational(
         start_date=start_str,
         end_date=end_str,
     )
-    print(f"\nPredicted Wind generation for range {start_str} -> {end_str} shape: {df_wind_pred.shape}\n  time range: {df_wind_pred['time'].min()} -> {df_wind_pred['time'].max()}")
+    #print(f"\nPredicted Wind generation for range {start_str} -> {end_str} shape: {df_wind_pred.shape}\n  time range: {df_wind_pred['time'].min()} -> {df_wind_pred['time'].max()}")
 
     future_times = pd.date_range(
         forecast_start,
@@ -1017,7 +868,7 @@ def prepare_data_for_price_prediction_operational(
         )
         df_price_raw.loc[mask, "price_de_lu_eur_mwh"] = pred_price
 
-    print(f"\nPrice features before final target-day feature build shape: {df_price_raw.shape}\n  time range: {df_price_raw['time'].min()} -> {df_price_raw['time'].max()}")
+    #print(f"\nPrice features before final target-day feature build shape: {df_price_raw.shape}\n  time range: {df_price_raw['time'].min()} -> {df_price_raw['time'].max()}")
 
     # ------------------------------------------------------------
     # 8. Build final target-day features
@@ -1031,5 +882,7 @@ def prepare_data_for_price_prediction_operational(
 
     if out_df.empty:
         raise ValueError(f"No target-day features generated for {target_date_str}")
+    
+    print('-'*10 + ' Done with preparing data for prediction ' + '-'*10)
 
     return out_df.reset_index(drop=True)

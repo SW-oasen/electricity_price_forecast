@@ -14,10 +14,9 @@ from pathlib import Path
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 import pandas as pd
 import streamlit as st
-
-#from config import DATABASE_URL
 
 # make direct execution from src/ work
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -49,9 +48,11 @@ except ImportError:
 MAX_RANGE_DAYS = 365
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = PROJECT_ROOT / "models"
+PRICE_MODEL_PATH = MODEL_DIR / "price_xgb_model.pkl"
 
 PRICE_TARGET_COL = "price_de_lu_eur_mwh"
-PRICE_DISPLAY_COL = "Strompreis (€/MWh)"
+PRICE_DISPLAY_COL = "Price (EUR/MWh)"
+MODEL_NAME = "XGBoost"
 
 
 st.set_page_config(
@@ -69,20 +70,10 @@ def init_db() -> bool:
 
 
 @st.cache_resource
-def load_models() -> dict[str, object]:
-    candidates = {
-        "LGBM": MODEL_DIR / "price_lgbm_model.pkl",
-        "XGBoost": MODEL_DIR / "price_xgb_model.pkl",
-    }
-    models: dict[str, object] = {}
-    for name, path in candidates.items():
-        if path.exists():
-            models[name] = load_model_from_pickle(path)
-    if not models:
-        raise FileNotFoundError(
-            "Kein Preismodell gefunden. Erwartet z. B. models/price_lgbm_model.pkl"
-        )
-    return models
+def load_price_model() -> object:
+    if not PRICE_MODEL_PATH.exists():
+        raise FileNotFoundError(f"XGBoost-Preismodell nicht gefunden: {PRICE_MODEL_PATH}")
+    return load_model_from_pickle(PRICE_MODEL_PATH)
 
 
 def to_berlin_naive(series: pd.Series) -> pd.Series:
@@ -96,10 +87,16 @@ def align_features(model: object, df: pd.DataFrame) -> pd.DataFrame:
         return X.reindex(columns=list(model.feature_name_))
     if hasattr(model, "feature_names_in_"):
         return X.reindex(columns=list(model.feature_names_in_))
+    try:
+        booster_features = model.get_booster().feature_names
+        if booster_features:
+            return X.reindex(columns=list(booster_features))
+    except Exception:
+        pass
     return X.select_dtypes("number")
 
 
-def predict_df(model: object, df_features: pd.DataFrame, pred_col: str = "ML Prediction") -> pd.DataFrame:
+def predict_df(model: object, df_features: pd.DataFrame, pred_col: str = "Prediction by XGBoost") -> pd.DataFrame:
     out = df_features[["time"]].copy()
     X = align_features(model, df_features)
     out[pred_col] = model.predict(X)
@@ -107,7 +104,7 @@ def predict_df(model: object, df_features: pd.DataFrame, pred_col: str = "ML Pre
 
 
 def load_actual_context(start_date: date, end_date: date) -> pd.DataFrame:
-    """Load price, PV, wind and demand actual/forecast context from DB."""
+    """Load historical context from DB for the historical tab."""
     df_ts = load_time_series_data_from_db().reset_index()
     df_ts["time"] = pd.to_datetime(df_ts["time"], utc=True)
 
@@ -122,76 +119,64 @@ def load_actual_context(start_date: date, end_date: date) -> pd.DataFrame:
     return df_base.loc[mask].copy().reset_index(drop=True)
 
 
-def add_mean_last_7_days(df_plot: pd.DataFrame, ref_date: date) -> pd.DataFrame:
-    last7_start = ref_date - timedelta(days=7)
-    last7_end = ref_date - timedelta(days=1)
-    df_last7 = load_actual_context(last7_start, last7_end)
-    if df_last7.empty or PRICE_TARGET_COL not in df_last7.columns:
-        df_plot["7-Tage-Mittel"] = pd.NA
-        return df_plot
-
-    tmp = df_last7.copy()
-    tmp["hour"] = pd.to_datetime(tmp["time"], utc=True).dt.tz_convert("Europe/Berlin").dt.hour
-    hourly_mean = tmp.groupby("hour")[PRICE_TARGET_COL].mean()
-    df_plot["hour"] = pd.to_datetime(df_plot["time"], utc=True).dt.tz_convert("Europe/Berlin").dt.hour
-    df_plot["7-Tage-Mittel"] = df_plot["hour"].map(hourly_mean)
-    return df_plot.drop(columns=["hour"])
+def load_price_history_berlin() -> pd.DataFrame:
+    df_price = load_time_series_data_from_db().reset_index()
+    df_price["time_berlin"] = pd.to_datetime(df_price["time"], utc=True).dt.tz_convert("Europe/Berlin")
+    return df_price
 
 
-def plot_price_forecast(df_plot: pd.DataFrame, title: str) -> None:
-    fig, ax = plt.subplots(figsize=(14, 5))
-    x = to_berlin_naive(df_plot["time"])
+def plot_tomorrow_forecast_notebook_style(
+    pred_price_xgb,
+    df_price_daybeforeyesterday: pd.DataFrame,
+    df_price_last7days: pd.Series,
+    residual_load_forecast: pd.Series,
+    tomorrow: date,
+) -> None:
+    """Match the notebook plot: price forecast + day-before-yesterday + 7-day average + residual load."""
+    time_range = range(24)
 
-    plot_cols = [
-        ("Heute ML", "Heute: ML-Vorhersage"),
-        ("Morgen ML", "Morgen: ML-Vorhersage"),
-        (PRICE_TARGET_COL, "Echter / veröffentlichter Preis"),
-        ("7-Tage-Mittel", "Mittelwert letzte 7 Tage"),
+    y_candidates = [
+        pd.Series(pred_price_xgb),
+        pd.to_numeric(df_price_daybeforeyesterday.get(PRICE_TARGET_COL), errors="coerce"),
+        pd.to_numeric(df_price_last7days, errors="coerce"),
     ]
-    for col, label in plot_cols:
-        if col in df_plot.columns and pd.to_numeric(df_plot[col], errors="coerce").notna().any():
-            ax.plot(x, df_plot[col], linewidth=1.6, label=label)
+    predicted_max = max(float(s.max()) for s in y_candidates if s is not None and s.notna().any())
+    predicted_min = min(float(s.min()) for s in y_candidates if s is not None and s.notna().any())
+    predicted_min = min(predicted_min, 0)
 
-    ax.set_title(title)
-    ax.set_xlabel("Zeit (Europe/Berlin)")
-    ax.set_ylabel(PRICE_DISPLAY_COL)
-    ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=6, maxticks=12))
-    #ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    fig, ax = plt.subplots(figsize=(10, 4))
+
+    ax.plot(time_range, pred_price_xgb, linestyle="--", color="orange", label="Prediction by XGBoost")
+
+    if not df_price_daybeforeyesterday.empty and PRICE_TARGET_COL in df_price_daybeforeyesterday.columns:
+        y_day_before = df_price_daybeforeyesterday[PRICE_TARGET_COL].to_numpy()
+        ax.plot(time_range, y_day_before, color="steelblue", label="Day Before Yesterday")
+
+    ax.plot(
+        time_range,
+        df_price_last7days.reindex(time_range).to_numpy(),
+        color="skyblue",
+        label="Last 7 days average",
+    )
+
+    ax_twin = ax.twinx()
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Price (EUR/MWh)", color="darkgreen")
+    ax.set_ylim(predicted_min * 1.1, predicted_max * 1.1)
+    ax.legend(loc="upper center")
+    ax.xaxis.set_major_locator(MultipleLocator(3))
     ax.grid(True, alpha=0.3)
-    ax.legend()
-    fig.autofmt_xdate()
-    plt.tight_layout()
-    st.pyplot(fig)
 
+    ax_twin.plot(
+        time_range,
+        residual_load_forecast.to_numpy(),
+        color="silver",
+        label="Residual Load Forecast MWH",
+    )
+    ax_twin.set_ylabel("Residual Load Forecast (MWh)", color="black")
+    ax_twin.legend(loc="lower left")
 
-def plot_energy_context(df: pd.DataFrame, title: str) -> None:
-    fig, ax = plt.subplots(figsize=(14, 5))
-    x = to_berlin_naive(df["time"])
-
-    cols = [
-        ("gen_pv_total_mwh", "PV Erzeugung"),
-        #("gen_pv_input_mwh", "PV Vorhersage/Input"),
-        ("gen_wind_total_mwh", "Wind Erzeugung"),
-        #("gen_wind_input_mwh", "Wind Vorhersage/Input"),
-        ("energy_demand_mwh", "Stromverbrauch"),
-        #("demand_input_mwh", "Verbrauch Vorhersage/Input"),
-    ]
-    colors_dict = {"gen_pv_total_mwh": "orange", "gen_wind_total_mwh": "green", "energy_demand_mwh": "blue"}
-
-    for col, label in cols:
-        if col in df.columns and pd.to_numeric(df[col], errors="coerce").notna().any():
-            ax.plot(x, df[col], linewidth=1.4, label=label, color=colors_dict.get(col, None))
-
-    ax.set_title(title)
-    ax.set_xlabel("Zeit (Europe/Berlin)")
-    ax.set_ylabel("MWh")
-    ax.xaxis.set_major_locator(mdates.AutoDateLocator(minticks=6, maxticks=12))
-    #ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
-    ax.grid(True, alpha=0.3)
-    ax.legend(ncol=2)
-    fig.autofmt_xdate()
+    plt.suptitle(f"Predicted Electricity Price for {tomorrow}")
     plt.tight_layout()
     st.pyplot(fig)
 
@@ -202,7 +187,7 @@ def render_metrics(df: pd.DataFrame, actual_col: str, pred_col: str) -> None:
     cmp_df = df[[actual_col, pred_col]].apply(pd.to_numeric, errors="coerce").dropna()
     if cmp_df.empty:
         return
-    
+
     import numpy as np
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
@@ -210,10 +195,7 @@ def render_metrics(df: pd.DataFrame, actual_col: str, pred_col: str) -> None:
     rmse = np.sqrt(mean_squared_error(cmp_df[actual_col], cmp_df[pred_col]))
     r2 = r2_score(cmp_df[actual_col], cmp_df[pred_col])
 
-    #err = cmp_df[actual_col] - cmp_df[pred_col]
     col1, col2, col3, col4 = st.columns(4)
-    #col1.metric("MAE", f"{err.abs().mean():.2f} €/MWh")
-    #col2.metric("RMSE", f"{(err.pow(2).mean() ** 0.5):.2f} €/MWh")
     col1.metric("MAE", f"{mae:.2f} €/MWh")
     col2.metric("RMSE", f"{rmse:.2f} €/MWh")
     col3.metric("R²", f"{r2:.2f}")
@@ -221,12 +203,12 @@ def render_metrics(df: pd.DataFrame, actual_col: str, pred_col: str) -> None:
 
 
 init_db()
-models = load_models()
+price_model = load_price_model()
 
 st.title("⚡ Strompreisprognose Deutschland")
 st.markdown(
-    "Zwei Ansichten: **Vorhersage für morgen** inklusive Vorgestern- und 7-Tage-Vergleich "
-    "sowie **historische Vorhersage** mit echten Preisen."
+    "Die App verwendet das **XGBoost-Preismodell**. Die Morgenansicht zeigt die Prognose, "
+    "den Preis von vorgestern, den 7-Tage-Durchschnitt und die prognostizierte Residuallast."
 )
 
 tab_future, tab_hist = st.tabs(["Vorhersage für morgen", "Historische Vorhersage"])
@@ -234,69 +216,63 @@ tab_future, tab_hist = st.tabs(["Vorhersage für morgen", "Historische Vorhersag
 with tab_future:
     today = pd.Timestamp.now(tz="Europe/Berlin").date()
     tomorrow = today + timedelta(days=1)
+    daybeforeyesterday = today - timedelta(days=2)
 
-    col_info, col_ctrl = st.columns([2, 1])
-    with col_info:
-        st.markdown(f"**Vorgestern:** {(today - timedelta(days=2)).isoformat()}")
-        st.markdown(f"**Heute:** {today.isoformat()}")
-        st.markdown(f"**Vorhersagetag:** {tomorrow.isoformat()}")
-    with col_ctrl:
-        future_model_name = st.selectbox("Modell", list(models.keys()), key="future_model")
+    st.markdown(f"**Modell:** {MODEL_NAME}")
+    st.markdown(f"**Vorgestern:** {daybeforeyesterday.isoformat()}")
+    st.markdown(f"**Heute:** {today.isoformat()}")
+    st.markdown(f"**Vorhersagetag:** {tomorrow.isoformat()}")
 
     if st.button("Vorhersage berechnen", type="primary", key="btn_future_price"):
-        model = models[future_model_name]
-
         with st.spinner("Features für morgen werden vorbereitet …"):
-            df_tomorrow_feat = prepare_data_for_price_prediction_operational()
+            df_tomorrow_feat = prepare_data_for_price_prediction_operational(price_model=price_model)
         if df_tomorrow_feat.empty:
             st.error("Keine Features für morgen erzeugt.")
             st.stop()
 
-        with st.spinner("Heute-Vergleich wird aus dem Modell berechnet …"):
-            df_all_model = prepare_price_model_dataset()
-            df_all_model["time"] = pd.to_datetime(df_all_model["time"], utc=True)
-            today_start = pd.Timestamp(today, tz="Europe/Berlin")
-            today_end = today_start + pd.Timedelta(days=1)
-            df_today_feat = df_all_model[
-                (df_all_model["time"] >= today_start) & (df_all_model["time"] < today_end)
-            ].copy()
-
-        df_tom_pred = predict_df(model, df_tomorrow_feat, "Morgen ML")
-        #df_today_pred = predict_df(model, df_today_feat, "Heute ML") if not df_today_feat.empty else pd.DataFrame(columns=["time", "Heute ML"])
-
-        df_context = load_actual_context(today - timedelta(days=7), tomorrow)
-        keep_cols = [
-            "time", PRICE_TARGET_COL, "gen_pv_total_mwh", "gen_pv_input_mwh",
-            "gen_wind_total_mwh", "gen_wind_input_mwh", "energy_demand_mwh", "demand_input_mwh",
-        ]
-        df_context = df_context[[c for c in keep_cols if c in df_context.columns]]
-
-        df_context["time"] = pd.to_datetime(df_context["time"], utc=True).dt.tz_convert("Europe/Berlin")
-
-        #df_plot = pd.concat([df_today_pred, df_tom_pred], ignore_index=True)
-        df_plot = df_tom_pred.copy()
-        df_plot["time"] = pd.to_datetime(df_plot["time"], utc=True).dt.tz_convert("Europe/Berlin")
-
-        df_plot = df_plot.merge(df_context, on="time", how="left")
-        df_plot = add_mean_last_7_days(df_plot, today)
-
-        st.success(f"Vorhersage abgeschlossen ({future_model_name}).")
-        plot_price_forecast(
-            df_plot,
-            f"Strompreis: Heute, Morgen und 7-Tage-Mittel — {today} bis {tomorrow}",
-        )
-        plot_energy_context(
-            df_plot,
-            f"PV- und Wind-Erzeugung und Stromverbrauch - {today} bis {tomorrow}",
+        df_tomorrow_feat["time"] = pd.to_datetime(df_tomorrow_feat["time"], utc=True).dt.tz_convert("Europe/Berlin")
+        df_tomorrow_feat["residual_load_forecast"] = (
+            df_tomorrow_feat["gen_pv_input_mwh"]
+            + df_tomorrow_feat["gen_wind_input_mwh"]
+            - df_tomorrow_feat["demand_input_mwh"]
         )
 
-        table = df_plot.copy()
-        table["Zeit (Berlin)"] = to_berlin_naive(table["time"]).dt.strftime("%Y-%m-%d %H:%M")
-        display_cols = [
-            "Zeit (Berlin)", "Morgen ML", "7-Tage-Mittel",
-            "gen_pv_input_mwh", "gen_wind_input_mwh", "demand_input_mwh",
-        ]
-        st.dataframe(table[[c for c in display_cols if c in table.columns]], use_container_width=True)
+        pred_price_xgb = price_model.predict(align_features(price_model, df_tomorrow_feat))
+
+        df_price = load_price_history_berlin()
+        df_price_daybeforeyesterday = (
+            df_price
+            .loc[df_price["time_berlin"].dt.date == daybeforeyesterday]
+            .sort_values("time_berlin")
+        )
+        df_price_last7days = (
+            df_price
+            .loc[
+                (df_price["time_berlin"].dt.date >= (today - timedelta(days=7)))
+                & (df_price["time_berlin"].dt.date < today)
+            ]
+            .groupby(df_price["time_berlin"].dt.hour)[PRICE_TARGET_COL]
+            .mean()
+        )
+
+        st.success("Vorhersage abgeschlossen (XGBoost).")
+        plot_tomorrow_forecast_notebook_style(
+            pred_price_xgb=pred_price_xgb,
+            df_price_daybeforeyesterday=df_price_daybeforeyesterday,
+            df_price_last7days=df_price_last7days,
+            residual_load_forecast=df_tomorrow_feat["residual_load_forecast"],
+            tomorrow=tomorrow,
+        )
+
+        table = pd.DataFrame({
+            "Stunde": list(range(24)),
+            "Prediction by XGBoost": pred_price_xgb,
+            "Day Before Yesterday": df_price_daybeforeyesterday[PRICE_TARGET_COL].to_numpy()
+            if not df_price_daybeforeyesterday.empty and len(df_price_daybeforeyesterday) == 24 else pd.NA,
+            "Last 7 days average": df_price_last7days.reindex(range(24)).to_numpy(),
+            "Residual Load Forecast MWH": df_tomorrow_feat["residual_load_forecast"].to_numpy(),
+        })
+        st.dataframe(table, use_container_width=True)
 
 with tab_hist:
     _default_to = date.today() - timedelta(days=1)
@@ -304,13 +280,13 @@ with tab_hist:
     _min_date = date(2019, 1, 8)
     _max_date = date.today() - timedelta(days=1)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         date_from = st.date_input("Von:", value=_default_from, min_value=_min_date, max_value=_max_date, key="hist_from_price")
     with col2:
         date_to = st.date_input("Bis:", value=_default_to, min_value=_min_date, max_value=_max_date, key="hist_to_price")
-    with col3:
-        hist_model_name = st.selectbox("Modell", list(models.keys()), key="hist_model")
+
+    st.markdown(f"**Modell:** {MODEL_NAME}")
 
     delta_days = (date_to - date_from).days
     if delta_days < 0:
@@ -322,7 +298,6 @@ with tab_hist:
 
     if st.button("Historische Vorhersage berechnen", type="primary", key="btn_hist_price"):
         from_str, to_str = str(date_from), str(date_to)
-        model = models[hist_model_name]
 
         with st.spinner(f"Historische Features werden geladen: {from_str} → {to_str} …"):
             df_model = prepare_price_model_dataset()
@@ -335,21 +310,15 @@ with tab_hist:
             st.error(f"Keine Modelldaten für {from_str} → {to_str} gefunden.")
             st.stop()
 
-        df_pred = predict_df(model, df_hist_feat, "ML Prediction")
+        df_pred = predict_df(price_model, df_hist_feat, "ML Prediction")
         df_plot = df_hist_feat[["time", PRICE_TARGET_COL]].merge(df_pred, on="time", how="left")
 
-        df_context = load_actual_context(date_from, date_to)
-        ctx_cols = [
-            "time", "gen_pv_total_mwh", "gen_wind_total_mwh", "energy_demand_mwh"
-        ]
-        df_plot = df_plot.merge(df_context[[c for c in ctx_cols if c in df_context.columns]], on="time", how="left")
-
-        st.success(f"Historische Vorhersage abgeschlossen ({hist_model_name}).")
+        st.success("Historische Vorhersage abgeschlossen (XGBoost).")
 
         fig, ax = plt.subplots(figsize=(14, 5))
         x = to_berlin_naive(df_plot["time"])
-        ax.plot(x, df_plot[PRICE_TARGET_COL], linewidth=1.5, label="Echter Strompreis")
-        ax.plot(x, df_plot["ML Prediction"], linewidth=1.5, linestyle="--", label=f"ML-Vorhersage ({hist_model_name})")
+        ax.plot(x, df_plot[PRICE_TARGET_COL], linewidth=1.5, color="steelblue", label="Echter Strompreis")
+        ax.plot(x, df_plot["ML Prediction"], linewidth=1.5, linestyle="--", color="orange", label="ML-Vorhersage (XGBoost)")
         ax.set_title(f"Historische Strompreisvorhersage — {from_str} bis {to_str}")
         ax.set_xlabel("Zeit (Europe/Berlin)")
         ax.set_ylabel(PRICE_DISPLAY_COL)
@@ -362,18 +331,11 @@ with tab_hist:
         st.pyplot(fig)
 
         render_metrics(df_plot, PRICE_TARGET_COL, "ML Prediction")
-        plot_energy_context(
-            df_plot,
-            f"PV- und Wind-Erzeugung und Stromverbrauch - {from_str} bis {to_str}",
-        )
 
         table = df_plot.copy()
         table["Zeit (Berlin)"] = to_berlin_naive(table["time"]).dt.strftime("%Y-%m-%d %H:%M")
-        display_cols = [
-            "Zeit (Berlin)", PRICE_TARGET_COL, "ML Prediction",
-            "gen_pv_total_mwh", "gen_wind_total_mwh", "energy_demand_mwh",
-        ]
+        display_cols = ["Zeit (Berlin)", PRICE_TARGET_COL, "ML Prediction"]
         st.dataframe(table[[c for c in display_cols if c in table.columns]], use_container_width=True)
 
 st.markdown("---")
-st.caption("Strompreisprognose App • Datenquellen: SQLite DB, SMARD, Open-Meteo")
+st.caption("Strompreisprognose App • Modell: XGBoost • Datenquellen: SQLite DB, SMARD, Open-Meteo")
