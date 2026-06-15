@@ -6,13 +6,15 @@ Dieses Dokument dient als technische Arbeitsdokumentation des Projekts.
 
 Während die README einen fachlichen Überblick über Zielsetzung, Datenquellen und Ergebnisse liefert, beschreibt dieses Dokument die technische Architektur, den aktuellen Implementierungsstand sowie bekannte offene Punkte.
 
+Die fachliche Einführung mit Motivation, Datenquellen und Anwendungsziel findet sich in der [README.md](../README.md).
+
 ---
 
 # Projektziel
 
 Vorhersage der stündlichen Day-Ahead-Strompreise für Deutschland (DE/LU) auf Basis von:
 
-* historischen Strompreisen
+* Historischen Strompreisen
 * Stromnachfrage
 * Stromerzeugung
 * Wetterdaten
@@ -125,7 +127,8 @@ src/etl_price.py
 Zentrale Orchestrierung:
 
 ```python
-update_database(...)
+update_demand_database()
+update_price_database()
 ```
 
 Aufgaben:
@@ -204,6 +207,14 @@ Optional:
 * Windgeschwindigkeit²
 * Windgeschwindigkeit³
 
+## Visualisierung der Erzeuger-Cluster
+
+* Mit open-street-map die Erzeuger-Cluster mit Kapazitäten dargestellt
+* Wind (Onshore und Offshore)
+    - ../reports/wind_clusters_capacity_map.html
+* Solar / PV 
+    - ../reports/solar_clusters_capacity_map.html
+
 ---
 
 # Feature Engineering
@@ -213,7 +224,6 @@ Optional:
 Aktuell verwendet:
 
 * price_lag_24
-* price_lag_48
 * price_lag_168
 
 ---
@@ -221,7 +231,6 @@ Aktuell verwendet:
 ## Nachfragemerkmale
 
 * demand_lag_24
-* demand_lag_48
 * demand_lag_168
 
 ---
@@ -273,7 +282,6 @@ Wind:
 Zusätzlich:
 
 * Wetter-Lags
-* Interaktion mit Residuallast
 
 ---
 
@@ -282,7 +290,7 @@ Zusätzlich:
 Aktuelles Hauptmodell:
 
 ```text
-LightGBM Regressor
+XGBoost Regressor
 ```
 
 Zielvariable:
@@ -349,6 +357,13 @@ Aktueller Funktionsumfang:
 ---
 
 # Bekannte technische Herausforderungen
+
+## Datenlücken
+
+* Die Preise, die Wind- und PV-Erzeugung von heute und gestern sind oft nicht vollständig
+* Diese sind jedoch wichtige Prädikatoren
+* Lösung - gestapelte Vorhersagemodell
+    - Die fehlende Daten werden durch Modell bereitgestellt für die Vorhersage für morgen
 
 ## Zeitzonen
 
@@ -422,4 +437,4 @@ log/SESSION_LOG.md
 
 ---
 
-Letzte Aktualisierung: 2026-06-12
+Letzte Aktualisierung: 2026-06-15

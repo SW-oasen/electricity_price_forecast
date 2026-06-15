@@ -163,7 +163,7 @@ Die Anwendung ermöglicht:
 
     ### GUI App starten
     * streamlit run src/streamlit_app_price.py
-    * python -m streamlit run src/streamlit_app_price.p
+    * python -m streamlit run src/streamlit_app_price.py
 
 ---
 
@@ -199,11 +199,24 @@ log/
 
 ## Geplante Erweiterungen
 
+* Walk-Forward-Simulation für historische Vorhersage für genaueres Scoring
 * Rolling-Origin-Backtesting
 * Modellvergleich
 * Ensemble-Ansätze
+* Automatisch Erzeugerdaten aus MaStR holen und die Wettergewichtungen aktualisieren
 * Automatisierte Modellaktualisierung
 * Erweiterte Marktmerkmale
+* Power BI Dashboard
+
+---
+
+## Dokumentation
+
+- **README.md** – Fachlicher Überblick über Zielsetzung, Datenquellen und Ergebnisse des Projekts.
+- **documents/PROJECT_CONTEXT.md** – Technische Dokumentation mit Architektur, ETL-Prozess, Feature Engineering und Implementierungsdetails.
+
+Für Entwickler und Mitwirkende empfiehlt sich die Lektüre des
+[PROJECT_CONTEXT.md](documents/PROJECT_CONTEXT.md).
 
 ---
 
@@ -215,4 +228,4 @@ Persönliches Data-Science-Projekt im Bereich Energieanalytik und Machine Learni
 
 ---
 
-Letzte Aktualisierung: 2026-06-12
+Letzte Aktualisierung: 2026-06-15
