@@ -20,8 +20,12 @@ import sqlalchemy as sa
 import sys
 import time
 
-from etl_price import update_price_database
-from etl_demand import update_demand_database
+try:
+    from src.etl_price import update_price_database
+    from src.etl_demand import update_demand_database
+except ImportError:
+    from etl_price import update_price_database
+    from etl_demand import update_demand_database
 
 try:
     from src.config import (
@@ -49,7 +53,10 @@ except ImportError:
     )
 
 sys.path.insert(0, str(Path(__file__).parent.parent))  # project root → util importable
-from config import DATABASE_PATH, PROJECT_ROOT
+try:
+    from src.config import DATABASE_PATH, PROJECT_ROOT
+except ImportError:
+    from config import DATABASE_PATH, PROJECT_ROOT
 from util.time_features import TimeFeatureCreator
 from util.smard_client import SmardClient
 from util.openmeteo_client import OpenMeteoClient
@@ -150,15 +157,28 @@ def load_energy_demand_table(database_path = DATABASE_PATH) -> pd.DataFrame:
 def build_price_feature_base(
     df_price_raw: pd.DataFrame,
     df_demand_raw: pd.DataFrame,
+    physical_actual_until_exclusive: pd.Timestamp | None = None,
+    price_known_until_exclusive: pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     """
     Build base price-feature table.
 
-    Rule:
-    - historical rows use actual values
-    - only missing values are filled with day-ahead forecast
+    Default rule: historical rows use actual values and only missing values are
+    filled with forecasts.  For a leakage-safe walk-forward call, pass both
+    availability boundaries.  Then physical actuals at/after the boundary are
+    never used, and prices at/after their boundary are treated as unknown.
     """
     df_base = df_price_raw.merge(df_demand_raw, on="time", how="inner")
+
+    if price_known_until_exclusive is not None:
+        price_boundary = pd.Timestamp(price_known_until_exclusive)
+        if price_boundary.tzinfo is None:
+            price_boundary = price_boundary.tz_localize(df_base["time"].dt.tz)
+        else:
+            price_boundary = price_boundary.tz_convert(df_base["time"].dt.tz)
+        df_base.loc[
+            df_base["time"] >= price_boundary, "price_de_lu_eur_mwh"
+        ] = np.nan
 
     time_features = ["hour", "weekday", "month",
                      #"hour_sin", "hour_cos",
@@ -208,11 +228,28 @@ def build_price_feature_base(
     # Use SMARD forecasts to fill the proxy where available
     df_base["gen_wind_da_proxy_mwh"] = df_base["gen_wind_total_forecast_mwh"].fillna(df_base["gen_wind_da_proxy_mwh"])
     df_base["gen_pv_da_proxy_mwh"] = df_base["gen_pv_total_forecast_mwh"].fillna(df_base["gen_pv_da_proxy_mwh"])
+    # Frozen upstream generation models are the canonical D-1/D source for
+    # both the live forecast and the walk-forward evaluation.
+    if "generation_ml_wind_mwh" in df_base:
+        df_base["gen_wind_da_proxy_mwh"] = df_base["generation_ml_wind_mwh"].fillna(df_base["gen_wind_da_proxy_mwh"])
+    if "generation_ml_pv_mwh" in df_base:
+        df_base["gen_pv_da_proxy_mwh"] = df_base["generation_ml_pv_mwh"].fillna(df_base["gen_pv_da_proxy_mwh"])
 
     # Inputs used by model (actual-first)
     df_base["demand_input_mwh"] = pd.to_numeric(df_base["energy_demand_mwh"], errors="coerce")
     df_base["gen_wind_input_mwh"] = pd.to_numeric(df_base["gen_wind_total_mwh"], errors="coerce")
     df_base["gen_pv_input_mwh"] = pd.to_numeric(df_base["gen_pv_total_mwh"], errors="coerce")
+
+    if physical_actual_until_exclusive is not None:
+        physical_boundary = pd.Timestamp(physical_actual_until_exclusive)
+        if physical_boundary.tzinfo is None:
+            physical_boundary = physical_boundary.tz_localize(df_base["time"].dt.tz)
+        else:
+            physical_boundary = physical_boundary.tz_convert(df_base["time"].dt.tz)
+        future_physical = df_base["time"] >= physical_boundary
+        df_base.loc[future_physical, [
+            "demand_input_mwh", "gen_wind_input_mwh", "gen_pv_input_mwh"
+        ]] = np.nan
 
     # Fallback only on missing actual values
     mask_dem_missing = df_base["demand_input_mwh"].isna()

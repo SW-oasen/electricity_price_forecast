@@ -59,6 +59,9 @@ TABLE_SERIES_CATALOG = "series_catalog"
 TABLE_TIMESERIES_VALUES = "timeseries_values"
 TABLE_INGESTION_RUNS = "ingestion_runs"
 TABLE_DATA_QUALITY_LOG = "data_quality_log"
+TABLE_WEATHER_FORECAST_RUNS = "weather_forecast_runs"
+TABLE_WEATHER_FORECAST_VALUES = "weather_forecast_values"
+TABLE_EXTERNAL_FORECAST_SNAPSHOTS = "external_forecast_snapshots"
 
 # ---------------------------------------------------------------------------
 # Calendar / holiday features
@@ -130,6 +133,12 @@ PV_WEATHER_SERIES_IDS = {
 
 WIND_WEATHER_SERIES_IDS = {
     var: f"wind_weather_{var}" for var in WIND_WEATHER_VARIABLES
+}
+
+# Separate namespace: these are archived forecast inputs for the upstream
+# demand model, not observed weather values from the legacy weather table.
+DEMAND_FORECAST_WEATHER_SERIES_IDS = {
+    var: f"demand_forecast_weather_{var}" for var in WEATHER_VARIABLES
 }
 
 WIND_LAND_WEATHER_SERIES_IDS = {
@@ -226,6 +235,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 DB_DIR = PROJECT_ROOT / "db"
 DATABASE_PATH = DB_DIR / "energy_demand.db"
+DEMAND_UPSTREAM_MODEL_PATH = PROJECT_ROOT / "models" / "demand_lgbm_cutoff_2025-10-01.pkl"
 PV_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "pv_cluster_yearly_capacity_since_2019.csv"
 WIND_CLUSTER_YEARLY_CAPACITY_PATH = PROJECT_ROOT / "data" / "processed" / "wind_cluster_yearly_capacity_since_2019.csv"
 

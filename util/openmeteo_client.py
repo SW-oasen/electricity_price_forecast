@@ -28,6 +28,10 @@ Returned DataFrames always have:
 from __future__ import annotations
 
 import time
+from pathlib import Path
+import json
+import os
+import subprocess
 
 import pandas as pd
 import requests
@@ -35,6 +39,29 @@ import requests
 
 _ARCHIVE_URL  = "https://archive-api.open-meteo.com/v1/archive"
 _FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+_SINGLE_RUNS_URL = "https://single-runs-api.open-meteo.com/v1/forecast"
+
+
+def _request_json(url: str, params: dict, timeout: int) -> dict:
+    """Fetch JSON while retaining platform-native certificate validation."""
+    def _curl() -> dict:
+        command = ["curl.exe", "--fail", "--silent", "--show-error", "--get", url]
+        for key, value in params.items():
+            command.extend(["--data-urlencode", f"{key}={value}"])
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=True)
+        return json.loads(result.stdout)
+
+    # In this Python 3.14 Windows build, requests/OpenSSL aborts the process on
+    # the local certificate chain before an SSLError can be raised.  curl.exe
+    # uses the Windows trust store and keeps verification enabled.
+    if os.name == "nt":
+        return _curl()
+    try:
+        response = requests.get(url, params=params, timeout=timeout)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.SSLError:
+        return _curl()
 
 
 class OpenMeteoClient:
@@ -153,16 +180,7 @@ class OpenMeteoClient:
                 f"&hourly={vars_str}"
                 f"&timezone=UTC"
             )
-            for attempt in range(3):
-                try:
-                    r = requests.get(url, timeout=self.timeout)
-                    r.raise_for_status()
-                    data = r.json()
-                    break
-                except requests.exceptions.RequestException:
-                    if attempt == 2:
-                        raise
-                    time.sleep(5)
+            data = _request_json(url, {}, self.timeout)
 
             df_loc = pd.DataFrame(data['hourly'])
             df_loc['time'] = (
@@ -182,6 +200,71 @@ class OpenMeteoClient:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def latest_available_run(
+        as_of: pd.Timestamp, availability_delay_hours: int = 6
+    ) -> pd.Timestamp:
+        """Latest ECMWF six-hour run safely published by ``as_of``."""
+        timestamp = pd.Timestamp(as_of)
+        if timestamp.tzinfo is None:
+            raise ValueError("as_of must be timezone-aware")
+        cutoff = timestamp.tz_convert("UTC") - pd.Timedelta(
+            hours=availability_delay_hours
+        )
+        return cutoff.normalize() + pd.Timedelta(hours=(cutoff.hour // 6) * 6)
+
+    def fetch_single_run(
+        self,
+        run: pd.Timestamp,
+        forecast_days: int = 3,
+        model: str = "ecmwf_ifs",
+        cache_dir: Path | None = None,
+    ) -> pd.DataFrame:
+        """Fetch one archived, population-weighted Open-Meteo model run."""
+        run = pd.Timestamp(run)
+        if run.tzinfo is None:
+            raise ValueError("run must be timezone-aware")
+        run = run.tz_convert("UTC")
+        if run.minute or run.second or run.hour % 6:
+            raise ValueError("run must be a 00/06/12/18 UTC model cycle")
+
+        cache_path = None
+        if cache_dir is not None:
+            cache_path = Path(cache_dir) / model / f"{run.strftime('%Y%m%dT%H%MZ')}_{forecast_days}d.csv"
+            if cache_path.exists():
+                cached = pd.read_csv(cache_path)
+                if {"time", *self.weather_variables}.issubset(cached.columns):
+                    cached["time"] = pd.to_datetime(cached["time"], utc=True).dt.tz_convert("Europe/Berlin")
+                    return cached.sort_values("time").reset_index(drop=True)
+
+        location_frames: dict[str, pd.DataFrame] = {}
+        for name, coords in self.cities.items():
+            data = _request_json(
+                _SINGLE_RUNS_URL,
+                {
+                    "latitude": coords["latitude"],
+                    "longitude": coords["longitude"],
+                    "hourly": ",".join(self.weather_variables),
+                    "models": model,
+                    "run": run.strftime("%Y-%m-%dT%H:%M"),
+                    "timezone": "UTC",
+                    "forecast_days": forecast_days,
+                }, self.timeout,
+            )
+            frame = pd.DataFrame(data["hourly"])
+            missing = set(self.weather_variables) - set(frame.columns)
+            if missing:
+                raise ValueError(f"Single Runs response lacks variables: {sorted(missing)}")
+            frame["time"] = pd.to_datetime(frame["time"], utc=True).dt.tz_convert("Europe/Berlin")
+            location_frames[name] = frame[["time", *self.weather_variables]]
+            time.sleep(self.city_sleep)
+
+        result = self._merge_cities(location_frames).sort_values("time").reset_index(drop=True)
+        if cache_path is not None:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            result.assign(time=result["time"].dt.strftime("%Y-%m-%dT%H:%M:%S%z")).to_csv(cache_path, index=False)
+        return result
 
     def fetch_archive(self, start_date: str, end_date: str) -> pd.DataFrame:
         """

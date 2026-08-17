@@ -33,8 +33,12 @@ try:
         TABLE_TIMESERIES_VALUES,
         TABLE_INGESTION_RUNS,
         TABLE_DATA_QUALITY_LOG,
+        TABLE_WEATHER_FORECAST_RUNS,
+        TABLE_WEATHER_FORECAST_VALUES,
+        TABLE_EXTERNAL_FORECAST_SNAPSHOTS,
         PV_WEATHER_SERIES_IDS,
         WIND_WEATHER_SERIES_IDS,
+        DEMAND_FORECAST_WEATHER_SERIES_IDS,
         PV_CLUSTER_LOCATIONS,
         WIND_CLUSTER_LOCATIONS,
         SELECTED_CITIES,
@@ -61,8 +65,12 @@ except ImportError:
         TABLE_TIMESERIES_VALUES,
         TABLE_INGESTION_RUNS,
         TABLE_DATA_QUALITY_LOG,
+        TABLE_WEATHER_FORECAST_RUNS,
+        TABLE_WEATHER_FORECAST_VALUES,
+        TABLE_EXTERNAL_FORECAST_SNAPSHOTS,
         PV_WEATHER_SERIES_IDS,
         WIND_WEATHER_SERIES_IDS,
+        DEMAND_FORECAST_WEATHER_SERIES_IDS,
         PV_CLUSTER_LOCATIONS,
         WIND_CLUSTER_LOCATIONS,
         SELECTED_CITIES,
@@ -73,7 +81,18 @@ from util.smard_client import SmardClient
 from util.openmeteo_client import OpenMeteoClient
 from util.weather_weighted import build_yearly_weights
 
-from config import DATABASE_PATH, PV_CLUSTER_YEARLY_CAPACITY_PATH, WIND_CLUSTER_YEARLY_CAPACITY_PATH
+try:
+    from src.config import (
+        DATABASE_PATH,
+        PV_CLUSTER_YEARLY_CAPACITY_PATH,
+        WIND_CLUSTER_YEARLY_CAPACITY_PATH,
+    )
+except ImportError:
+    from config import (
+        DATABASE_PATH,
+        PV_CLUSTER_YEARLY_CAPACITY_PATH,
+        WIND_CLUSTER_YEARLY_CAPACITY_PATH,
+    )
 
 #PROJECT_ROOT = Path(__file__).parent.parent
 #DB_DIR = PROJECT_ROOT / "db"
@@ -206,6 +225,21 @@ for weather_var, series_id in WIND_WEATHER_SERIES_IDS.items():
     )
 
 
+for weather_var, series_id in DEMAND_FORECAST_WEATHER_SERIES_IDS.items():
+    SERIES_CATALOG_SEED.append(
+        {
+            "series_id": series_id,
+            "source": "openmeteo_forecast",
+            "filter_id": None,
+            "region": SMARD_REGION,
+            "resolution": SMARD_RESOLUTION,
+            "unit": _OPENMETEO_UNITS.get(weather_var, "unknown"),
+            "active": 1,
+            "description": f"Open-Meteo archived demand forecast weather: {weather_var}",
+        }
+    )
+
+
 def _ddl_series_catalog() -> str:
     return f"""
 CREATE TABLE IF NOT EXISTS {TABLE_SERIES_CATALOG} (
@@ -268,17 +302,79 @@ CREATE TABLE IF NOT EXISTS {TABLE_DATA_QUALITY_LOG} (
 """
 
 
-def create_price_tables(db_path: Path = DATABASE_PATH) -> sqlite3.Connection:
+def _ddl_weather_forecast_runs() -> str:
+    """Model-run metadata for point-in-time weather forecasts.
+
+    ``available_at_utc`` is intentionally distinct from initialization: a
+    numerical weather model needs time to finish and be published.
+    """
+    return f"""
+CREATE TABLE IF NOT EXISTS {TABLE_WEATHER_FORECAST_RUNS} (
+    forecast_run_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider              TEXT NOT NULL,
+    model                 TEXT NOT NULL,
+    initialized_at_utc    TEXT NOT NULL,
+    available_at_utc      TEXT NOT NULL,
+    aggregation_key       TEXT NOT NULL,
+    aggregation_version   TEXT NOT NULL,
+    source_url            TEXT,
+    fetched_at_utc        TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(provider, model, initialized_at_utc, aggregation_key, aggregation_version)
+)
+"""
+
+
+def _ddl_weather_forecast_values() -> str:
+    """Weather features of one model run, indexed by their valid time."""
+    return f"""
+CREATE TABLE IF NOT EXISTS {TABLE_WEATHER_FORECAST_VALUES} (
+    forecast_run_id       INTEGER NOT NULL,
+    valid_time_utc        TEXT NOT NULL,
+    series_id             TEXT NOT NULL,
+    value                 REAL,
+    PRIMARY KEY (forecast_run_id, valid_time_utc, series_id),
+    FOREIGN KEY (forecast_run_id)
+        REFERENCES {TABLE_WEATHER_FORECAST_RUNS}(forecast_run_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (series_id) REFERENCES {TABLE_SERIES_CATALOG}(series_id)
+)
+"""
+
+
+def _ddl_external_forecast_snapshots() -> str:
+    """Point-in-time snapshots of externally published forecasts (e.g. SMARD)."""
+    return f"""
+CREATE TABLE IF NOT EXISTS {TABLE_EXTERNAL_FORECAST_SNAPSHOTS} (
+    source                TEXT NOT NULL,
+    series_id             TEXT NOT NULL,
+    issued_at_utc         TEXT NOT NULL,
+    valid_time_utc        TEXT NOT NULL,
+    value                 REAL,
+    retrieved_at_utc      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (source, series_id, issued_at_utc, valid_time_utc),
+    FOREIGN KEY (series_id) REFERENCES {TABLE_SERIES_CATALOG}(series_id)
+)
+"""
+
+
+def create_price_tables(db_path: Path | str = DATABASE_PATH) -> sqlite3.Connection:
     """Create all price-pipeline tables and return an open DB connection."""
-    db_path = Path(db_path)
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    if str(db_path) == ":memory:":
+        conn = sqlite3.connect(":memory:")
+    else:
+        db_path = Path(db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA foreign_keys = ON")
     cur = conn.cursor()
 
     cur.execute(_ddl_series_catalog())
     cur.execute(_ddl_timeseries_values())
     cur.execute(_ddl_ingestion_runs())
     cur.execute(_ddl_data_quality_log())
+    cur.execute(_ddl_weather_forecast_runs())
+    cur.execute(_ddl_weather_forecast_values())
+    cur.execute(_ddl_external_forecast_snapshots())
 
     # Helpful indexes for future fetch/query steps.
     cur.execute(
@@ -290,8 +386,69 @@ def create_price_tables(db_path: Path = DATABASE_PATH) -> sqlite3.Connection:
         f"ON {TABLE_TIMESERIES_VALUES}(time)"
     )
 
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS idx_{TABLE_WEATHER_FORECAST_VALUES}_series_valid "
+        f"ON {TABLE_WEATHER_FORECAST_VALUES}(series_id, valid_time_utc)"
+    )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS idx_{TABLE_WEATHER_FORECAST_RUNS}_available "
+        f"ON {TABLE_WEATHER_FORECAST_RUNS}(available_at_utc)"
+    )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS idx_{TABLE_EXTERNAL_FORECAST_SNAPSHOTS}_series_valid_issued "
+        f"ON {TABLE_EXTERNAL_FORECAST_SNAPSHOTS}(series_id, valid_time_utc, issued_at_utc)"
+    )
+
     conn.commit()
     return conn
+
+
+def store_weather_forecast_run(
+    conn: sqlite3.Connection,
+    forecast: pd.DataFrame,
+    *,
+    provider: str,
+    model: str,
+    initialized_at_utc: str,
+    available_at_utc: str,
+    aggregation_key: str,
+    aggregation_version: str,
+    series_ids: dict[str, str],
+    source_url: str | None = None,
+) -> int:
+    """Store one aggregated weather run idempotently and return its identifier."""
+    required = {"time", *series_ids}
+    if missing := required - set(forecast.columns):
+        raise ValueError(f"forecast lacks columns: {sorted(missing)}")
+    cur = conn.cursor()
+    cur.execute(
+        f"""INSERT INTO {TABLE_WEATHER_FORECAST_RUNS}
+        (provider, model, initialized_at_utc, available_at_utc, aggregation_key,
+         aggregation_version, source_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(provider, model, initialized_at_utc, aggregation_key, aggregation_version)
+        DO UPDATE SET available_at_utc=excluded.available_at_utc, source_url=excluded.source_url
+        """,
+        (provider, model, initialized_at_utc, available_at_utc, aggregation_key, aggregation_version, source_url),
+    )
+    cur.execute(
+        f"""SELECT forecast_run_id FROM {TABLE_WEATHER_FORECAST_RUNS}
+        WHERE provider=? AND model=? AND initialized_at_utc=? AND aggregation_key=? AND aggregation_version=?""",
+        (provider, model, initialized_at_utc, aggregation_key, aggregation_version),
+    )
+    run_id = int(cur.fetchone()[0])
+    rows = []
+    for row in forecast[["time", *series_ids]].itertuples(index=False):
+        valid_time = pd.Timestamp(row[0]).tz_convert("UTC").strftime("%Y-%m-%dT%H:%M:%SZ")
+        for index, series_id in enumerate(series_ids.values(), start=1):
+            rows.append((run_id, valid_time, series_id, float(row[index])))
+    cur.executemany(
+        f"""INSERT OR REPLACE INTO {TABLE_WEATHER_FORECAST_VALUES}
+        (forecast_run_id, valid_time_utc, series_id, value) VALUES (?, ?, ?, ?)""",
+        rows,
+    )
+    conn.commit()
+    return run_id
 
 
 def seed_series_catalog(conn: sqlite3.Connection) -> int:
@@ -882,7 +1039,7 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
             if smard_start <= smard_end:
                 result = fetch_and_store_smard_batch(conn, smard_start, smard_end)
                 #print(f"Batch ingestion result: {result}")
-                print(f"\nDone with fetching and storing SMARD price/generation series: {smard_start} → {smard_end}")
+                print(f"\nDone with fetching and storing SMARD price/generation series: {smard_start} -> {smard_end}")
             else:
                 print("\nSMARD start_date is after end_date — skip SMARD fetch.")
 
@@ -918,7 +1075,7 @@ def update_price_database(db_path: Path = DATABASE_PATH, start_date: Optional[st
         if weather_start <= weather_end:
             weather_result = fetch_and_store_openmeteo_batch(conn, weather_start, weather_end)
             #print(f"Weather ingestion result: {weather_result}")
-            print(f"\nDone with fetching and storing Open-Meteo weighted weather series: {weather_start} → {weather_end}")
+            print(f"\nDone with fetching and storing Open-Meteo weighted weather series: {weather_start} -> {weather_end}")
         else:
             print("\nOpen-Meteo weather is up to date (target: yesterday).")
 

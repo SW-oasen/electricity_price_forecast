@@ -236,35 +236,9 @@ def fetch_weather_data_for_cities(in_start_date=KAGGLE_END_DATE,
         city_population={c: CITY_POPULATION[c] for c in cities},
         weather_variables=variables,
     )
-    # Return the raw per-city dict for backward compat with callers that iterate over cities
-    import requests as _requests, time as _time
-    api_start = (pd.to_datetime(in_start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
-    clip_start = pd.Timestamp(in_start_date, tz='Europe/Berlin')
-    vars_str = ','.join(variables)
-    city_dict = {}
-    for city, coords in cities.items():
-        url = (
-            f"https://archive-api.open-meteo.com/v1/archive"
-            f"?latitude={coords['latitude']}&longitude={coords['longitude']}"
-            f"&start_date={api_start}&end_date={in_end_date}"
-            f"&hourly={vars_str}&timezone=UTC"
-        )
-        for attempt in range(3):
-            try:
-                r = _requests.get(url, timeout=30); r.raise_for_status()
-                data = r.json(); break
-            except _requests.exceptions.RequestException:
-                if attempt == 2: raise
-                _time.sleep(5)
-        df_city = pd.DataFrame(data['hourly'])
-        df_city['time'] = (
-            pd.to_datetime(df_city['time'], utc=True)
-            .dt.tz_convert('Europe/Berlin').dt.as_unit('s')
-        )
-        df_city = df_city[df_city['time'] >= clip_start].reset_index(drop=True)
-        city_dict[city] = df_city
-        _time.sleep(1)
-    return city_dict
+    # Keep the legacy per-city return type, but use the shared client transport.
+    # On Windows this uses curl.exe with the Windows certificate store.
+    return client._fetch_archive_per_location(cities, in_start_date, in_end_date, variables)
 
 def merge_weather_data_with_city_weights(in_weather_city_dict,
                                          in_city_population=None,

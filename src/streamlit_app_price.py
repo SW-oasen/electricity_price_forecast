@@ -24,7 +24,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
     from src.etl_price import update_price_database
+    from src.etl_price import create_price_tables, seed_series_catalog
     from src.etl_demand import update_demand_database
+    from src.config import DATABASE_PATH, DEMAND_UPSTREAM_MODEL_PATH
+    from src.historical_price_weather import fetch_and_store_demand_weather_for_target, fetch_and_store_weather_for_target
+    from src.price_walk_forward import predict_price_target_day_from_db
     from src.fetch_price_data import (
         build_price_feature_base,
         load_energy_demand_table,
@@ -35,7 +39,11 @@ try:
     from src.train_predict_model import load_model_from_pickle
 except ImportError:
     from etl_price import update_price_database
+    from etl_price import create_price_tables, seed_series_catalog
     from etl_demand import update_demand_database
+    from config import DATABASE_PATH, DEMAND_UPSTREAM_MODEL_PATH
+    from historical_price_weather import fetch_and_store_demand_weather_for_target, fetch_and_store_weather_for_target
+    from price_walk_forward import predict_price_target_day_from_db
     from fetch_price_data import (
         build_price_feature_base,
         load_energy_demand_table,
@@ -74,6 +82,11 @@ def load_price_model() -> object:
     if not PRICE_MODEL_PATH.exists():
         raise FileNotFoundError(f"XGBoost-Preismodell nicht gefunden: {PRICE_MODEL_PATH}")
     return load_model_from_pickle(PRICE_MODEL_PATH)
+
+
+@st.cache_resource
+def load_frozen_demand_model() -> object:
+    return load_model_from_pickle(DEMAND_UPSTREAM_MODEL_PATH)
 
 
 def to_berlin_naive(series: pd.Series) -> pd.Series:
@@ -225,7 +238,21 @@ with tab_future:
 
     if st.button("Vorhersage berechnen", type="primary", key="btn_future_price"):
         with st.spinner("Features für morgen werden vorbereitet …"):
-            df_tomorrow_feat = prepare_data_for_price_prediction_operational(price_model=price_model)
+            conn = create_price_tables(DATABASE_PATH)
+            try:
+                seed_series_catalog(conn)
+                target_str = tomorrow.isoformat()
+                fetch_and_store_weather_for_target(conn, target_str)
+                fetch_and_store_demand_weather_for_target(conn, target_str)
+                df_tomorrow_feat = predict_price_target_day_from_db(
+                    price_model,
+                    load_frozen_demand_model(),
+                    conn,
+                    target_str,
+                    MODEL_NAME,
+                ).rename(columns={"target_time": "time"})
+            finally:
+                conn.close()
         if df_tomorrow_feat.empty:
             st.error("Keine Features für morgen erzeugt.")
             st.stop()
@@ -237,7 +264,7 @@ with tab_future:
             - df_tomorrow_feat["demand_input_mwh"]
         )
 
-        pred_price_xgb = price_model.predict(align_features(price_model, df_tomorrow_feat))
+        pred_price_xgb = df_tomorrow_feat["prediction_eur_mwh"].to_numpy()
 
         df_price = load_price_history_berlin()
         df_price_daybeforeyesterday = (
@@ -298,23 +325,35 @@ with tab_hist:
 
     if st.button("Historische Vorhersage berechnen", type="primary", key="btn_hist_price"):
         from_str, to_str = str(date_from), str(date_to)
-
-        with st.spinner(f"Historische Features werden geladen: {from_str} → {to_str} …"):
-            df_model = prepare_price_model_dataset()
-            df_model["time"] = pd.to_datetime(df_model["time"], utc=True)
-            start_ts = pd.Timestamp(date_from, tz="Europe/Berlin")
-            end_ts = pd.Timestamp(date_to + timedelta(days=1), tz="Europe/Berlin")
-            df_hist_feat = df_model[(df_model["time"] >= start_ts) & (df_model["time"] < end_ts)].copy()
-
-        if df_hist_feat.empty:
-            st.error(f"Keine Modelldaten für {from_str} → {to_str} gefunden.")
+        if delta_days > 31 or delta_days < 0:
+            st.error("Bitte einen gueltigen Zeitraum von maximal 31 Tagen waehlen.")
             st.stop()
 
-        df_pred = predict_df(price_model, df_hist_feat, "ML Prediction")
-        df_plot = df_hist_feat[["time", PRICE_TARGET_COL]].merge(df_pred, on="time", how="left")
-
-        st.success("Historische Vorhersage abgeschlossen (XGBoost).")
-
+        frozen_demand_model = load_frozen_demand_model()
+        days = pd.date_range(date_from, date_to, freq="D")
+        predictions = []
+        progress = st.progress(0, text="Walk-forward wird vorbereitet ...")
+        conn = None
+        try:
+            conn = create_price_tables(DATABASE_PATH)
+            seed_series_catalog(conn)
+            for position, target_day in enumerate(days, start=1):
+                day = target_day.strftime("%Y-%m-%d")
+                progress.progress((position - 1) / len(days), text=f"Walk-forward fuer {day} ...")
+                fetch_and_store_weather_for_target(conn, day)
+                fetch_and_store_demand_weather_for_target(conn, day)
+                predictions.append(predict_price_target_day_from_db(
+                    price_model, frozen_demand_model, conn, day, MODEL_NAME
+                ))
+            progress.progress(1.0, text="Walk-forward abgeschlossen")
+        finally:
+            if conn is not None:
+                conn.close()
+        df_plot = pd.concat(predictions, ignore_index=True).rename(columns={
+            "target_time": "time", "actual_eur_mwh": PRICE_TARGET_COL,
+            "prediction_eur_mwh": "ML Prediction",
+        })
+        st.success("Historische Walk-forward-Vorhersage abgeschlossen (eingefrorene Modelle).")
         fig, ax = plt.subplots(figsize=(14, 5))
         x = to_berlin_naive(df_plot["time"])
         ax.plot(x, df_plot[PRICE_TARGET_COL], linewidth=1.5, color="steelblue", label="Echter Strompreis")

@@ -23,9 +23,25 @@ API reference: documents/smard_api.md
 from __future__ import annotations
 
 import time
+import json
+import os
+import subprocess
 
 import pandas as pd
 import requests
+
+
+def _get_json(url: str, headers: dict, timeout: int) -> dict:
+    """Use Windows curl with the system trust store when running on Windows."""
+    if os.name == "nt":
+        command = ["curl.exe", "--fail", "--silent", "--show-error", url]
+        for name, value in headers.items():
+            command.extend(["-H", f"{name}: {value}"])
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=True)
+        return json.loads(result.stdout)
+    response = requests.get(url, headers=headers, timeout=timeout)
+    response.raise_for_status()
+    return response.json()
 
 
 class SmardClient:
@@ -83,9 +99,7 @@ class SmardClient:
             f"{self.base_url}/{self.filter_id}/{self.region}"
             f"/index_{self.resolution}.json"
         )
-        r = requests.get(url, headers=self.headers, timeout=self.timeout)
-        r.raise_for_status()
-        return r.json()["timestamps"]
+        return _get_json(url, self.headers, self.timeout)["timestamps"]
 
     def _fetch_week(self, timestamp_ms: int) -> list:
         """Fetch the raw series [[ts_ms, value], ...] for one weekly bucket."""
@@ -93,9 +107,7 @@ class SmardClient:
             f"{self.base_url}/{self.filter_id}/{self.region}"
             f"/{self.filter_id}_{self.region}_{self.resolution}_{timestamp_ms}.json"
         )
-        r = requests.get(url, headers=self.headers, timeout=self.timeout)
-        r.raise_for_status()
-        return r.json().get("series", [])
+        return _get_json(url, self.headers, self.timeout).get("series", [])
 
     # ------------------------------------------------------------------
     # Public API

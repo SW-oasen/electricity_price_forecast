@@ -438,7 +438,7 @@ def update_energy_table(conn: sqlite3.Connection) -> int:
     max_time     = pd.to_datetime(status['max_time']).tz_convert("Europe/Berlin").as_unit('s')
     update_start = (max_time + pd.Timedelta(hours=1)).strftime("%Y-%m-%d")
     yesterday_str = _yesterday()
-    print(f"Updating energy data ({update_start} → {yesterday_str})...")
+    print(f"Updating energy data ({update_start} -> {yesterday_str})...")
 
     df_new_actual = fetch_smard_netzlast(update_start, yesterday_str, filter_id=FILTER_NETZLAST_ACTUAL)
     if df_new_actual.empty:
@@ -501,7 +501,7 @@ def update_weather_table(conn: sqlite3.Connection) -> int:
     max_time     = pd.to_datetime(status['max_time']).tz_convert("Europe/Berlin").as_unit('s')
     update_start = (max_time + pd.Timedelta(hours=1)).strftime("%Y-%m-%d")
     yesterday_str = _yesterday()
-    print(f"Updating weather data ({update_start} → {yesterday_str})...")
+    print(f"Updating weather data ({update_start} -> {yesterday_str})...")
 
     # Fetch raw new weather (city-by-city, then population-weight merge)
     weather_city_dict = fetch_weather_data_for_cities(update_start, yesterday_str)

@@ -1,0 +1,8 @@
+{
+  "model_name": "demand_lgbm_cutoff_2025-10-01",
+  "source_project": "electricity_demand_forecast/workspace_energy_demand",
+  "source_artifact": "models/best_lgbm_model_bayesian_etl.pkl",
+  "training_end_exclusive": "2025-10-01",
+  "sha256": "2D2985BBD27874B3465F229FE4864FC6937F857E201E49AE23768D35F2B8B792",
+  "purpose": "Frozen upstream electricity-demand model for price walk-forward evaluation"
+}

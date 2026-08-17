@@ -22,6 +22,29 @@ Vorhersage der stündlichen Day-Ahead-Strompreise für Deutschland (DE/LU) auf B
 
 Der Fokus liegt auf einer reproduzierbaren End-to-End-Pipeline vom Datenabruf bis zur Vorhersage.
 
+## Walk-forward-Protokoll (beschlossen)
+
+Der eingefrorene Trainingsstand endet exklusiv am **01.10.2025**. Das bedeutet:
+
+* Das Preis-, Verbrauchs-, PV- und Windmodell werden zunächst nicht täglich neu trainiert.
+* Jede historische Preisprognose bewertet einen Liefertag `D >= 01.10.2025`.
+* Der Informationsstichtag liegt am Vortag `D-1` um **11:30 Europe/Berlin**, also vor dem Day-Ahead-Auktionsschluss.
+* Vollständige Day-Ahead-Preise bis einschließlich `D-1` sind erlaubt; sie wurden jeweils am Vortag des Liefertags veröffentlicht.
+* Physische Istwerte (Last, PV, Wind) werden bis zur belastbaren Speicherung echter Veröffentlichungszeitpunkte konservativ nur bis einschließlich `D-2` verwendet.
+* Für `D-1` und `D` werden Last-, PV-/Wind- und Wetterprognosen verwendet. Für Wetter muss der historische Forecast-Modelllauf zum Informationsstichtag abrufbar gewesen sein.
+
+Die zugehörigen Regeln liegen zentral in `src/forecast_protocol.py` und werden vor der Implementierung der Feature-Pipeline unit-getestet.
+
+Als Upstream-Artefakt für die Preisprognose liegt das eingefrorene, angepasste
+LightGBM-Verbrauchsmodell unter `models/demand_lgbm_cutoff_2025-10-01.pkl`.
+Seine Herkunft, sein Trainings-Cutoff und sein SHA-256-Hash stehen im zugehörigen
+versionierten Manifest. Das Modell wird innerhalb eines Walk-forward-Laufs nicht
+neu trainiert.
+
+Die operative Morgenprognose und die historische Auswertung verwenden
+denselben zentralen Pfad (`src/price_walk_forward.py`). Damit ist die
+historische Bewertung unmittelbar fuer den Betrieb relevant.
+
 ---
 
 # Systemarchitektur
@@ -293,6 +316,16 @@ Aktuelles Hauptmodell:
 XGBoost Regressor
 ```
 
+Die komplette eingefrorene Modellkette lautet:
+
+* Preis: `price_xgb_model.pkl` (XGBoost)
+* Verbrauch: `demand_lgbm_cutoff_2025-10-01.pkl` (LightGBM)
+* PV-Erzeugung: `pv_lgbm_model.pkl` (LightGBM)
+* Wind-Erzeugung: `wind_lgbm_model.pkl` (LightGBM)
+
+`price_lgbm_model.pkl` bleibt als Vergleichsartefakt erhalten und wird nicht
+von der GUI oder dem Walk-forward-Pfad verwendet.
+
 Zielvariable:
 
 ```text
@@ -322,8 +355,13 @@ Vorhersage der nächsten 24 Stunden.
 Aktuelle Pipeline:
 
 ```python
-prepare_data_for_price_prediction_operational()
+predict_price_target_day_from_db(...)
 ```
+
+Dies ist dieselbe Funktion, die auch die historische Walk-forward-Auswertung
+ausfuehrt. Fuer den Folgetag werden aktuelle verfuegbare Wettermodelllaeufe
+gespeichert; im Backtest werden deren historische archivierte Gegenstuecke
+verwendet.
 
 Aufgaben:
 
@@ -396,8 +434,8 @@ Bereits umgesetzt und getestet:
 * Tagesbasierte Delta-Logik
 * Gewichtete Wetteraggregation
 * Windvektoraggregation über u/v-Komponenten
-* Historische Vorhersagepipeline
-* Operative Vorhersagepipeline
+* Gemeinsame Walk-forward-Pipeline fuer historische und operative Vorhersagen
+* Persistierung historischer Preisvorhersagen
 
 ---
 
@@ -405,8 +443,6 @@ Bereits umgesetzt und getestet:
 
 ## Hohe Priorität
 
-* Rolling-Origin-Backtesting
-* Persistierung historischer Vorhersagen
 * Dokumentation der Modellmetriken
 
 ## Mittlere Priorität
