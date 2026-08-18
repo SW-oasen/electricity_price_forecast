@@ -1,231 +1,119 @@
 # Strompreisprognose Deutschland
 
-## Projektüberblick
-
-Dieses Projekt untersucht die Vorhersage stündlicher Day-Ahead-Strompreise für Deutschland mithilfe von Machine-Learning-Verfahren.
-
-Als Folgeprojekt der Stromverbrauchsprognose steht hier die Analyse der Zusammenhänge zwischen Stromnachfrage, erneuerbarer Erzeugung, Wetterbedingungen und Marktpreisen im Mittelpunkt.
-
-Neben einer möglichst genauen Vorhersage wird besonderer Wert auf eine nachvollziehbare Datenpipeline, reproduzierbare Modellierung und eine praxisnahe Prognoseumgebung gelegt.
-
----
+Dieses Projekt prognostiziert stündliche Day-Ahead-Strompreise für Deutschland/Luxemburg (DE/LU). Dazu werden Markt-, Erzeugungs-, Nachfrage-, Wetter- und Kalenderdaten in einer reproduzierbaren Machine-Learning-Pipeline kombiniert.
 
 ## Zielsetzung
 
-Der deutsche Strommarkt wird zunehmend durch wetterabhängige erneuerbare Energien geprägt. Insbesondere die starke Einspeisung von Wind- und Solarenergie führt zu:
-
-* hoher Preisvolatilität,
-* negativen Strompreisen,
-* kurzfristigen Marktveränderungen,
-* schwankender Residuallast.
-
-Ziel des Projektes ist die Vorhersage der stündlichen Day-Ahead-Strompreise auf Basis historischer Markt-, Erzeugungs-, Nachfrage- und Wetterdaten.
-
----
+Der Ausbau wetterabhängiger erneuerbarer Energien erhöht die Volatilität des Strommarkts und führt unter anderem zu negativen Preisen und stark schwankender Residuallast. Das Projekt untersucht diese Zusammenhänge und stellt historische Auswertungen sowie eine Prognose für die nächsten 24 Stunden bereit.
 
 ## Datenquellen
 
-### SMARD (Bundesnetzagentur)
+- **SMARD / Bundesnetzagentur:** Day-Ahead-Preise, Nachfrage, Wind Onshore/Offshore, Photovoltaik, konventionelle Erzeugung sowie veröffentlichte Prognosen.
+- **Open-Meteo:** Global-, Direkt- und Diffusstrahlung, Bewölkung sowie Windgeschwindigkeit und -richtung in 100 m Höhe.
+- **Marktstammdatenregister (MaStR):** Anlagenstandorte, installierte Leistungen und Inbetriebnahmedaten zur regional gewichteten Wetteraggregation.
 
-Verwendete Daten:
-
-* Day-Ahead-Strompreise
-* Stromnachfrage
-* Windstromerzeugung (Offshore + Onshore)
-* Solarstromerzeugung
-* Konventionelle Erzeugung
-
-SMARD stellt offizielle Zeitreihen des deutschen Strommarktes bereit.
-
-### Open-Meteo
-
-Verwendete Wetterdaten:
-
-#### Photovoltaik
-
-* Globalstrahlung
-* Direktstrahlung
-* Diffusstrahlung
-* Bewölkung
-
-#### Windenergie
-
-* Windgeschwindigkeit (100 m)
-* Windrichtung (100 m)
-
-### Marktstammdatenregister (MaStR)
-
-Verwendet für:
-
-* Anlagenstandorte
-* installierte Leistungen
-* gewichtete Wetteraggregation
-
----
-
-## Fachlicher Ansatz
-
-Die Strompreise werden durch das Zusammenspiel von Angebot und Nachfrage bestimmt.
-
-Daher werden Informationen aus mehreren Bereichen kombiniert:
-
-### Marktinformationen
-
-* historische Strompreise
-* Stromnachfrage
-* Preis- und Nachfragelags
-
-### Erzeugungsdaten
-
-* Windstromerzeugung
-* Solarstromerzeugung
-* Residuallast
-
-### Kalenderinformationen
-
-* Stunde
-* Wochentag
-* Monat
-* Feiertage
-* Wochenenden
-
-### Wetterinformationen
-
-* Strahlungsdaten
-* Bewölkung
-* Windgeschwindigkeit
-* Windrichtung
-
----
-
-## Projektarchitektur
+## Pipeline
 
 ```text
-SMARD
- ├─ Strompreise
- ├─ Stromnachfrage
- └─ Stromerzeugung
-          │
-          ▼
-
-Marktstammdatenregister
-          │
-          ▼
-
-Open-Meteo Wetterdaten
-          │
-          ▼
-
-Feature Engineering
-          │
-          ▼
-
-Machine-Learning-Modell
-          │
-          ▼
-
-Historische Prognosen
-und Tagesprognosen
-          │
-          ▼
-
-Streamlit-Anwendung
+SMARD + MaStR + Open-Meteo
+            ↓
+   SQLite-Datenbank / ETL
+            ↓
+     Feature Engineering
+            ↓
+      ML-Modelle (LightGBM)
+            ↓
+ Historische Auswertung / 24h-Prognose
+            ↓
+       Streamlit-Anwendung
 ```
 
----
+Die Daten werden in `db/energy_demand.db` gehalten. Das normalisierte Preisschema umfasst unter anderem `series_catalog`, `timeseries_values`, `ingestion_runs`, `data_quality_log` sowie Tabellen für historische Wetter-Forecast-Läufe und externe Forecast-Snapshots.
 
-## Aktueller Funktionsumfang
+## Leakage-sichere Bewertung
 
-Bereits umgesetzt:
+Historische Prognosen laufen über `src/price_walk_forward.py` und verwenden dasselbe Protokoll wie die operative Prognose:
 
-* automatisierte Datenbeschaffung
-* SQLite-Datenbank
-* Wetterdatenaggregation
-* Feature Engineering
-* Modelltraining
-* historische Preisprognosen
-* Tagesprognosen für den Folgetag
-* interaktive Streamlit-Anwendung
+- eingefrorener Trainings-Cutoff: **01.10.2025** (exklusiv),
+- Informationsstichtag: Vortag des Liefertags um **11:30 Europe/Berlin**,
+- Day-Ahead-Preise sind bis einschließlich `D-1` zulässig,
+- physische Istwerte von Last, PV und Wind werden konservativ nur bis `D-2` verwendet,
+- für `D-1` und `D` werden veröffentlichte Markt- und Wetterprognosen genutzt.
 
----
+Die Regeln sind in `src/forecast_protocol.py` zentralisiert und durch Tests abgesichert. Das eingefrorene Nachfrage-Upstream-Modell liegt unter `models/demand_lgbm_cutoff_2025-10-01.pkl`; das zugehörige Manifest dokumentiert Herkunft und SHA-256-Hash.
 
-## Streamlit-Anwendung
+## Installation
 
-Die Anwendung ermöglicht:
+Voraussetzungen: Python **3.14** und `uv`.
 
-* Analyse historischer Vorhersagen
-* Vergleich von Prognose und Ist-Wert
-* Vorhersage der nächsten 24 Stunden
-* Interaktive Visualisierung der Ergebnisse
+```powershell
+uv sync
+```
 
-    ### start .venv
-    * .\.venv\Scripts\Activate.ps1  
+Alternativ kann die vorhandene virtuelle Umgebung aktiviert werden:
 
-    ### GUI App starten
-    * streamlit run src/streamlit_app_price.py
-    * python -m streamlit run src/streamlit_app_price.py
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
----
+## Verwendung
 
-## Verwendete Technologien
+Streamlit-Anwendung starten:
 
-* Python
-* Pandas
-* Scikit-Learn
-* LightGBM
-* SQLite
-* Streamlit
-* Open-Meteo API
-* SMARD API
+```powershell
+uv run streamlit run src/streamlit_app_price.py
+```
 
----
+Die Anwendung bietet die Analyse historischer Prognosen, den Vergleich von Prognose und Ist-Wert sowie die Vorhersage der nächsten 24 Stunden.
+
+ETL-Funktionen können aus Python aufgerufen werden:
+
+```python
+from src.etl_demand import update_demand_database
+from src.etl_price import update_price_database
+
+update_demand_database()
+update_price_database()
+```
+
+## Tests
+
+```powershell
+uv run pytest
+```
+
+Die Tests decken unter anderem das Forecast-Protokoll, Feature-Verfügbarkeit, Schema-Verträge, Walk-forward-Prognosen und die Speicherung von Prognosen ab.
 
 ## Projektstruktur
 
 ```text
-data/
-db/
-documents/
-models/
-notebook/
-presentation/
-reports/
-src/
-util/
-log/
+data/          Roh- und Eingangsdaten
+db/            SQLite-Datenbank
+documents/     technische Projektdokumentation
+models/        trainierte Modelle und Manifeste
+notebook/      explorative Analysen
+reports/       Auswertungen
+src/           ETL, Features, Modelle und Streamlit-App
+tests/         automatisierte Tests
+util/          Hilfsskripte
 ```
 
----
+Weitere technische Details zu Architektur, ETL, Datenmodell und Feature Engineering stehen in [documents/PROJECT_CONTEXT.md](documents/PROJECT_CONTEXT.md).
 
-## Geplante Erweiterungen
+## Technologien
 
-* Walk-Forward-Simulation für historische Vorhersage für genaueres Scoring
-* Rolling-Origin-Backtesting
-* Modellvergleich
-* Ensemble-Ansätze
-* Automatisch Erzeugerdaten aus MaStR holen und die Wettergewichtungen aktualisieren
-* Automatisierte Modellaktualisierung
-* Erweiterte Marktmerkmale
-* Power BI Dashboard
+Python, Pandas, NumPy, scikit-learn, LightGBM, XGBoost, Optuna, SQLite, Streamlit, SMARD API und Open-Meteo API.
 
----
+## Ausblick
 
-## Dokumentation
-
-- **README.md** – Fachlicher Überblick über Zielsetzung, Datenquellen und Ergebnisse des Projekts.
-- **documents/PROJECT_CONTEXT.md** – Technische Dokumentation mit Architektur, ETL-Prozess, Feature Engineering und Implementierungsdetails.
-
-Für Entwickler und Mitwirkende empfiehlt sich die Lektüre des
-[PROJECT_CONTEXT.md](documents/PROJECT_CONTEXT.md).
-
----
+- Modellvergleich und Ensemble-Ansätze
+- automatisierte Modellaktualisierung
+- erweiterte Marktmerkmale und Backtesting-Auswertungen
+- automatisierte Aktualisierung der MaStR-Erzeugerdaten und Wettergewichtungen
+- Power-BI-Dashboard
 
 ## Autor
 
-Yuchuan Liu
+Yuchuan Liu — persönliches Data-Science-Projekt im Bereich Energieanalytik und Machine Learning.
 
-Persönliches Data-Science-Projekt im Bereich Energieanalytik und Machine Learning.
-
----
-
-Letzte Aktualisierung: 2026-06-15
+*Letzte Aktualisierung: 2026-08-18*
