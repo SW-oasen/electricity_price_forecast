@@ -36,6 +36,8 @@ try:
         TABLE_WEATHER_FORECAST_RUNS,
         TABLE_WEATHER_FORECAST_VALUES,
         TABLE_EXTERNAL_FORECAST_SNAPSHOTS,
+        TABLE_PRICE_INPUT_LINEAGE,
+        TABLE_WEATHER_RUN_REJECTIONS,
         PV_WEATHER_SERIES_IDS,
         WIND_WEATHER_SERIES_IDS,
         DEMAND_FORECAST_WEATHER_SERIES_IDS,
@@ -68,6 +70,8 @@ except ImportError:
         TABLE_WEATHER_FORECAST_RUNS,
         TABLE_WEATHER_FORECAST_VALUES,
         TABLE_EXTERNAL_FORECAST_SNAPSHOTS,
+        TABLE_PRICE_INPUT_LINEAGE,
+        TABLE_WEATHER_RUN_REJECTIONS,
         PV_WEATHER_SERIES_IDS,
         WIND_WEATHER_SERIES_IDS,
         DEMAND_FORECAST_WEATHER_SERIES_IDS,
@@ -357,6 +361,46 @@ CREATE TABLE IF NOT EXISTS {TABLE_EXTERNAL_FORECAST_SNAPSHOTS} (
 """
 
 
+def _ddl_price_input_lineage() -> str:
+    """Audit trail for the concrete inputs selected for one price target."""
+    return f"""
+CREATE TABLE IF NOT EXISTS {TABLE_PRICE_INPUT_LINEAGE} (
+    evaluation_id              TEXT NOT NULL,
+    target_date                TEXT NOT NULL,
+    input_group                TEXT NOT NULL,
+    source                     TEXT NOT NULL,
+    selected_forecast_run_id   INTEGER,
+    preferred_initialized_at_utc TEXT,
+    fallback_offset_hours      INTEGER NOT NULL DEFAULT 0,
+    availability_status        TEXT NOT NULL,
+    fallback_type              TEXT,
+    selection_reason           TEXT,
+    record_origin              TEXT NOT NULL DEFAULT 'live',
+    recorded_at_utc            TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (evaluation_id, target_date, input_group),
+    FOREIGN KEY (selected_forecast_run_id)
+        REFERENCES {TABLE_WEATHER_FORECAST_RUNS}(forecast_run_id)
+)
+"""
+
+
+def _ddl_weather_run_rejections() -> str:
+    """Candidates rejected while choosing a historical weather forecast run."""
+    return f"""
+CREATE TABLE IF NOT EXISTS {TABLE_WEATHER_RUN_REJECTIONS} (
+    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
+    evaluation_id              TEXT,
+    target_date                TEXT NOT NULL,
+    aggregation_key            TEXT NOT NULL,
+    candidate_initialized_at_utc TEXT NOT NULL,
+    rejection_reason           TEXT NOT NULL,
+    details                    TEXT,
+    record_origin              TEXT NOT NULL DEFAULT 'live',
+    recorded_at_utc            TEXT NOT NULL DEFAULT (datetime('now'))
+)
+"""
+
+
 def create_price_tables(db_path: Path | str = DATABASE_PATH) -> sqlite3.Connection:
     """Create all price-pipeline tables and return an open DB connection."""
     if str(db_path) == ":memory:":
@@ -375,6 +419,8 @@ def create_price_tables(db_path: Path | str = DATABASE_PATH) -> sqlite3.Connecti
     cur.execute(_ddl_weather_forecast_runs())
     cur.execute(_ddl_weather_forecast_values())
     cur.execute(_ddl_external_forecast_snapshots())
+    cur.execute(_ddl_price_input_lineage())
+    cur.execute(_ddl_weather_run_rejections())
 
     # Helpful indexes for future fetch/query steps.
     cur.execute(
@@ -398,6 +444,22 @@ def create_price_tables(db_path: Path | str = DATABASE_PATH) -> sqlite3.Connecti
         f"CREATE INDEX IF NOT EXISTS idx_{TABLE_EXTERNAL_FORECAST_SNAPSHOTS}_series_valid_issued "
         f"ON {TABLE_EXTERNAL_FORECAST_SNAPSHOTS}(series_id, valid_time_utc, issued_at_utc)"
     )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS idx_{TABLE_PRICE_INPUT_LINEAGE}_target "
+        f"ON {TABLE_PRICE_INPUT_LINEAGE}(target_date, input_group)"
+    )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS idx_{TABLE_WEATHER_RUN_REJECTIONS}_target "
+        f"ON {TABLE_WEATHER_RUN_REJECTIONS}(target_date, aggregation_key)"
+    )
+    cur.execute(f"""
+        CREATE VIEW IF NOT EXISTS v_price_walk_forward_input_audit AS
+        SELECT lineage.*, weather.initialized_at_utc AS selected_initialized_at_utc,
+               weather.available_at_utc AS selected_available_at_utc
+        FROM {TABLE_PRICE_INPUT_LINEAGE} AS lineage
+        LEFT JOIN {TABLE_WEATHER_FORECAST_RUNS} AS weather
+          ON weather.forecast_run_id = lineage.selected_forecast_run_id
+    """)
 
     conn.commit()
     return conn

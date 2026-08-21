@@ -12,7 +12,8 @@ from src.demand_upstream import predict_demand_for_price_target_from_db
 from src.forecast_protocol import PRICE_WALK_FORWARD_PROTOCOL, PriceWalkForwardProtocol
 from src.generation_upstream import predict_generation_for_price_target
 from src.price_forecast_weather import inject_archived_price_weather
-from src.price_prediction_store import upsert_price_predictions
+from src.price_prediction_store import store_versioned_price_predictions, upsert_price_predictions
+from src.price_input_lineage import record_input_lineage
 
 
 EVALUATION_MODE = "walk_forward_as_of_d1_1130"
@@ -96,7 +97,9 @@ def predict_price_target_day(
     features = _align_features(model, target.drop(columns=["time", TARGET], errors="ignore"))
     if features.isna().any().any():
         missing = features.columns[features.isna().any()].tolist()
-        raise ValueError(f"Unavailable walk-forward features: {missing}")
+        raise ValueError(
+            f"Unavailable walk-forward features for target {target_date}: {missing}"
+        )
     result = pd.DataFrame({
         "target_time": target["time"],
         "as_of_time": protocol.as_of(target_date),
@@ -111,10 +114,13 @@ def predict_price_target_day(
     return result.merge(actual_target, left_on="target_time", right_on="time", how="left").drop(columns="time")
 
 
-def predict_and_store_price_target_day(connection, *args, **kwargs) -> pd.DataFrame:
-    """Run one target day and atomically persist its hourly predictions."""
+def predict_and_store_price_target_day(connection, *args, run_id: str | None = None, **kwargs) -> pd.DataFrame:
+    """Run one target day and persist it, optionally under a versioned run id."""
     prediction = predict_price_target_day(*args, **kwargs)
-    upsert_price_predictions(connection, prediction)
+    if run_id is None:
+        upsert_price_predictions(connection, prediction)
+    else:
+        store_versioned_price_predictions(connection, run_id, prediction)
     return prediction
 
 
@@ -125,6 +131,7 @@ def predict_price_target_day_from_db(
     target_date: str,
     price_model_name: str,
     protocol: PriceWalkForwardProtocol = PRICE_WALK_FORWARD_PROTOCOL,
+    evaluation_id: str | None = None,
 ) -> pd.DataFrame:
     """Run the complete frozen-model price forecast from persisted as-of inputs."""
     price_raw = load_time_series_data_from_db().reset_index()
@@ -140,9 +147,48 @@ def predict_price_target_day_from_db(
         generation_mask, "generation_ml_pv_mwh"
     ]
     demand_raw = load_energy_demand_table()
+    if evaluation_id is not None:
+        demand_audit = demand_raw.copy()
+        demand_audit["time"] = pd.to_datetime(
+            demand_audit["time"], utc=True
+        ).dt.tz_convert(protocol.timezone)
+        origin = protocol.target_start(target_date) - pd.DateOffset(days=1)
+        end = protocol.target_start(target_date) + pd.DateOffset(days=1)
+        expected = pd.date_range(origin, end, freq="h", inclusive="left")
+        smard_values = demand_audit.loc[
+            (demand_audit["time"] >= origin) & (demand_audit["time"] < end),
+            ["time", "smard_forecast_mwh"],
+        ].drop_duplicates("time").set_index("time").reindex(expected)
+        smard_complete = (
+            len(smard_values) == len(expected)
+            and smard_values["smard_forecast_mwh"].notna().all()
+        )
+        record_input_lineage(
+            connection, evaluation_id=evaluation_id, target_date=target_date,
+            input_group="smard_demand_forecast", source="smard",
+            availability_status="available" if smard_complete else "partial",
+            fallback_type="frozen_demand_model" if not smard_complete else None,
+            selection_reason=(
+                "stored_series_no_issued_snapshot"
+                if smard_complete else "stored_series_incomplete"
+            ),
+        )
     demand_forecast = predict_demand_for_price_target_from_db(
         demand_model, connection, target_date, protocol
     )
+    if evaluation_id is not None:
+        record_input_lineage(
+            connection, evaluation_id=evaluation_id, target_date=target_date,
+            input_group="demand_upstream", source="model_fallback",
+            availability_status="available", fallback_type="frozen_demand_model",
+            selection_reason="recursive_demand_forecast",
+        )
+        record_input_lineage(
+            connection, evaluation_id=evaluation_id, target_date=target_date,
+            input_group="generation_upstream", source="model_fallback",
+            availability_status="available", fallback_type="frozen_generation_models",
+            selection_reason="recursive_pv_wind_forecast",
+        )
     return predict_price_target_day(
         price_model, price_raw, demand_raw, target_date, price_model_name,
         demand_ml_forecasts=demand_forecast, protocol=protocol,

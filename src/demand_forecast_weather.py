@@ -112,7 +112,11 @@ def load_archived_demand_weather(
         forecast = rows.pivot(index="valid_time_utc", columns="variable", values="value").reset_index()
         forecast = forecast.rename(columns={"valid_time_utc": "time"})
         times = pd.to_datetime(forecast["time"], utc=True).dt.tz_convert(protocol.timezone)
-        complete = set(expected).issubset(set(times)) and set(WEATHER_VARIABLES).issubset(forecast.columns)
+        complete = (
+            set(expected).issubset(set(times))
+            and set(WEATHER_VARIABLES).issubset(forecast.columns)
+            and forecast[WEATHER_VARIABLES].notna().all().all()
+        )
         if complete:
             return forecast
     raise ValueError(f"No complete archived demand weather run is stored for {target_date}")

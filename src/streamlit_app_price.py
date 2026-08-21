@@ -56,7 +56,9 @@ except ImportError:
 MAX_RANGE_DAYS = 365
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = PROJECT_ROOT / "models"
-PRICE_MODEL_PATH = MODEL_DIR / "price_xgb_model.pkl"
+PRICE_MODEL_PATH = MODEL_DIR / "production" / "price_xgboost.pkl"
+if not PRICE_MODEL_PATH.exists():
+    PRICE_MODEL_PATH = MODEL_DIR / "price_xgb_model.pkl"
 
 PRICE_TARGET_COL = "price_de_lu_eur_mwh"
 PRICE_DISPLAY_COL = "Price (EUR/MWh)"

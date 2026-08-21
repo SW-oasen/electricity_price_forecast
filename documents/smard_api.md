@@ -202,10 +202,16 @@ GET https://www.smard.de/app/table_data/410/DE/410_DE_quarterhour_1546300800000.
 
 The Kaggle dataset (ENTSO-E based) covers **2019-01-01 to 2025-09-30**. SMARD is used to extend the energy demand data from **2025-10-01 onward** for:
 
-- Real-time prediction pipeline (Notebook 08 / `streamlit_app.py`)
+- Echtzeit-Prognosepfad (`src/streamlit_app_demand.py`)
 - Building lag features (`lag_24h`, `lag_168h`) that require recent historical load values
 
-### Key Functions — `src/fetch_prepare_data.py`
+### Projektintegration
+
+Die generische SMARD-Kommunikation liegt in `util/smard_client.py`. Der
+Verbrauchspfad verwendet `src/fetch_demand_data.py`; die Preis-Pipeline nutzt
+`src/etl_price.py` und speichert die Serien normalisiert in SQLite.
+
+### Key Functions — `src/fetch_demand_data.py`
 
 #### `_get_index(filter_id, region, resolution) → list[int]`
 Fetches the list of available weekly bucket timestamps from the index endpoint.
@@ -243,7 +249,7 @@ fetch_smard_netzlast(
 ### Usage Example
 
 ```python
-from src.fetch_prepare_data import fetch_smard_netzlast
+from src.fetch_demand_data import fetch_smard_netzlast
 
 df = fetch_smard_netzlast(
     in_start_date="2025-10-01",
@@ -268,6 +274,10 @@ df = fetch_smard_netzlast(
 - Data for the current week may be incomplete (the last bucket is updated in near-real-time).
 - SMARD displays times in **CET/CEST** on the web interface, but the stored timestamps are UTC milliseconds — this is handled correctly by the implementation.
 - The processed output file is stored at `data/raw/netzlast_2025-10-01_to_2026-05-10_20.csv`.
+- In der Preis-Pipeline werden die Filter aus `SMARD_PRICE_START_FILTERS` in
+  `src/config.py` verwendet: Preis DE/LU, Ist-Erzeugung sowie veröffentlichte
+  PV- und Windprognosen. `update_price_database()` führt den inkrementellen
+  Abruf und die Qualitätsprotokollierung aus.
 
 ---
 

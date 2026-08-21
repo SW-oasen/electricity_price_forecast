@@ -21,14 +21,14 @@ SMARD + MaStR + Open-Meteo
             ↓
      Feature Engineering
             ↓
-      ML-Modelle (LightGBM)
+      ML-Modelle (XGBoost / LightGBM)
             ↓
  Historische Auswertung / 24h-Prognose
             ↓
        Streamlit-Anwendung
 ```
 
-Die Daten werden in `db/energy_demand.db` gehalten. Das normalisierte Preisschema umfasst unter anderem `series_catalog`, `timeseries_values`, `ingestion_runs`, `data_quality_log` sowie Tabellen für historische Wetter-Forecast-Läufe und externe Forecast-Snapshots.
+Die Daten werden in `db/energy_demand.db` gehalten. Das normalisierte Preisschema umfasst unter anderem `series_catalog`, `timeseries_values`, `ingestion_runs`, `data_quality_log`, historische Wetter-Forecast-Läufe sowie die Lineage- und Ergebnistabellen des Walk-forward-Verfahrens.
 
 ## Leakage-sichere Bewertung
 
@@ -40,7 +40,11 @@ Historische Prognosen laufen über `src/price_walk_forward.py` und verwenden das
 - physische Istwerte von Last, PV und Wind werden konservativ nur bis `D-2` verwendet,
 - für `D-1` und `D` werden veröffentlichte Markt- und Wetterprognosen genutzt.
 
-Die Regeln sind in `src/forecast_protocol.py` zentralisiert und durch Tests abgesichert. Das eingefrorene Nachfrage-Upstream-Modell liegt unter `models/demand_lgbm_cutoff_2025-10-01.pkl`; das zugehörige Manifest dokumentiert Herkunft und SHA-256-Hash.
+Die Regeln sind in `src/forecast_protocol.py` zentralisiert und durch Tests abgesichert. Das eingefrorene Nachfrage-Upstream-Modell liegt unter `models/demand_lgbm_cutoff_2025-10-01.pkl`; das zugehörige Manifest dokumentiert Herkunft und SHA-256-Hash. Das operative Preismodell ist XGBoost, das Nachfrage-Upstream-Modell LightGBM.
+
+Für D-1 und D werden historische Open-Meteo-ECMWF-IFS-Single-Runs verwendet. Die Läufe werden unter `data/cache/openmeteo_single_runs/` zwischengespeichert, auf vollständige D-1/D-Abdeckung geprüft und bei fehlenden oder unvollständigen historischen Zyklen durch ältere Läufe ersetzt. SMARD liefert davon unabhängig die Markt-, Last- und Erzeugungszeitreihen.
+
+Walk-forward-Ergebnisse werden versioniert in SQLite gespeichert. Jeder Lauf erhält eine `run_id` mit Hashes des Preis- und Nachfrage-Modells sowie der Feature- und Protokollversion; dadurch bleiben frühere Prognosen auch bei späteren Modell- oder Codeänderungen nachvollziehbar. Die verwendeten Eingaben und verworfenen Wetterlauf-Kandidaten werden zusätzlich protokolliert.
 
 ## Installation
 
@@ -64,7 +68,7 @@ Streamlit-Anwendung starten:
 uv run streamlit run src/streamlit_app_price.py
 ```
 
-Die Anwendung bietet die Analyse historischer Prognosen, den Vergleich von Prognose und Ist-Wert sowie die Vorhersage der nächsten 24 Stunden.
+Die Anwendung bietet die Analyse historischer Prognosen, den Vergleich von Prognose und Ist-Wert sowie die Vorhersage der nächsten 24 Stunden. Die Preis-App nutzt dabei den gemeinsamen Walk-forward-Pfad (`src/price_walk_forward.py`).
 
 ETL-Funktionen können aus Python aufgerufen werden:
 
@@ -75,6 +79,44 @@ from src.etl_price import update_price_database
 update_demand_database()
 update_price_database()
 ```
+
+Eine historische Bewertung kann über die Trainingshilfen gestartet werden. Die
+Wetter-Inputs werden dabei vor der Prognose als historische, zeitpunktgetreue
+Forecast-Läufe in SQLite abgelegt:
+
+```python
+import sqlite3
+from src.config import DATABASE_PATH, DEMAND_UPSTREAM_MODEL_PATH
+from src.train_predict_model import load_model_from_pickle
+from src.train_price_model import evaluate_price_model_walk_forward
+
+price_model = load_model_from_pickle("models/production/price_xgboost.pkl")
+demand_model = load_model_from_pickle(DEMAND_UPSTREAM_MODEL_PATH)
+with sqlite3.connect(DATABASE_PATH) as connection:
+    scores = evaluate_price_model_walk_forward(
+        price_model, connection, demand_model, "2025-10-01", "2025-11-01",
+        model_family="xgboost",
+    )
+```
+
+## MLflow-Tracking
+
+Trainings-, Rolling-Origin- und Preis-Walk-forward-Läufe können mit MLflow
+verglichen werden. Geloggt werden Modellname, Split-Parameter, MAE, RMSE, R²,
+die Metriken einzelner Folds sowie bei Walk-forward-Läufen Kennzahlen zur
+Input-Lineage und zu Wetter-Fallbacks. Beispiel:
+
+```python
+fold_scores, summary = rolling_origin_backtest(
+    model_pipeline, df, "time", "price_de_lu_eur_mwh", "2025-10-01",
+    mlflow_experiment="electricity-price",
+    mlflow_run_name="lightgbm-walk-forward",
+    mlflow_tags={"evaluation_mode": "walk_forward"},
+)
+```
+
+Standardmäßig verwendet MLflow den lokalen Tracking-Speicher. Ein anderer
+Tracking-Server kann über `MLFLOW_TRACKING_URI` gesetzt werden.
 
 ## Tests
 
@@ -102,7 +144,7 @@ Weitere technische Details zu Architektur, ETL, Datenmodell und Feature Engineer
 
 ## Technologien
 
-Python, Pandas, NumPy, scikit-learn, LightGBM, XGBoost, Optuna, SQLite, Streamlit, SMARD API und Open-Meteo API.
+Python, Pandas, NumPy, scikit-learn, LightGBM, XGBoost, Optuna, MLflow, SQLite, Streamlit, SMARD API und Open-Meteo API.
 
 ## Ausblick
 
@@ -116,4 +158,4 @@ Python, Pandas, NumPy, scikit-learn, LightGBM, XGBoost, Optuna, SQLite, Streamli
 
 Yuchuan Liu — persönliches Data-Science-Projekt im Bereich Energieanalytik und Machine Learning.
 
-*Letzte Aktualisierung: 2026-08-18*
+*Letzte Aktualisierung: 2026-08-20*

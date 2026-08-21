@@ -31,10 +31,11 @@ https://archive-api.open-meteo.com/v1/archive
   &start_date=2019-01-01
   &end_date=2025-09-30
   &hourly=apparent_temperature,rain,snowfall,wind_speed_10m,shortwave_radiation
-  &timezone=auto
+  &timezone=UTC
 ```
 
-> time: UTC Zeit
+The client requests UTC timestamps and converts them to `Europe/Berlin` after
+loading, so all returned project DataFrames use Berlin-aware timestamps.
 
 ---
 
@@ -55,13 +56,45 @@ https://api.open-meteo.com/v1/forecast
   &longitude=13.4050
   &hourly=apparent_temperature,rain,snowfall,wind_speed_10m,shortwave_radiation
   &forecast_days=2
-  &timezone=auto
+  &timezone=UTC
 ```
 
 - `forecast_days`: 1–16 (free tier maximum is 16 days ahead)
 - Default in this project: `2` days (today + tomorrow)
 
-> time: Europe/Berlin
+The client converts these UTC timestamps to `Europe/Berlin` as well.
+
+---
+
+### 3. Historical ECMWF Single Runs
+
+```
+GET https://single-runs-api.open-meteo.com/v1/forecast
+```
+
+This endpoint is used by the leakage-safe price walk-forward evaluation. It
+retrieves one concrete `ecmwf_ifs` forecast cycle that was available at the
+day-ahead decision time, rather than today's revised forecast history.
+
+**Example request:**
+```
+https://single-runs-api.open-meteo.com/v1/forecast
+  ?latitude=52.5200
+  &longitude=13.4050
+  &hourly=apparent_temperature,rain,snowfall,wind_speed_10m,shortwave_radiation
+  &models=ecmwf_ifs
+  &run=2026-06-10T18:00
+  &forecast_days=3
+  &timezone=UTC
+```
+
+- ECMWF IFS cycles occur every six hours, but not every historical cycle is
+  necessarily retained by the endpoint.
+- The walk-forward code validates complete D-1/D coverage and non-null weather
+  variables, skips unavailable or incomplete cycles, and may request a longer
+  horizon for an older fallback cycle.
+- Retrieved runs are cached under `data/cache/openmeteo_single_runs/` and stored
+  with their initialization and availability timestamps.
 
 ---
 
@@ -131,7 +164,19 @@ Weather data is fetched for the **5 largest German cities** and then aggregated 
 
 Population-weighted aggregation ensures that cities with more inhabitants have greater influence on the national weather signal, better reflecting the distribution of electricity consumers across Germany.
 
-### Key Functions — `src/fetch_prepare_data.py`
+### Projektintegration
+
+`util/openmeteo_client.py` kapselt die HTTP-Anfragen. Der Verbrauchspfad in
+`src/fetch_demand_data.py` bildet bevölkerungsgewichtete Wetterwerte aus fünf
+Städten. Die Preis-Pipeline verwendet getrennte, kapazitätsgewichtete
+PV-/Wind-Cluster in `src/etl_price.py`.
+
+Für eine zeitpunktgetreue Preisbewertung speichert
+`src/historical_price_weather.py` historische ECMWF-IFS-Single-Runs. Die
+Auswahl, Fallbacks und verworfenen Läufe werden in SQLite nachvollziehbar
+festgehalten.
+
+### Key Functions — `util/openmeteo_client.py` and `src/fetch_demand_data.py`
 
 #### `fetch_weather_data_for_cities(in_selected_cities, in_start_date, in_end_date, in_weather_variables) → dict`
 
@@ -177,7 +222,7 @@ Full pipeline for forecast weather: fetch forecast → merge with weights → re
 ### Fetch Historical Weather Data
 
 ```python
-from src.fetch_prepare_data import prepare_weather_data
+from src.fetch_demand_data import prepare_weather_data
 
 df_weather = prepare_weather_data(
     in_start_date="2019-01-01",
@@ -188,9 +233,9 @@ df_weather = prepare_weather_data(
 ### Fetch Weather Forecast (for next-day prediction)
 
 ```python
-from src.fetch_prepare_data import prepare_weather_forecast
+from src.fetch_demand_data import prepare_weather_for_prediction
 
-df_forecast = prepare_weather_forecast(forecast_days=2)
+df_forecast = prepare_weather_for_prediction(prediction_date="2026-08-21")
 ```
 
 ---
@@ -199,7 +244,7 @@ df_forecast = prepare_weather_forecast(forecast_days=2)
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `time` | `datetime64` | Hourly timestamp (local timezone via `timezone=auto`) |
+| `time` | `datetime64[ns, Europe/Berlin]` | Hourly Berlin-local timestamp, converted from API UTC timestamps |
 | `apparent_temperature` | `float64` | Weighted apparent temperature (°C) |
 | `rain` | `float64` | Weighted rainfall (mm) |
 | `snowfall` | `float64` | Weighted snowfall (cm) |
@@ -231,7 +276,8 @@ df_forecast = prepare_weather_forecast(forecast_days=2)
 
 ## Notes
 
-- The archive API returns timestamps in the **local timezone** of the requested location when `timezone=auto` is used. When merging with the energy data (UTC), ensure consistent timezone handling.
-- The forecast API returns timestamps as UTC-aware datetime strings in the implementation (`utc=True` in `pd.to_datetime`).
-- There is a known discrepancy between how the archive and forecast APIs handle timezones — this is handled consistently by `rename_time_column()` before merging.
+- Both archive and forecast requests use `timezone=UTC`; `OpenMeteoClient` converts them to `Europe/Berlin`. Consumers should preserve timezone-aware timestamps when merging data.
 - The free tier of Open-Meteo is sufficient for this project. No API key is required for non-commercial use.
+- Die Single-Runs-API kann historische Zyklen nicht vollständig vorhalten. Ein
+  gespeicherter Lauf wird deshalb nur verwendet, wenn er die benötigten
+  D-1/D-Stunden und Variablen vollständig abdeckt.

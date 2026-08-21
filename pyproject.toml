@@ -16,7 +16,8 @@ dependencies = [
     "matplotlib>=3.10.9",
     "numpy>=2.4.4",
     "optuna>=4.8.0",
-    "pandas>=3.0.2",
+    # MLflow currently requires pandas < 3.
+    "pandas>=2.2,<3",
     "pypdf>=6.11.0",
     "requests>=2.33.1",
     "scikit-learn>=1.8.0",
@@ -30,4 +31,5 @@ dependencies = [
     "scikit-optimize>=0.10.2",
     "lxml>=6.1.1",
     "folium>=0.20.0",
+    "mlflow>=3.3.2",
 ]

@@ -154,6 +154,44 @@ def load_energy_demand_table(database_path = DATABASE_PATH) -> pd.DataFrame:
     return df_dem
 
 
+def _calendar_lag(df: pd.DataFrame, column: str, days: int) -> pd.Series:
+    """Return values from the same local clock time on an earlier calendar day.
+
+    Positional ``shift(24)`` is incorrect on daylight-saving transition days:
+    Germany has 23 or 25 hourly rows then.  Price and weather lags are market
+    features by local delivery hour, so the correct reference is one (or seven)
+    local calendar days earlier.
+    """
+    local_time = df["time"].dt.tz_localize(None)
+    source = pd.DataFrame({
+        "date": local_time.dt.normalize(),
+        "hour": local_time.dt.hour,
+        "value": df[column].to_numpy(),
+    })
+    # The repeated 02:00 on the autumn transition is represented twice.  For a
+    # later day, use the second (standard-time) market price for that clock hour.
+    values_by_local_hour = source.drop_duplicates(["date", "hour"], keep="last").set_index(
+        ["date", "hour"]
+    )["value"]
+    reference_dates = local_time.dt.normalize() - pd.Timedelta(days=days)
+    reference_index = pd.MultiIndex.from_arrays([reference_dates, local_time.dt.hour])
+    calendar_lag = values_by_local_hour.reindex(reference_index).to_numpy(copy=True)
+
+    # On the spring DST transition the previous local day has no 02:00.  In
+    # that single case use the value exactly 24 elapsed hours earlier instead.
+    # Do not use this fallback for ordinary source-data gaps.
+    rows_per_local_date = source.groupby("date").size()
+    is_spring_gap = reference_dates.map(rows_per_local_date).eq(23).to_numpy()
+    elapsed_lag = df.set_index("time")[column].reindex(
+        pd.DatetimeIndex(df["time"]) - pd.Timedelta(days=days)
+    ).to_numpy()
+    missing_calendar_lag = pd.isna(calendar_lag)
+    calendar_lag[missing_calendar_lag & is_spring_gap] = elapsed_lag[
+        missing_calendar_lag & is_spring_gap
+    ]
+    return pd.Series(calendar_lag, index=df.index)
+
+
 def build_price_feature_base(
     df_price_raw: pd.DataFrame,
     df_demand_raw: pd.DataFrame,
@@ -288,9 +326,9 @@ def build_price_feature_base(
     for col in lag_cols:
         l24, l168 = f"{col}_lag_24h", f"{col}_lag_168h"
         if l24 not in df_base.columns:
-            df_base[l24] = df_base[col].shift(24)
+            df_base[l24] = _calendar_lag(df_base, col, days=1)
         if l168 not in df_base.columns:
-            df_base[l168] = df_base[col].shift(168)
+            df_base[l168] = _calendar_lag(df_base, col, days=7)
 
     # Extra regime/interaction features
     #df_base["wind_pv_ratio_input"] = df_base["gen_wind_input_mwh"] / (df_base["gen_pv_input_mwh"].abs() + 1.0)
@@ -319,8 +357,8 @@ def build_price_feature_base(
         #    df_base["wind_dir_sin"] = np.sin(wind_dir_rad)
         #    df_base["wind_dir_cos"] = np.cos(wind_dir_rad)
         for col in existing_weather_cols:
-            df_base[f"{col}_lag_24h"] = df_base[col].shift(24)
-            df_base[f"{col}_lag_168h"] = df_base[col].shift(168)
+            df_base[f"{col}_lag_24h"] = _calendar_lag(df_base, col, days=1)
+            df_base[f"{col}_lag_168h"] = _calendar_lag(df_base, col, days=7)
         if "wind_weather_wind_speed_100m" in df_base.columns:
             # Physical wind power features (mirroring logic in aggregate_weighted_wind_vector_features)
             v = df_base["wind_weather_wind_speed_100m"]

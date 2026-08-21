@@ -7,6 +7,11 @@ Inkompatibilitaet der lokalen OpenSSL-Bindung, kein fehlendes Projektzertifikat.
 Die Datenclients verwenden deshalb unter Windows `curl.exe`. Dieses nutzt den
 Windows-Zertifikatsspeicher und laesst die TLS-Zertifikatspruefung aktiv.
 Auf anderen Betriebssystemen verwenden die Clients weiterhin `requests`.
+Betroffen sein können sowohl SMARD- als auch Open-Meteo-Abrufe.
 
 Es ist keine eigene CA zu erzeugen oder zu installieren. Insbesondere darf
 `verify=False` nicht als Umgehung eingesetzt werden.
+
+Bei einem solchen Fehler zuerst `curl.exe --version` prüfen und anschließend
+den Abruf erneut ausführen. Der Fallback ist Teil der Clients; für die
+Projektaufrufe ist keine zusätzliche Konfiguration erforderlich.

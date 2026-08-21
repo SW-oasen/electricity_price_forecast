@@ -62,6 +62,8 @@ TABLE_DATA_QUALITY_LOG = "data_quality_log"
 TABLE_WEATHER_FORECAST_RUNS = "weather_forecast_runs"
 TABLE_WEATHER_FORECAST_VALUES = "weather_forecast_values"
 TABLE_EXTERNAL_FORECAST_SNAPSHOTS = "external_forecast_snapshots"
+TABLE_PRICE_INPUT_LINEAGE = "price_walk_forward_input_lineage"
+TABLE_WEATHER_RUN_REJECTIONS = "weather_run_rejections"
 
 # ---------------------------------------------------------------------------
 # Calendar / holiday features

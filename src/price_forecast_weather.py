@@ -36,7 +36,11 @@ def _load_complete_run(conn, key, series_ids, target_date, protocol):
         values = rows.pivot(index="valid_time_utc", columns="variable", values="value").reset_index()
         values = values.rename(columns={"valid_time_utc": "time"})
         times = pd.to_datetime(values.time, utc=True).dt.tz_convert(protocol.timezone)
-        if expected.issubset(set(times)) and set(series_ids).issubset(values.columns):
+        if (
+            expected.issubset(set(times))
+            and set(series_ids).issubset(values.columns)
+            and values[list(series_ids)].notna().all().all()
+        ):
             return values
     raise ValueError(f"No complete archived {key} weather run is stored for {target_date}")
 

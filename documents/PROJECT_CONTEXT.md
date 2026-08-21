@@ -33,7 +33,7 @@ Der eingefrorene Trainingsstand endet exklusiv am **01.10.2025**. Das bedeutet:
 * Physische Istwerte (Last, PV, Wind) werden bis zur belastbaren Speicherung echter Veröffentlichungszeitpunkte konservativ nur bis einschließlich `D-2` verwendet.
 * Für `D-1` und `D` werden Last-, PV-/Wind- und Wetterprognosen verwendet. Für Wetter muss der historische Forecast-Modelllauf zum Informationsstichtag abrufbar gewesen sein.
 
-Die zugehörigen Regeln liegen zentral in `src/forecast_protocol.py` und werden vor der Implementierung der Feature-Pipeline unit-getestet.
+Die zugehörigen Regeln liegen zentral in `src/forecast_protocol.py` und werden durch Unit-Tests abgesichert.
 
 Als Upstream-Artefakt für die Preisprognose liegt das eingefrorene, angepasste
 LightGBM-Verbrauchsmodell unter `models/demand_lgbm_cutoff_2025-10-01.pkl`.
@@ -44,6 +44,29 @@ neu trainiert.
 Die operative Morgenprognose und die historische Auswertung verwenden
 denselben zentralen Pfad (`src/price_walk_forward.py`). Damit ist die
 historische Bewertung unmittelbar fuer den Betrieb relevant.
+
+### Historische Wetterlaeufe im Walk-forward
+
+Vor jeder Auswertung speichert
+`evaluate_price_model_walk_forward(...)` die Wetterinputs fuer jeden Liefertag
+ueber `src/historical_price_weather.py`.
+
+* PV- und Windfeatures stammen aus technologiegewichteten ECMWF-IFS-
+  Single-Runs.
+* Die Nachfrageprognose verwendet einen separat gespeicherten,
+  bevoelkerungsgewichteten Lauf fuer die fuenf ausgewaehlten deutschen Staedte.
+* Der bevorzugte Lauf ist der neueste zum Informationsstichtag verfuegbare
+  Sechs-Stunden-Lauf. Gespeichert werden Initialisierungs- und
+  Verfuegbarkeitszeitpunkt zusammen mit den Werten.
+* Jeder Lauf muss den gesamten Zeitraum D-1/D abdecken und fuer alle
+  benoetigten Nachfrage-Wettervariablen vollstaendige Werte enthalten.
+* Unvollstaendige, defekte oder von der Open-Meteo-Single-Runs-API nicht mehr
+  bereitgestellte historische Zyklen werden uebersprungen. Der Fallback prueft
+  aeltere Zyklen und erhoeht deren angeforderten Prognosehorizont bei Bedarf.
+
+Die Rohantworten werden unter
+`data/cache/openmeteo_single_runs/` zwischengespeichert. Sie beschleunigen
+erneute Laeufe, sind aber kein Ersatz fuer die Vollstaendigkeitspruefung.
 
 ---
 
@@ -132,6 +155,30 @@ Protokollierung aller ETL-Läufe.
 ### data_quality_log
 
 Erfassung von Qualitätsprüfungen und Auffälligkeiten.
+
+### Input-Lineage für Walk-forward
+
+`price_walk_forward_input_lineage` ist der Audit-Trail der pro Evaluation und
+Liefertag ausgewählten Eingaben. Er speichert insbesondere die verwendete
+`forecast_run_id`, den bevorzugten Lauf, Fallback-Abstand, Quelle und Status.
+
+`weather_run_rejections` speichert verworfene Wetterlauf-Kandidaten mit Grund
+wie fehlenden Werten, unvollständigem Horizont oder API-Nichtverfügbarkeit.
+Die View `v_price_walk_forward_input_audit` verknüpft die Lineage mit den
+Initialisierungs- und Verfügbarkeitszeitpunkten des Wetterlaufs.
+
+Historisch rekonstruierte Einträge sind mit `record_origin = reconstructed`
+markiert. Neue Evaluationen erzeugen `record_origin = live`. SMARD-Reihen
+werden als vorhanden/teilweise vorhanden protokolliert; ohne gespeicherten
+Veröffentlichungs-Snapshot wird ihre historische Verfügbarkeit nicht behauptet.
+
+### Versionierte Vorhersagen
+
+`price_walk_forward_runs` beschreibt einen unveränderlichen Modelllauf mit
+Modell-Hashes sowie Feature- und Protokollversion. Die zugehörigen stündlichen
+Ergebnisse liegen in `price_walk_forward_prediction_versions`. Die Tabelle
+`price_walk_forward_predictions` bleibt als aktuelle, überschreibbare Sicht
+auf Prognosen je Zielzeitpunkt, Modell und Evaluationsmodus erhalten.
 
 ### energy_demand
 
@@ -324,7 +371,9 @@ Die komplette eingefrorene Modellkette lautet:
 * Wind-Erzeugung: `wind_lgbm_model.pkl` (LightGBM)
 
 `price_lgbm_model.pkl` bleibt als Vergleichsartefakt erhalten und wird nicht
-von der GUI oder dem Walk-forward-Pfad verwendet.
+von der GUI oder dem Walk-forward-Pfad verwendet. Produktionsartefakte werden
+unter `models/production/` erwartet; historische Versionen können unter
+`models/archive/` abgelegt werden.
 
 Zielvariable:
 
@@ -436,6 +485,8 @@ Bereits umgesetzt und getestet:
 * Windvektoraggregation über u/v-Komponenten
 * Gemeinsame Walk-forward-Pipeline fuer historische und operative Vorhersagen
 * Persistierung historischer Preisvorhersagen
+* Versionierung von Walk-forward-Läufen und Eingabe-Lineage
+* MLflow-Tracking für Training und Evaluation
 
 ---
 
@@ -464,7 +515,7 @@ Bereits umgesetzt und getestet:
 ```text
 documents/smard_api.md
 documents/open-meteo_api.md
-documents/umsetzung_preisdaten_smard.md
+documents/LOCAL_WINDOWS_TLS.md
 
 log/DECISIONS.md
 log/NEXT_STEPS.md
@@ -473,4 +524,4 @@ log/SESSION_LOG.md
 
 ---
 
-Letzte Aktualisierung: 2026-06-15
+Letzte Aktualisierung: 2026-08-20

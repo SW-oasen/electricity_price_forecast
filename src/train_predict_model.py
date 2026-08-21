@@ -86,6 +86,10 @@ def rolling_origin_backtest(
     step_hours=24,
     horizon_hours=24,
     max_folds=None,
+    train_window_years=None,
+    mlflow_experiment=None,
+    mlflow_run_name=None,
+    mlflow_tags=None,
 ):
     """
     Perform rolling-origin validation on a time-indexed dataset.
@@ -99,6 +103,11 @@ def rolling_origin_backtest(
     """
     if step_hours <= 0 or horizon_hours <= 0:
         raise ValueError("step_hours and horizon_hours must be > 0")
+    if train_window_years is not None:
+        raise NotImplementedError(
+            "Rolling training windows are reserved for the next comparison; "
+            "use train_window_years=None for the current expanding window."
+        )
 
     working_df = df.copy()
     working_df[date_column] = pd.to_datetime(working_df[date_column], utc=True)
@@ -170,6 +179,31 @@ def rolling_origin_backtest(
         "rmse_mean": float(fold_scores["rmse"].mean()),
         "r2_mean": float(fold_scores["r2"].mean()),
     }
+    if mlflow_experiment and not fold_scores.empty:
+        from src.mlflow_tracking import log_model_evaluation
+
+        log_model_evaluation(
+            experiment_name=mlflow_experiment,
+            run_name=mlflow_run_name or "rolling-origin-backtest",
+            model_name=model_pipeline.__class__.__name__,
+            params={
+                "date_column": date_column,
+                "target_column": target_column,
+                "first_split_date": first_split_date,
+                "step_hours": step_hours,
+                "horizon_hours": horizon_hours,
+                "max_folds": max_folds if max_folds is not None else "all",
+                "train_window_years": train_window_years or "expanding",
+            },
+            metrics={
+                "mae_mean": summary_scores["mae_mean"],
+                "rmse_mean": summary_scores["rmse_mean"],
+                "r2_mean": summary_scores["r2_mean"],
+                "folds": summary_scores["folds"],
+            },
+            fold_scores=fold_scores,
+            tags=mlflow_tags,
+        )
     return fold_scores, summary_scores
     
 
@@ -201,7 +235,10 @@ def tune_model_bayesian(model_pipeline,
                         in_param_bayes, 
                         in_features_train, 
                         in_target_train,
-                        scoring='neg_mean_absolute_error'):
+                        scoring='neg_mean_absolute_error',
+                        mlflow_experiment=None,
+                        mlflow_run_name=None,
+                        mlflow_tags=None):
     tscv = TimeSeriesSplit(n_splits=5)
     bayes_search = BayesSearchCV(estimator=model_pipeline, 
                                  search_spaces=in_param_bayes, 
@@ -209,6 +246,22 @@ def tune_model_bayesian(model_pipeline,
                                  scoring=scoring, 
                                  n_jobs=-1)
     bayes_search.fit(in_features_train, in_target_train)
+    if mlflow_experiment:
+        from src.mlflow_tracking import log_model_evaluation
+        log_model_evaluation(
+            experiment_name=mlflow_experiment,
+            run_name=mlflow_run_name or f"{model_pipeline.__class__.__name__}-bayesian-tuning",
+            model_name=model_pipeline.__class__.__name__,
+            params={
+                "search_type": "bayesian",
+                "scoring": scoring,
+                "cv_splits": 5,
+                "n_iter": getattr(bayes_search, "n_iter", "unknown"),
+                "best_params": bayes_search.best_params_,
+            },
+            metrics={"best_cv_score": float(bayes_search.best_score_)},
+            tags=mlflow_tags,
+        )
     #print(f'Best parameters: {bayes_search.best_params_}')
     return bayes_search.best_estimator_, bayes_search.best_params_
 
